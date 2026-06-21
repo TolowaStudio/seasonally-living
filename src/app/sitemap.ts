@@ -11,6 +11,8 @@ const staticPaths = [
   "/contact",
 ] as const;
 
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = getSiteUrl();
   const lastModified = new Date();
