@@ -1,45 +1,25 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { LegacyCta } from "@/components/legacy-cta";
-import { PageShell } from "@/components/page-shell";
-import { pageHero } from "@/lib/imagery";
-import { legacy } from "@/lib/legacy-routes";
+import LinePage from "@/components/LinePage";
+import { PHOTOS } from "@/lib/images";
 
 export const metadata: Metadata = {
-  title: "Hot tubs & swim spas",
-  description:
-    "Therapeutic hydrotherapy, swim spas, and backyard retreats — visit our Wenatchee showroom.",
+  title: "Cal Spas Hot Tubs",
+  description: "Try a Cal Spas hot tub in our Wenatchee showroom. Delivery, setup, orientation and service from Seasonally Living.",
 };
 
-export default function HotTubsPage() {
+export default function Page() {
   return (
-    <PageShell
-      heroImage={pageHero.hotTubs}
-      eyebrow="Relaxation"
-      title="Hot tubs & swim spas"
-      intro={
-        <>
-          Refresh your backyard with hydrotherapy, year-round soaks, and models
-          you can see before you buy. We&apos;ll match you to the right size,
-          jet layout, and efficiency for how you actually live.
-        </>
-      }
-    >
-      <ul className="list-inside list-disc space-y-2 text-[var(--sl-muted)]">
-        <li>Compare models side-by-side in the showroom</li>
-        <li>Site checks: access, pad, electrical — plain-language guidance</li>
-        <li>Delivery &amp; install questions answered upfront</li>
-      </ul>
-
-      <div className="flex flex-col gap-4">
-        <Link
-          href="/book"
-          className="sl-btn-primary inline-flex h-12 min-h-12 w-fit items-center justify-center px-8 text-sm font-semibold"
-        >
-          Book a visit
-        </Link>
-        <LegacyCta href={legacy.hotTubs} label="Explore hot tubs &amp; swim spas" />
-      </div>
-    </PageShell>
+    <LinePage
+      interest="hot-tub"
+      hero={{ kicker: "Hot tubs · Cal Spas", title: <>The winter soak, <em style={{ fontStyle: "italic", color: "var(--clay-soft)" }}>every night.</em></>, lead: "January in the valley is made for this. Sit in a running Cal Spas tub at the showroom before you decide, then let us deliver, set up and show you how to care for it.", image: PHOTOS.hotTubPeople, alt: "Two people in a steaming hot tub above a snowy forest", cta: "Book a try-out" }}
+      points={{ kicker: "Why buy here", title: "The tub is half of it. The rest is us.", lead: "A hot tub is a ten-year decision. Buy it from people who'll still pick up the phone in year eight.", items: [
+        { title: "Try before you buy", body: "Models filled and running in the showroom. Bring a swimsuit if you like." },
+        { title: "Delivered and set up", body: "Site prep advice, delivery, placement and start-up by our crew." },
+        { title: "Orientation for every buyer", body: "We walk you through water care, filters and settings so it stays easy." },
+      ] }}
+      feature={{ kicker: "Certified pre-owned", title: "Pre-owned, inspected and ready.", body: "Trade-ins come back through our shop. When a good one is ready, subscribers to the note hear about it first.", bullets: ["Inspected and repaired by our techs", "Cleaned and sanitized", "Delivered like a new tub"], image: PHOTOS.hotTubGarden, alt: "Hot tub on a wooden deck in a garden" }}
+      magnet={{ title: "Get the winter hot tub care guide.", body: "Freeze protection, water care in the cold, and when to call us. Pick pre-owned too and you'll see arrivals first." }}
+      closing={{ title: "Come sit in one.", body: "The fastest way to choose a tub is to try a few. Book a time and we'll have them warm.", cta: "Book a try-out" }}
+    />
   );
 }
