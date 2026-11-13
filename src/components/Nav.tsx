@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "./Icon";
-import { NAV, site } from "@/lib/site";
+import { NAV_GROUPS, NAV_LINKS, site, type NavGroup } from "@/lib/site";
 
 export function Wordmark({ size = 18, color }: { size?: number; color?: string }) {
   return (
@@ -23,7 +23,7 @@ export function Wordmark({ size = 18, color }: { size?: number; color?: string }
 }
 
 function Mark({ size = 34 }: { size?: number }) {
-  // Four quarters: the four seasons, one in fire colour.
+  // Four quarters: the four seasons, one in the accent colour.
   return (
     <span aria-hidden style={{ width: size, height: size, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, padding: 6, borderRadius: 8, background: "var(--ink)" }}>
       <span style={{ background: "var(--clay)", borderRadius: "6px 1px 1px 1px" }} />
@@ -31,6 +31,69 @@ function Mark({ size = 34 }: { size?: number }) {
       <span style={{ background: "var(--base)", opacity: 0.85, borderRadius: "1px 1px 1px 6px" }} />
       <span style={{ background: "var(--base)", opacity: 0.85, borderRadius: "1px 1px 6px 1px" }} />
     </span>
+  );
+}
+
+function Dropdown({ group, pathname, color }: { group: NavGroup; pathname: string; color: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const active = group.items.some((i) => pathname === i.href);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div
+      ref={ref}
+      className="nav-dd"
+      onMouseLeave={() => setOpen(false)}
+      style={{ position: "relative" }}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "10px 0",
+          fontSize: 14.5, fontWeight: 500, color: active ? "var(--clay)" : color,
+        }}
+      >
+        {group.label}
+        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s var(--ease)" }}>
+          <path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
+      </button>
+      <div className="nav-dd-panel" data-open={open} role="menu">
+        {group.items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            role="menuitem"
+            onClick={(e) => {
+              setOpen(false);
+              e.currentTarget.blur();
+            }}
+            className="nav-dd-item"
+            aria-current={pathname === item.href ? "page" : undefined}
+          >
+            <span className="nav-dd-label">{item.label}</span>
+            {item.note && <span className="nav-dd-note">{item.note}</span>}
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -56,6 +119,7 @@ export default function Nav() {
 
   const solid = scrolled || !isHome || open;
   const overPhoto = !solid;
+  const linkColor = overPhoto ? "#fff" : "var(--ink)";
 
   return (
     <>
@@ -76,20 +140,20 @@ export default function Nav() {
             <Wordmark color={overPhoto ? "#fff" : undefined} />
           </Link>
 
-          <nav className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 26 }} aria-label="Main navigation">
-            {NAV.map((item) => {
-              const active = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="ul-link"
-                  style={{ fontSize: 14, fontWeight: 500, color: active ? "var(--clay)" : overPhoto ? "#fff" : "var(--ink)", paddingBottom: 2 }}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+          <nav className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 28 }} aria-label="Main navigation">
+            {NAV_GROUPS.map((g) => (
+              <Dropdown key={g.label} group={g} pathname={pathname} color={linkColor} />
+            ))}
+            {NAV_LINKS.filter((l) => l.href !== "/visit").map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="ul-link"
+                style={{ fontSize: 14.5, fontWeight: 500, color: pathname === item.href ? "var(--clay)" : linkColor, paddingBottom: 2 }}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
 
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -101,7 +165,7 @@ export default function Nav() {
               onClick={() => setOpen((o) => !o)}
               aria-label={open ? "Close menu" : "Open menu"}
               aria-expanded={open}
-              style={{ display: "none", background: "none", border: "none", color: overPhoto ? "#fff" : "var(--ink)", padding: 6 }}
+              style={{ display: "none", background: "none", border: "none", color: linkColor, padding: 6 }}
             >
               <Icon name={open ? "x" : "menu"} size={26} />
             </button>
@@ -116,25 +180,45 @@ export default function Nav() {
           transform: open ? "translateY(0)" : "translateY(-100%)",
           visibility: open ? "visible" : "hidden",
           transition: "transform .4s var(--ease), visibility .4s",
-          padding: "calc(var(--nav-h) + 24px) 24px 40px",
-          display: "flex", flexDirection: "column", gap: 4, overflowY: "auto",
+          padding: "calc(var(--nav-h) + 20px) 24px 40px",
+          overflowY: "auto",
         }}
       >
-        {[{ href: "/", label: "Home" }, ...NAV].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setOpen(false)}
-            className="serif"
-            style={{ fontSize: 28, fontWeight: 500, padding: "12px 0", color: pathname === item.href ? "var(--clay)" : "var(--ink)", borderBottom: "1px solid var(--line)", display: "block" }}
-          >
-            {item.label}
-          </Link>
+        <Link href="/" onClick={() => setOpen(false)} className="serif" style={{ fontSize: 26, fontWeight: 500, display: "block", padding: "8px 0", color: pathname === "/" ? "var(--clay)" : "var(--ink)" }}>
+          Home
+        </Link>
+        {NAV_GROUPS.map((g) => (
+          <div key={g.label} style={{ borderTop: "1px solid var(--line)", padding: "14px 0 6px" }}>
+            <p className="eyebrow" style={{ marginBottom: 6 }}>{g.label}</p>
+            {g.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                style={{ display: "block", padding: "8px 0", fontSize: 18, fontWeight: 500, color: pathname === item.href ? "var(--clay)" : "var(--ink)" }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
         ))}
-        <Link href="/visit#book" onClick={() => setOpen(false)} className="btn btn-primary btn-lg" style={{ marginTop: 24, justifyContent: "center" }}>
+        <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
+          {NAV_LINKS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="serif"
+              style={{ display: "block", padding: "8px 0", fontSize: 24, fontWeight: 500, color: pathname === item.href ? "var(--clay)" : "var(--ink)" }}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+        <Link href="/visit#book" onClick={() => setOpen(false)} className="btn btn-primary btn-lg" style={{ marginTop: 22, justifyContent: "center", width: "100%" }}>
           Book a visit
         </Link>
-        <a href={`tel:${site.phoneTel}`} className="btn btn-outline btn-lg" style={{ marginTop: 10, justifyContent: "center" }}>
+        <a href={`tel:${site.phoneTel}`} className="btn btn-outline btn-lg" style={{ marginTop: 10, justifyContent: "center", width: "100%" }}>
           <Icon name="phone" size={18} /> {site.phoneDisplay}
         </a>
       </div>

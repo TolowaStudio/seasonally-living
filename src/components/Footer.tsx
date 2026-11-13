@@ -2,7 +2,7 @@ import Link from "next/link";
 import Icon from "./Icon";
 import { Wordmark } from "./Nav";
 import NoteForm from "./NoteForm";
-import { NAV, site, addressBlock, mapsUrl } from "@/lib/site";
+import { NAV_GROUPS, NAV_LINKS, site, addressBlock, mapsUrl } from "@/lib/site";
 
 export default function Footer() {
   return (
@@ -15,30 +15,41 @@ export default function Footer() {
               One useful note a month. Never a blast.
             </h2>
             <p className="body-muted" style={{ marginTop: 14, maxWidth: "46ch" }}>
-              Burn-ban-ready fireplace tips, winter hot tub care, first look at certified pre-owned spas, and
-              spring pool planning. Pick what you care about.
+              Fireplace tips for burn-ban season, winter hot tub care, pre-owned arrivals, and spring pool planning.
+              Pick what you care about.
             </p>
+            <Link href="/note" className="small ul-link" style={{ display: "inline-block", marginTop: 14, color: "var(--clay)" }}>
+              See every topic →
+            </Link>
           </div>
           <NoteForm compact />
         </div>
 
-        <div className="footer-cols" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 40, paddingTop: 56 }}>
+        <div className="footer-cols" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr 1fr 1.1fr", gap: 36, paddingTop: 56 }}>
           <div>
             <Wordmark color="#f0ede8" />
-            <p className="small body-muted" style={{ marginTop: 18, maxWidth: "32ch" }}>
-              {site.legalName}. Fireplaces, venting, hot tubs, swim spas and pools for North Central Washington.
+            <p className="small body-muted" style={{ marginTop: 18, maxWidth: "30ch" }}>
+              {site.legalName}. Family-owned by {site.owners} since {site.founded}. Showroom open since {site.showroomOpened}.
             </p>
           </div>
-          <div>
-            <p className="eyebrow muted" style={{ marginBottom: 16 }}>Explore</p>
-            <ul style={{ listStyle: "none", display: "grid", gap: 10 }}>
-              {NAV.map((n) => (
-                <li key={n.href}>
-                  <Link className="ul-link small" href={n.href}>{n.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {NAV_GROUPS.map((g) => (
+            <div key={g.label}>
+              <p className="eyebrow muted" style={{ marginBottom: 16 }}>{g.label}</p>
+              <ul style={{ listStyle: "none", display: "grid", gap: 10 }}>
+                {g.items.map((n) => (
+                  <li key={n.href}>
+                    <Link className="ul-link small" href={n.href}>{n.label}</Link>
+                  </li>
+                ))}
+                {g.label === "Outdoor" &&
+                  NAV_LINKS.filter((l) => l.href !== "/visit").map((n) => (
+                    <li key={n.href}>
+                      <Link className="ul-link small" href={n.href}>{n.label}</Link>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ))}
           <div>
             <p className="eyebrow muted" style={{ marginBottom: 16 }}>Showroom</p>
             <a className="small ul-link" href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
@@ -50,20 +61,21 @@ export default function Footer() {
                 {h.days}: {h.time}
               </p>
             ))}
-          </div>
-          <div>
-            <p className="eyebrow muted" style={{ marginBottom: 16 }}>Talk to us</p>
-            <a className="small ul-link" href={`tel:${site.phoneTel}`} style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+            <a className="small ul-link" href={`tel:${site.phoneTel}`} style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 14 }}>
               <Icon name="phone" size={15} /> {site.phoneDisplay}
             </a>
             <br />
-            <a className="small ul-link" href={`mailto:${site.email}`} style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 10 }}>
+            <a className="small ul-link" href={`mailto:${site.email}`} style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 8 }}>
               <Icon name="mail" size={15} /> {site.email}
             </a>
+            <br />
+            <Link className="small ul-link" href="/visit#book" style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 8, color: "var(--clay)" }}>
+              Book a visit <Icon name="arrow" size={15} />
+            </Link>
           </div>
         </div>
         <p className="tiny" style={{ marginTop: 56, color: "var(--faint)" }}>
-          © {new Date().getFullYear()} {site.legalName}. Stûv is a trademark of Stûv SA. Cal Spas is a trademark of California Acrylic Industries.
+          © {new Date().getFullYear()} {site.legalName}. Stûv, Cal Spas, Cal Saunas and Cal Flame are trademarks of their respective owners.
         </p>
       </div>
     </footer>
