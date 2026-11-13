@@ -25,7 +25,7 @@ export default async function Home() {
     <main>
       {/* HERO: Cal Spas leads */}
       <section style={{ position: "relative", height: "100vh", minHeight: 660, overflow: "hidden" }}>
-        <Image src={c.hero.image} alt={c.hero.alt} fill priority sizes="100vw" style={{ objectFit: "cover", objectPosition: c.hero.position || "center" }} />
+        <Image src={c.hero.image} alt={c.hero.alt} fill loading="eager" fetchPriority="high" sizes="100vw" style={{ objectFit: "cover", objectPosition: c.hero.position || "center" }} />
         <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(8,7,5,0.9) 0%, rgba(8,7,5,0.6) 28%, rgba(8,7,5,0.12) 56%, rgba(8,7,5,0) 72%), linear-gradient(to bottom, rgba(10,8,5,0.55) 0%, rgba(10,8,5,0.04) 24%, rgba(10,8,5,0.2) 55%, rgba(10,8,5,0.9) 100%)" }} />
         <span className="figure-cap caption hero-credit" style={{ right: "max(32px, calc((100vw - var(--maxw)) / 2 + 32px))", bottom: 40, fontSize: 10.5 }}>
           <span className="dot" /> {c.hero.caption}
