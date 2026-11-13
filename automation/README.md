@@ -74,8 +74,9 @@ Manager (project `tolowa-studio`), never in the JSON or this repo. `metaGraphVer
   double-post, and it needs Sanity to be down for a few seconds exactly then. The first week of
   runs is supervised for this reason; the execution log shows any save that failed.
 - **Instagram's publish call is retried** (3 tries, 8 seconds apart) because the photo may still be
-  processing. A container id can only be published once, so a retry cannot post a second copy
-  (TODO-verify with one real test post before activating).
+  processing. A container id can only be published once, so a retry cannot post a second copy; if a
+  retry answers "already published" the photo is treated as live (and recorded with a generic link).
+  (TODO-verify the exact error wording with one real test post before activating.)
 - **Sanity or n8n is down:** nothing happens; the next run picks the posts up.
 
 ## Turning it on (when Jeramey says so)
