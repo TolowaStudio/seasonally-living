@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Script from "next/script";
+import { usePathname } from "next/navigation";
 import { CONSENT_KEY, isGranted, setConsent, useConsent } from "@/lib/consent";
 import { INTERESTS } from "@/lib/interests";
 import { trackConversion } from "@/lib/track";
@@ -41,6 +42,11 @@ const interestIdFor = (labelText: string) => INTERESTS.find((i) => i.label === l
 /** Click, focus and form-success listeners. Only attached when a tag is enabled. */
 function useConversionListeners() {
   const bookingFocused = useRef(false);
+  const pathname = usePathname();
+  // "Once per page view": a client-side navigation starts a new one.
+  useEffect(() => {
+    bookingFocused.current = false;
+  }, [pathname]);
   useEffect(() => {
     if (!anyTagEnabled) return;
 
@@ -53,8 +59,15 @@ function useConversionListeners() {
         trackConversion("call_click", { phone: href.slice(4), area: where });
       } else if (MAP_HOSTS.test(href)) {
         trackConversion("directions_click", { area: where });
-      } else if (/^\/visit(\?|#|$)/.test(href) ? /#book|interest=/.test(href) : href.endsWith("#book")) {
-        trackConversion("booking_started", { via: "link", area: where, interest: new URL(a.href, location.href).searchParams.get("interest") ?? undefined });
+      } else {
+        // Booking CTA: the booking form on /visit, or a same-page #book anchor (campaign pages).
+        const u = new URL(a.href, location.href);
+        const sameOrigin = u.origin === location.origin;
+        const toVisit = sameOrigin && u.pathname === "/visit" && (u.hash === "#book" || u.searchParams.has("interest"));
+        const samePageBook = sameOrigin && u.hash === "#book" && u.pathname === location.pathname;
+        if (toVisit || samePageBook) {
+          trackConversion("booking_started", { via: "link", area: where, interest: u.searchParams.get("interest") ?? undefined });
+        }
       }
     };
 
@@ -85,7 +98,13 @@ function useConversionListeners() {
       }
     };
     const observer = new MutationObserver(() => {
+      // Success only: the form is gone AND the "Thanks" state is on the page. A navigation away also
+      // unmounts the form, but renders no .form-status, so it must not count as a lead.
       if (!pending || pending.form.isConnected) return;
+      if (!document.querySelector(".form-status")) {
+        pending = null;
+        return;
+      }
       const { name, interest } = pending;
       pending = null;
       trackConversion(name, { interest });
@@ -117,7 +136,9 @@ function ConsentBanner() {
       }}
     >
       <p style={{ color: "var(--ink-soft)" }}>
-        We use cookies to see which pages and ads bring people in. Nothing is shared until you say yes.
+        {tracking.consentDefault === "denied"
+          ? "We use cookies to see which pages and ads bring people in. Nothing is shared until you say yes."
+          : "We use cookies to see which pages and ads bring people in. Choose No thanks to opt out."}
       </p>
       <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
         <button type="button" className="btn btn-primary" style={{ padding: "8px 16px", fontSize: 13.5 }} onClick={() => setConsent("granted")}>

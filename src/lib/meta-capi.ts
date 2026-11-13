@@ -64,7 +64,9 @@ export async function sendMetaLead(input: MetaLeadInput): Promise<MetaCapiResult
   if (input.fbc) userData.fbc = input.fbc;
   if (!userData.em && !userData.ph) return { sent: false, reason: "no email or phone" };
 
+  // Token goes in the POST body (Graph API accepts it there), never the URL, so it stays out of access logs.
   const body: Record<string, unknown> = {
+    access_token: token,
     data: [
       {
         event_name: input.eventName ?? "Lead",
@@ -81,7 +83,7 @@ export async function sendMetaLead(input: MetaLeadInput): Promise<MetaCapiResult
   if (test) body.test_event_code = test;
 
   try {
-    const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${encodeURIComponent(pixelId)}/events?access_token=${encodeURIComponent(token)}`, {
+    const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${encodeURIComponent(pixelId)}/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

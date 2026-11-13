@@ -1,7 +1,6 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { tracking } from "./tracking-config";
 
 export type Consent = "granted" | "denied" | "unset";
 
@@ -49,7 +48,7 @@ export function useConsent(): Consent {
   return useSyncExternalStore(subscribe, read, () => "unset" as Consent);
 }
 
-/** Meta Pixel and PostHog only load once this is true. Google tags load earlier, in Consent Mode. */
+/** Meta Pixel and PostHog only load after an explicit Accept, whatever the Google default. Google tags load earlier, in Consent Mode. */
 export function isGranted(c: Consent): boolean {
-  return c === "granted" || (c === "unset" && tracking.consentDefault === "granted");
+  return c === "granted";
 }
