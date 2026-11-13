@@ -835,3 +835,7 @@ h1, h2, h3, h4 {
 
 /* Inline links inside running text must be distinguishable without relying on colour alone. */
 .lead a:not(.btn), .body-muted a:not(.btn):not(.ul-link) { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+/* Dark bands (footer, landing-page header over a photo) always use the white logo, whatever the page theme. */
+[data-theme="showroom-dark"] .logo .logo-white { display: block !important; }
+[data-theme="showroom-dark"] .logo .logo-blue { display: none !important; }

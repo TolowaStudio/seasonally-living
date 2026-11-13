@@ -31,7 +31,7 @@ export default async function LandingPage({ params }: Params) {
   return (
     <main>
       {/* Minimal header: logo and phone only. No site nav, so the page has one job. */}
-      <header style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 5 }} data-theme="alpine">
+      <header style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 5 }} data-theme="showroom-dark">
         <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, paddingTop: 14, paddingBottom: 14 }}>
           <Logo id={s.logo} height={44} />
           <a href={tel} data-track-area="lp-header" className="btn btn-outline" style={{ padding: "10px 18px", color: "#fff", borderColor: "rgba(247,242,234,0.45)", background: "rgba(8,7,5,0.35)" }}>
@@ -40,7 +40,7 @@ export default async function LandingPage({ params }: Params) {
         </div>
       </header>
 
-      <section style={{ position: "relative", minHeight: "min(82svh, 760px)", display: "flex", alignItems: "flex-end", overflow: "hidden" }}>
+      <section data-theme="showroom-dark" style={{ position: "relative", minHeight: "min(82svh, 760px)", display: "flex", alignItems: "flex-end", overflow: "hidden" }}>
         <Image src={c.hero.image} alt={c.hero.alt} fill priority sizes="100vw" style={{ objectFit: "cover", objectPosition: c.hero.position ?? "center" }} />
         <div
           aria-hidden
@@ -113,7 +113,7 @@ export default async function LandingPage({ params }: Params) {
         </div>
       </section>
 
-      <footer style={{ background: "var(--band)", padding: "28px 0 36px" }} data-theme="alpine">
+      <footer style={{ background: "var(--band)", padding: "28px 0 36px" }} data-theme="showroom-dark">
         <div className="wrap small" style={{ color: "var(--ink-soft)", display: "grid", gap: 6 }}>
           <p>
             Seasonally Living by Chim Chimney ·{" "}
