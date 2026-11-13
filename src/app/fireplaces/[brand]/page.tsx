@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BrandPage from "@/components/BrandPage";
-import { BRANDS, getBrand } from "@/content/brands";
+import { getBrand, getBrands } from "@/lib/sanity";
 
-// One page per hearth brand. Content: src/content/brands.ts (code, not yet in Sanity).
+// One page per hearth brand. Content: Sanity "hearthBrand" documents (fallback: src/content/brands.ts).
 // The static /fireplaces/gas-electric route takes precedence over this dynamic segment.
-export const dynamicParams = false;
+export const revalidate = 60;
+// A brand added in the Studio after the build renders on first visit; unknown slugs 404 via notFound().
+export const dynamicParams = true;
 
-export function generateStaticParams() {
-  return BRANDS.map((b) => ({ brand: b.slug }));
+export async function generateStaticParams() {
+  return (await getBrands()).map((b) => ({ brand: b.slug }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ brand: string }> }): Promise<Metadata> {
-  const b = getBrand((await params).brand);
+type Props = { params: Promise<{ brand: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const b = await getBrand((await params).brand);
   if (!b) return {};
   return {
     title: `${b.name} ${b.categories.join(", ").toLowerCase()} in Wenatchee`,
@@ -20,8 +24,9 @@ export async function generateMetadata({ params }: { params: Promise<{ brand: st
   };
 }
 
-export default async function Page({ params }: { params: Promise<{ brand: string }> }) {
-  const b = getBrand((await params).brand);
+export default async function Page({ params }: Props) {
+  const { brand } = await params;
+  const [b, all] = await Promise.all([getBrand(brand), getBrands()]);
   if (!b) notFound();
-  return <BrandPage b={b} />;
+  return <BrandPage b={b} others={all.filter((x) => x.slug !== b.slug)} />;
 }

@@ -6,7 +6,6 @@ import RichTitle from "./RichTitle";
 import SectionHead from "./SectionHead";
 import CtaBand from "./CtaBand";
 import Reveal from "./RevealWrapper";
-import { BRANDS } from "@/content/brands";
 import type { BrandContent, BrandModel } from "@/content/types";
 
 const book = "/visit?interest=hearth#book";
@@ -46,8 +45,7 @@ function ModelCard({ m, brand }: { m: BrandModel; brand: string }) {
   );
 }
 
-export default function BrandPage({ b }: { b: BrandContent }) {
-  const others = BRANDS.filter((x) => x.slug !== b.slug);
+export default function BrandPage({ b, others }: { b: BrandContent; others: BrandContent[] }) {
   return (
     <main>
       <PageHero kicker={`Fireplaces & stoves · ${b.name} · ${b.origin}`} title={<RichTitle t={b.tagline} />} lead={b.summary} image={b.heroImage} alt={b.heroAlt} position={b.heroPosition}>
