@@ -10,7 +10,7 @@ export default function PreOwnedPhotos({ photos, title }: { photos: { image: str
   return (
     <div>
       <div className="photo" style={{ aspectRatio: "4 / 3" }}>
-        <Image src={cur.image} alt={cur.alt || title} fill priority sizes="(max-width: 940px) 100vw, 55vw" />
+        <Image src={cur.image} alt={cur.alt || title} fill loading="eager" fetchPriority="high" sizes="(max-width: 940px) 100vw, 55vw" />
       </div>
       {photos.length > 1 && (
         <div className="po-thumbs">

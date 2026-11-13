@@ -4,7 +4,7 @@ import { useState } from "react";
 import Icon from "./Icon";
 import { INTERESTS } from "@/lib/interests";
 
-export default function NoteForm({ compact = false, defaultInterest }: { compact?: boolean; defaultInterest?: string }) {
+export default function NoteForm({ compact = false, defaultInterest, label = "Get the Seasonally Living note" }: { compact?: boolean; defaultInterest?: string; label?: string }) {
   const [picked, setPicked] = useState<string[]>(defaultInterest ? [defaultInterest] : []);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
@@ -48,7 +48,7 @@ export default function NoteForm({ compact = false, defaultInterest }: { compact
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }} aria-label="Get the Seasonally Living note">
+    <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }} aria-label={label}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {INTERESTS.map((i) => (
           <button
