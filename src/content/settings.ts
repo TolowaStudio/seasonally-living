@@ -20,6 +20,14 @@ export const SETTINGS: SiteSettings = {
   ],
   serviceArea: ["Wenatchee", "East Wenatchee", "Leavenworth", "Chelan", "Cashmere", "Manson"],
   logo: "seasonally-living/brand/logo/seasonally-living-script-blue",
+  // TODO-confirm (TOL-2908): set the real Google review link in the Studio once the profile is claimed.
+  googleReviewUrl: "",
+  // TODO-confirm: the business Facebook page (not Susan's personal profile).
+  facebookUrl: "",
+  facebookReviewUrl: "",
+  sameAs: [],
+  // Geocoded from 1407 Maiden Ln, Wenatchee (OpenStreetMap, 2026-11-12). TODO-confirm against the Google pin.
+  geo: { lat: 47.453, lng: -120.3357 },
   navGroups: [
     {
       label: "Water",

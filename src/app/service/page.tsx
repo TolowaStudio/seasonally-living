@@ -6,7 +6,9 @@ import SectionHead from "@/components/SectionHead";
 import CtaBand from "@/components/CtaBand";
 import RelatedLines from "@/components/RelatedLines";
 import RichTitle from "@/components/RichTitle";
+import Crumbs from "@/components/Crumbs";
 import { getPage } from "@/lib/sanity";
+import { SITE_TITLE_SUFFIX, socialMeta } from "@/lib/seo";
 import type { ServiceContent } from "@/content/types";
 
 // Content: Sanity document "page-service" (fallback: src/content/pages.ts).
@@ -14,7 +16,7 @@ export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const c = await getPage<ServiceContent>("/service");
-  return { title: c.seo.title, description: c.seo.description };
+  return { title: c.seo.title, description: c.seo.description, ...socialMeta({ fullTitle: `${c.seo.title} | ${SITE_TITLE_SUFFIX}`, description: c.seo.description, path: "/service", ogKey: "service", ogAlt: c.hero.alt }) };
 }
 
 export default async function ServicePage() {
@@ -22,6 +24,7 @@ export default async function ServicePage() {
   const book = "/visit?interest=venting#book";
   return (
     <main>
+      <Crumbs path="/service" />
       <PageHero kicker={c.hero.kicker} title={<RichTitle t={c.hero.title} />} lead={c.hero.lead} image={c.hero.image} alt={c.hero.alt} position={c.hero.position}>
         <Link href={book} className="btn btn-primary btn-lg">{c.hero.cta} <Icon name="arrow" size={18} /></Link>
         <Link href="/hearth-supplies" className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)" }}>{c.hero.secondaryCta}</Link>

@@ -81,6 +81,11 @@ export const schemaTypes = [
       list("hours", "Hours", [str("days"), str("time")], "days"),
       strings("serviceArea", "Service area"),
       img("logo", "Logo"),
+      str("googleReviewUrl", "Google review link (Business Profile \"write a review\" URL; powers /review)"),
+      str("facebookUrl", "Facebook business page URL"),
+      str("facebookReviewUrl", "Facebook recommendations URL (usually the page URL + /reviews)"),
+      strings("sameAs", "Other listings (Google profile, BBB, Yelp) for search engines"),
+      obj("geo", "Showroom coordinates", [defineField({ name: "lat", type: "number" }), defineField({ name: "lng", type: "number" })]),
       defineField({
         name: "navGroups",
         title: "Navigation groups (first group leads the menu)",

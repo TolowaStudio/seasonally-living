@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { INTERESTS, INTEREST_IDS } from "@/lib/interests";
+import { FEEDBACK_INTEREST, INTERESTS, INTEREST_IDS, LEAD_INTEREST_IDS } from "@/lib/interests";
 import { cleanAttribution, describeTouch } from "@/lib/attribution";
 import { cleanEmail, multiLine, oneLine, tagOf } from "@/lib/text";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
@@ -35,7 +35,7 @@ type Payload = {
 const MAX_BODY = 20_000;
 const fail = (status: number, code: string, error: string, headers?: Record<string, string>) =>
   NextResponse.json({ success: false, error, code }, { status, headers });
-const label = (id: string) => INTERESTS.find((i) => i.id === id)?.label ?? id;
+const label = (id: string) => (id === FEEDBACK_INTEREST ? "Private feedback for Cam" : (INTERESTS.find((i) => i.id === id)?.label ?? id));
 
 export async function POST(req: NextRequest) {
   const isProd = process.env.NODE_ENV === "production";
@@ -66,9 +66,17 @@ export async function POST(req: NextRequest) {
   const kind = d.kind === "note" ? "note" : "visit";
   const email = cleanEmail(d.email);
   const name = oneLine(d.name, kind === "note" ? 60 : 120);
-  if (!email) return fail(400, "bad_email", "Please enter a valid email");
-  if (kind === "visit" && !name) return fail(400, "missing_name", "Please add your name");
-  if (!rateLimit(`email:${email}`, 4, 60 * 60_000).ok) return fail(429, "rate_limited", "That address was just used. Please check your inbox, or call (509) 667-8833.", { "Retry-After": "900" });
+  // "Tell Cam directly" (/review): a way to reply (email or phone) and the message. Name is optional.
+  const feedback = kind === "visit" && d.interest === FEEDBACK_INTEREST;
+  if (feedback) {
+    if (oneLine(d.email, 254) && !email) return fail(400, "bad_email", "That email doesn't look right");
+    if (!email && !oneLine(d.phone, 40)) return fail(400, "missing_contact", "Please add an email or phone so Cam can reply");
+    if (!multiLine(d.message, 2000)) return fail(400, "missing_message", "Please tell us what happened");
+  } else {
+    if (!email) return fail(400, "bad_email", "Please enter a valid email");
+    if (kind === "visit" && !name) return fail(400, "missing_name", "Please add your name");
+  }
+  if (email && !rateLimit(`email:${email}`, 4, 60 * 60_000).ok) return fail(429, "rate_limited", "That address was just used. Please check your inbox, or call (509) 667-8833.", { "Retry-After": "900" });
 
   // Guide signups: the guide decides the interest tag.
   const guideSlug = oneLine(d.guide, 96);
@@ -76,7 +84,7 @@ export async function POST(req: NextRequest) {
   if (kind === "note" && guideSlug && !guide) return fail(400, "bad_guide", "That guide wasn't found");
 
   const rawInterests = kind === "note" ? (Array.isArray(d.interests) ? d.interests : []) : [d.interest];
-  const interests = [...new Set([...(guide ? [guide.interest] : []), ...rawInterests.map((i) => oneLine(i, 40))])].filter((i) => INTEREST_IDS.includes(i)).slice(0, 8);
+  const interests = [...new Set([...(guide ? [guide.interest] : []), ...rawInterests.map((i) => oneLine(i, 40))])].filter((i) => (kind === "visit" ? LEAD_INTEREST_IDS : INTEREST_IDS).includes(i)).slice(0, 8);
   const tags = interests.map(label).join(", ") || "General";
 
   // A unit is only accepted if its slug is a real pre-owned spa; the title is then rebuilt from our data.
@@ -87,7 +95,7 @@ export async function POST(req: NextRequest) {
     if (spa) unit = oneLine(`${spa.title} (${spa.slug})`, 160);
   }
 
-  const optIn = kind === "note" || d.optIn === true;
+  const optIn = kind === "note" || (!feedback && d.optIn === true);
   // A note signup without a working confirmation link would look like success while storing nothing.
   if (kind === "note" && !signingAvailable()) {
     console.error(JSON.stringify({ event: "lead.error", code: "no_signing_secret", note: "NOTE_SIGNING_SECRET unset: note signups disabled" }));
@@ -98,18 +106,20 @@ export async function POST(req: NextRequest) {
   const rid = randomUUID().slice(0, 8);
   const base = linkBase(req.nextUrl.origin);
 
-  const subject = kind === "visit" ? `Visit request: ${name} (${tags})${unit ? ` - ${unit}` : ""}` : `Note signup (unconfirmed): ${email} (${tags})${guide ? ` - ${guide.title}` : ""}`;
+  const subject = feedback ? `Private feedback for Cam${name ? ` from ${name}` : ""}` : kind === "visit" ? `Visit request: ${name} (${tags})${unit ? ` - ${unit}` : ""}` : `Note signup (unconfirmed): ${email} (${tags})${guide ? ` - ${guide.title}` : ""}`;
   const text = [
-    kind === "visit" ? "New visit / consult request from seasonallyliving.com" : "New Seasonally Living note signup (waiting on email confirmation)",
+    feedback
+      ? "Private feedback for Cam from the /review page. This person was also invited to post a public Google review; this form is a direct line, not a filter."
+      : kind === "visit" ? "New visit / consult request from seasonallyliving.com" : "New Seasonally Living note signup (waiting on email confirmation)",
     "",
     `Name: ${name || "-"}`,
-    `Email: ${email}`,
+    `Email: ${email || "-"}`,
     `Phone: ${oneLine(d.phone, 40) || "-"}`,
     `Interest: ${tags}`,
     guide ? `Guide: ${guide.title}` : "",
     unit ? `Unit: ${unit}` : "",
-    kind === "visit" ? `Best time: ${oneLine(d.when, 120) || "-"}` : "",
-    `Note opt-in: ${optIn ? "yes (double opt-in email sent)" : "no"}`,
+    kind === "visit" && !feedback ? `Best time: ${oneLine(d.when, 120) || "-"}` : "",
+    feedback ? "" : `Note opt-in: ${optIn ? "yes (double opt-in email sent)" : "no"}`,
     `Source page: ${source || "-"}`,
     "",
     `First touch: ${describeTouch(attribution.first)}`,
@@ -141,7 +151,7 @@ export async function POST(req: NextRequest) {
   // A note signup sends the confirmation first, so a failed send (and the person's retry) can't pile duplicate staff emails.
   // A visit request always reaches staff first: the confirmation is a bonus.
   if (kind === "note" && !(await sendConfirmation())) return fail(502, "confirm_failed", "We couldn't send the confirmation email. Please try again.");
-  const staff = await sendMail({ to: staffRecipients(), subject, text, replyTo: email });
+  const staff = await sendMail({ to: staffRecipients(), subject, text, replyTo: email ?? undefined });
   if (!staff.ok && !staff.skipped) return fail(502, "delivery_failed", "Delivery failed");
   if (kind === "visit") await sendConfirmation();
 
@@ -155,8 +165,8 @@ export async function POST(req: NextRequest) {
     source: source.split("?")[0],
     optIn,
     pendingConfirmation: pending,
-    who: await tagOf(email),
-    emailDomain: email.split("@")[1],
+    who: email ? await tagOf(email) : undefined,
+    emailDomain: email ? email.split("@")[1] : undefined,
     attribution,
     staffMail: staff.ok ? "sent" : "dev-log",
   }));

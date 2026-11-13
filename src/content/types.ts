@@ -102,6 +102,16 @@ export type SiteSettings = {
   hours: { days: string; time: string }[];
   serviceArea: string[];
   logo: string;
+  /** Google Business Profile "write a review" link. Empty until the profile is claimed (TOL-2908); see reviewUrlsOf(). */
+  googleReviewUrl?: string;
+  /** The business Facebook page, e.g. https://www.facebook.com/<page>. Empty until confirmed. */
+  facebookUrl?: string;
+  /** Where Facebook recommendations are written (usually <facebookUrl>/reviews). */
+  facebookReviewUrl?: string;
+  /** Other listings (BBB, Yelp, the Google profile) for the LocalBusiness sameAs list. */
+  sameAs?: string[];
+  /** Showroom coordinates for LocalBusiness geo. */
+  geo?: { lat: number; lng: number };
   navGroups: NavGroup[];
   navLinks: NavLink[];
 };

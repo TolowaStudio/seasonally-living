@@ -4,13 +4,15 @@ import Icon from "@/components/Icon";
 import LeadForm from "@/components/LeadForm";
 import { INTEREST_IDS } from "@/lib/interests";
 import { addressOf, mapsUrlOf } from "@/lib/site";
+import Crumbs from "@/components/Crumbs";
 import { getPage, getSettings } from "@/lib/sanity";
+import { SITE_TITLE_SUFFIX, socialMeta } from "@/lib/seo";
 import type { SimpleContent } from "@/content/types";
 
 // Content: Sanity documents "page-visit" + "siteSettings" (fallback: src/content). Dynamic (reads ?interest=).
 export async function generateMetadata(): Promise<Metadata> {
   const c = await getPage<SimpleContent>("/visit");
-  return { title: c.seo.title, description: c.seo.description };
+  return { title: c.seo.title, description: c.seo.description, ...socialMeta({ fullTitle: `${c.seo.title} | ${SITE_TITLE_SUFFIX}`, description: c.seo.description, path: "/visit", ogKey: "visit", ogAlt: c.alt || "The Seasonally Living showroom" }) };
 }
 
 export default async function VisitPage({ searchParams }: { searchParams: Promise<{ interest?: string }> }) {
@@ -18,6 +20,7 @@ export default async function VisitPage({ searchParams }: { searchParams: Promis
   const initial = interest && INTEREST_IDS.includes(interest) ? interest : "hot-tub";
   return (
     <main style={{ paddingTop: "var(--nav-h)" }}>
+      <Crumbs path="/visit" />
       <section className="section-sm">
         <div className="wrap contact-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.25fr", gap: 64, alignItems: "start" }}>
           <aside className="contact-rail" style={{ position: "sticky", top: "calc(var(--nav-h) + 24px)" }}>
