@@ -8,10 +8,15 @@ import { PHOTOS, photoUrl } from "@/lib/images";
 import { site, addressBlock, getSiteUrl } from "@/lib/site";
 
 const LINES = [
-  { href: "/fireplaces", kicker: "Fire", title: "Stûv stoves & fireplaces", body: "Belgian-designed wood stoves, inserts and fireplaces, installed and vented by our own crew.", img: PHOTOS.stoveCabin },
-  { href: "/hot-tubs", kicker: "Soak", title: "Cal Spas hot tubs", body: "Wet-test before you buy. Delivery, setup and an orientation with every tub.", img: PHOTOS.hotTubDeck },
-  { href: "/swim-spas", kicker: "Swim", title: "Swim spas", body: "Year-round swimming and therapy at a fraction of a pool. Dry consults now, wet tests in spring.", img: PHOTOS.swimmer },
-  { href: "/pools", kicker: "Build", title: "Pools", body: "Projects, not products. Spring 2027 build slots are planned over the winter.", img: PHOTOS.pool },
+  { href: "/fireplaces", kicker: "Fire", title: "Stûv stoves & fireplaces", body: "Belgian-designed wood stoves, inserts and fireplaces, installed and vented by our crew.", img: PHOTOS.stoveCabin },
+  { href: "/fireplaces/gas-electric", kicker: "Fire", title: "Gas & electric fireplaces", body: "Instant flame, no ash, and heat on burn-ban days.", img: PHOTOS.gasLinear },
+  { href: "/service", kicker: "Fire", title: "Venting & chimney", body: "Venting design and install, liners, inspections and sweeps since 1979.", img: PHOTOS.chimneyBrick },
+  { href: "/hot-tubs", kicker: "Soak", title: "Cal Spas hot tubs", body: "Try one in the showroom. Delivery, setup and orientation with every tub.", img: PHOTOS.hotTubDeck },
+  { href: "/swim-spas", kicker: "Swim", title: "Swim spas", body: "Cal Spas Swim Pro and Swim Pro X. Dry consults now, wet tests in spring.", img: PHOTOS.swimmer },
+  { href: "/saunas", kicker: "Sweat", title: "Cal Saunas", body: "Traditional and infrared saunas with real woodwork.", img: PHOTOS.saunaDark },
+  { href: "/pre-owned", kicker: "Soak", title: "Pre-owned spas", body: "Inspected, repaired trade-ins. Subscribers see them first.", img: PHOTOS.hotTubGarden },
+  { href: "/outdoor-living", kicker: "Outdoor", title: "Outdoor kitchens & projects", body: "Cal Flame grill islands, patios, pads and gazebos.", img: PHOTOS.outdoorKitchen },
+  { href: "/pools", kicker: "Build", title: "Pools", body: "Projects, not products. Spring 2027 builds are planned this winter.", img: PHOTOS.pool },
 ];
 
 const SEASONS = [
@@ -133,15 +138,15 @@ export default function Home() {
       {/* THE LINES */}
       <section className="section">
         <div className="wrap">
-          <SectionHead kicker="The home resort" title="Fire, soak and swim." lead="Everything we sell, we deliver, install and service ourselves. Come see it running in the showroom." />
-          <div className="grid-2" style={{ marginTop: 56 }}>
+          <SectionHead kicker="The home resort" title="Fire, soak, swim and sweat." lead="Nine ways to live for the season. Everything we sell, we deliver, install and service ourselves." />
+          <div className="line-grid" style={{ marginTop: 56 }}>
             {LINES.map((l, i) => (
-              <Reveal key={l.href} delay={i * 80}>
-                <Link href={l.href} className="card hoverable" style={{ display: "block" }}>
+              <Reveal key={l.href} delay={(i % 3) * 80}>
+                <Link href={l.href} className="card hoverable" style={{ display: "block", height: "100%" }}>
                   <div className="photo" style={{ aspectRatio: "16 / 10", borderRadius: 0 }}>
-                    <Image src={photoUrl(l.img, 1200)} alt={l.title} fill sizes="(max-width: 940px) 100vw, 50vw" />
+                    <Image src={photoUrl(l.img, 1200)} alt={l.title} fill sizes="(max-width: 620px) 100vw, (max-width: 940px) 50vw, 33vw" />
                   </div>
-                  <div style={{ padding: 28 }}>
+                  <div style={{ padding: 24 }}>
                     <span className="eyebrow">{l.kicker}</span>
                     <h3 className="h-md" style={{ marginTop: 10 }}>{l.title}</h3>
                     <p className="body-muted" style={{ marginTop: 10 }}>{l.body}</p>

@@ -7,6 +7,7 @@ import PageHero from "@/components/PageHero";
 import SectionHead from "@/components/SectionHead";
 import CtaBand from "@/components/CtaBand";
 import NoteForm from "@/components/NoteForm";
+import RelatedLines from "@/components/RelatedLines";
 import { PHOTOS, photoUrl } from "@/lib/images";
 
 export const metadata: Metadata = {
@@ -79,6 +80,11 @@ export default function FireplacesPage() {
           <p className="small body-muted" style={{ marginTop: 22 }}>
             Model availability varies. Ask us which Stûv models are on the showroom floor.
           </p>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 28 }}>
+            <Link href="/fireplaces/gas-electric" className="btn btn-outline">Prefer gas or electric?</Link>
+            <Link href="/hearth-supplies" className="btn btn-outline">Mantels & venting supplies</Link>
+            <Link href="/service" className="btn btn-outline">Venting & chimney service</Link>
+          </div>
         </div>
       </section>
 
@@ -130,6 +136,8 @@ export default function FireplacesPage() {
           <NoteForm defaultInterest="hearth" />
         </div>
       </section>
+
+      <RelatedLines current="/fireplaces" />
 
       <CtaBand title="Come see a Stûv burning." body="Book a fireplace consult and we'll have one lit when you arrive. Bring a photo of the room." cta="Book a fireplace consult" href="/visit?interest=hearth#book" />
     </main>

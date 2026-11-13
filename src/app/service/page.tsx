@@ -4,6 +4,7 @@ import Icon from "@/components/Icon";
 import PageHero from "@/components/PageHero";
 import SectionHead from "@/components/SectionHead";
 import CtaBand from "@/components/CtaBand";
+import RelatedLines from "@/components/RelatedLines";
 import { PHOTOS } from "@/lib/images";
 
 export const metadata: Metadata = {
@@ -26,11 +27,12 @@ export default function ServicePage() {
       <PageHero
         kicker="Venting & service"
         title={<>We started as <em style={{ fontStyle: "italic", color: "var(--clay-soft)" }}>Chim Chimney.</em></>}
-        lead="Venting, liners, inspections and sweeps are still the heart of the business. If it burns or it bubbles, we'll keep it running."
+        lead="Since 1979, venting, liners, inspections and sweeps have been the heart of the business. If it burns or it bubbles, we'll keep it running."
         image={PHOTOS.chimneySmoke}
         alt="Smoke rising from a chimney"
       >
         <Link href="/visit?interest=venting#book" className="btn btn-primary btn-lg">Request service <Icon name="arrow" size={18} /></Link>
+        <Link href="/hearth-supplies" className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)" }}>Venting parts & supplies</Link>
       </PageHero>
       <section className="section">
         <div className="wrap">
@@ -46,6 +48,7 @@ export default function ServicePage() {
           </div>
         </div>
       </section>
+      <RelatedLines current="/service" />
       <CtaBand title="Get on the fall schedule." body="Inspections and sweeps fill up fast once the first cold snap hits. Tell us what you've got and we'll find a time." cta="Request service" href="/visit?interest=venting#book" />
     </main>
   );

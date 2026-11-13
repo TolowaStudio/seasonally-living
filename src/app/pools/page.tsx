@@ -11,6 +11,7 @@ export default function Page() {
   return (
     <LinePage
       interest="pool"
+      path="/pools"
       hero={{ kicker: "Pools · Spring 2027", title: <>Pools are projects, <em style={{ fontStyle: "italic", color: "var(--clay-soft)" }}>not products.</em></>, lead: "A pool is designed around your land, your budget and your summers. Winter is when the planning happens, so the build can start when the ground thaws.", image: PHOTOS.pool, alt: "Modern home with a pool at blue hour", cta: "Join the spring build list" }}
       points={{ kicker: "How a build works", title: "Plan in winter. Build in spring.", lead: "Spring 2027 build slots are limited. Getting on the list now holds your place in the design queue.", items: [
         { title: "Design consult", body: "We talk budget, site, timeline and how you'll use it, with the people who'll build it." },
