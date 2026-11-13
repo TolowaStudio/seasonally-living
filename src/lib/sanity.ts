@@ -1,7 +1,11 @@
+import { cache } from "react";
 import { createClient } from "@sanity/client";
 import { ALL_PAGES } from "@/content/pages";
 import { SETTINGS } from "@/content/settings";
 import type { PageContent, SiteSettings } from "@/content/types";
+import { mergeContent } from "./merge";
+
+export { mergeContent };
 
 // Content lives in Sanity (project 83r23z7t, public dataset "production").
 // Every read falls back to the code defaults in src/content, so the site never
@@ -24,42 +28,19 @@ export function pageDocId(pageId: string) {
   return "page-" + (pageId === "/" ? "home" : pageId.replace(/^\//, "").replace(/\//g, "-"));
 }
 
-type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
-
-/** Sanity wins wherever it has a real value; empty strings, nulls and empty arrays fall back to the default. */
-export function mergeContent<T>(fallback: T, incoming: unknown): T {
-  if (incoming === null || incoming === undefined || incoming === "") return fallback;
-  if (Array.isArray(fallback)) return (Array.isArray(incoming) && incoming.length ? stripMeta(incoming) : fallback) as T;
-  if (fallback && typeof fallback === "object") {
-    if (typeof incoming !== "object" || Array.isArray(incoming)) return fallback;
-    const out: Record<string, unknown> = { ...(fallback as Record<string, unknown>) };
-    for (const [k, v] of Object.entries(incoming as Record<string, unknown>)) {
-      if (k.startsWith("_") && k !== "_type") continue;
-      out[k] = k in out ? mergeContent(out[k], v) : stripMeta(v);
-    }
-    return out as T;
-  }
-  return (typeof incoming === typeof fallback ? incoming : fallback) as T;
-}
-
-function stripMeta<T>(v: T): T {
-  if (Array.isArray(v)) return v.map(stripMeta) as T;
-  if (v && typeof v === "object") {
-    return Object.fromEntries(Object.entries(v as Record<string, Json>).filter(([k]) => !k.startsWith("_") || k === "_type").map(([k, x]) => [k, stripMeta(x)])) as T;
-  }
-  return v;
-}
-
-async function fetchDoc(id: string): Promise<unknown> {
+// One fetch per document per render (generateMetadata, layout and page share it), aborted after 4s.
+const fetchDoc = cache(async (id: string): Promise<unknown> => {
   try {
-    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000));
-    const query = client.fetch(`*[_id == $id][0]`, { id }, { next: { revalidate: REVALIDATE_SECONDS, tags: [id] } });
-    return await Promise.race([query, timeout]);
+    return await client.fetch(
+      `*[_id == $id][0]`,
+      { id },
+      { signal: AbortSignal.timeout(4000), next: { revalidate: REVALIDATE_SECONDS, tags: [id] } },
+    );
   } catch (err) {
     console.error("sanity: fetch failed for", id, err instanceof Error ? err.message : err);
     return null;
   }
-}
+});
 
 export async function getPage<T extends PageContent>(pageId: string): Promise<T> {
   const fallback = ALL_PAGES.find((p) => p.pageId === pageId) as T | undefined;

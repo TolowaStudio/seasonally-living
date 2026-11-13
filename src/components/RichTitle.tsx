@@ -11,4 +11,3 @@ export default function RichTitle({ t, accent = "var(--clay-soft)" }: { t: T; ac
   );
 }
 
-export const plainTitle = (t: T) => [t.before, t.emphasis, t.after].filter(Boolean).join("");

@@ -16,7 +16,7 @@ export function Logo({ id, height = 58, alt = "Seasonally Living by Chim Chimney
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="logo-white" src={`${LOGO_BASE}/e_trim/e_colorize:100,co_white/f_auto,q_auto,h_${height * 2}/${id}`} alt={alt} height={height} width={w} style={{ height, width: "auto" }} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="logo-blue" src={`${LOGO_BASE}/e_trim/f_auto,q_auto,h_${height * 2}/${id}`} alt={alt} height={height} width={w} style={{ height, width: "auto" }} />
+      <img className="logo-blue" src={`${LOGO_BASE}/e_trim/f_auto,q_auto,h_${height * 2}/${id}`} alt="" aria-hidden="true" height={height} width={w} style={{ height, width: "auto" }} />
     </span>
   );
 }

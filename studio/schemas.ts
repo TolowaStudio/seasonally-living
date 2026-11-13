@@ -5,8 +5,13 @@ const IMAGE_HELP =
   "Cloudinary public ID (cloud: tolowa-studio), e.g. seasonally-living/brand/calspas/swim-pro-garden. Upload to Cloudinary under seasonally-living/brand/ first.";
 
 const str = (name: string, title?: string, opts: Record<string, unknown> = {}) => defineField({ name, title, type: "string", ...opts });
+/** Required string. */
+const req = (name: string, title?: string) => defineField({ name, title, type: "string", validation: (r) => r.required() });
+const href = (name = "href", title = "Link (path like /hot-tubs)") =>
+  defineField({ name, title, type: "string", validation: (r) => r.required().regex(/^(\/[a-z0-9/#?=&-]*|https:\/\/.+)$/i, { name: "path or https URL" }) });
 const txt = (name: string, title?: string) => defineField({ name, title, type: "text", rows: 3 });
-const img = (name = "image", title = "Image") => defineField({ name, title, type: "string", description: IMAGE_HELP });
+const img = (name = "image", title = "Image") =>
+  defineField({ name, title, type: "string", description: IMAGE_HELP, validation: (r) => r.required().regex(/^[a-z0-9][a-z0-9/_-]*$/i, { name: "Cloudinary public ID" }) });
 const strings = (name: string, title?: string) => defineField({ name, title, type: "array", of: [defineArrayMember({ type: "string" })] });
 const obj = (name: string, title: string, fields: ReturnType<typeof defineField>[], opts: Record<string, unknown> = {}) =>
   defineField({ name, title, type: "object", fields, options: { collapsible: true, collapsed: true }, ...opts });
@@ -47,7 +52,7 @@ const heroFields = [
 const pageId = (readOnly = true) =>
   defineField({ name: "pageId", title: "Page path", type: "string", readOnly, description: "Route on the site, e.g. /hot-tubs" });
 
-const itemFields = [str("title"), txt("body")];
+const itemFields = [req("title"), txt("body")];
 
 export const schemaTypes = [
   richTitle,
@@ -77,12 +82,12 @@ export const schemaTypes = [
         of: [
           defineArrayMember({
             type: "object",
-            fields: [str("label"), str("href"), list("items", "Links", [str("label"), str("href"), str("note")], "label")],
+            fields: [req("label"), href(), defineField({ ...list("items", "Links", [req("label"), href(), str("note")], "label"), validation: (r) => r.required().min(1) })],
             preview: { select: { title: "label" } },
           }),
         ],
       }),
-      list("navLinks", "Top-level links", [str("label"), str("href")], "label"),
+      list("navLinks", "Top-level links", [req("label"), href()], "label"),
     ],
     preview: { prepare: () => ({ title: "Site settings" }) },
   }),
@@ -93,8 +98,8 @@ export const schemaTypes = [
     fields: [
       pageId(),
       defineField({ name: "seo", type: "seo" }),
-      obj("hero", "Hero", [...heroFields, str("credential"), str("caption", "Photo caption"), str("secondaryCta", "Second button label"), str("secondaryHref", "Second button link")]),
-      obj("lines", "Product lines", [str("kicker"), str("title"), txt("lead"), list("items", "Cards", [str("href"), str("kicker"), str("title"), txt("body"), img()])]),
+      obj("hero", "Hero", [...heroFields, str("credential"), str("caption", "Photo caption"), str("secondaryCta", "Second button label"), href("secondaryHref", "Second button link")]),
+      obj("lines", "Product lines", [str("kicker"), str("title"), txt("lead"), list("items", "Cards", [href(), str("kicker"), req("title"), txt("body"), img()])]),
       obj("stuv", "Stûv feature", [str("kicker"), str("title"), txt("body"), list("models", "Models", [str("name"), str("body")], "name"), img(), str("alt"), str("cta"), str("secondaryCta")]),
       obj("venting", "Venting band", [str("kicker"), str("title"), txt("body"), str("cta"), list("cards", "Cards", [str("icon"), str("title"), txt("body")])]),
       obj("seasons", "Four seasons", [str("kicker"), str("title"), list("items", "Seasons", [str("name"), str("lead"), txt("note")], "name")]),
@@ -112,11 +117,11 @@ export const schemaTypes = [
       str("interest", "Lead-form interest tag", { readOnly: true }),
       obj("hero", "Hero", heroFields),
       obj("points", "Why / how (3 points)", [str("kicker"), str("title"), txt("lead"), list("items", "Points", itemFields)]),
-      obj("models", "Models / options", [str("kicker"), str("title"), txt("lead"), list("items", "Models", [str("tag"), str("name"), txt("body"), strings("bullets")], "name")]),
+      obj("models", "Models / options", [str("kicker"), str("title"), txt("lead"), list("items", "Models", [str("tag"), req("name"), txt("body"), strings("bullets")], "name")]),
       obj("feature", "Feature", [str("kicker"), str("title"), txt("body"), strings("bullets"), img(), str("alt")]),
       obj("magnet", "Lead magnet", [str("title"), txt("body")]),
       obj("closing", "Closing call to action", [str("title"), txt("body"), str("cta")]),
-      list("quickLinks", "Quick links", [str("label"), str("href")], "label"),
+      list("quickLinks", "Quick links", [req("label"), href()], "label"),
     ],
     preview: { select: { title: "seo.title", subtitle: "pageId" } },
   }),

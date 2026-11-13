@@ -44,12 +44,12 @@ export default async function LinePage({ pageId }: { pageId: string }) {
         </div>
       </section>
 
-      {models && models.items.length > 0 && (
+      {models && models.items?.some((m) => m.name) && (
         <section className="section-sm" style={{ paddingTop: 0 }}>
           <div className="wrap">
             <SectionHead kicker={models.kicker} title={models.title} lead={models.lead} />
             <div className={models.items.length === 2 ? "grid-2" : "grid-3"} style={{ marginTop: 40 }}>
-              {models.items.map((m) => (
+              {models.items.filter((m) => m.name).map((m) => (
                 <div key={m.name} className="card" style={{ padding: 30 }}>
                   {m.tag && <span className="eyebrow">{m.tag}</span>}
                   <h3 className="h-md" style={{ marginTop: m.tag ? 10 : 0 }}>{m.name}</h3>
@@ -87,17 +87,17 @@ export default async function LinePage({ pageId }: { pageId: string }) {
         </div>
       </section>
 
-      {quickLinks && quickLinks.length > 0 && (
+      {quickLinks && quickLinks.some((q) => q.href && q.label) && (
         <section className="section-sm">
           <div className="wrap" style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-            {quickLinks.map((q) => (
+            {quickLinks.filter((q) => q.href && q.label).map((q) => (
               <Link key={q.href} href={q.href} className="btn btn-outline">{q.label}</Link>
             ))}
           </div>
         </section>
       )}
 
-      {magnet && (
+      {magnet?.title && (
         <section className="section-sm bg-bone">
           <div className="wrap split" style={{ alignItems: "start" }}>
             <div>
