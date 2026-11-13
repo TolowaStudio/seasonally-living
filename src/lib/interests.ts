@@ -10,3 +10,10 @@ export const INTERESTS = [
 
 export type InterestId = (typeof INTERESTS)[number]["id"];
 export const INTEREST_IDS = INTERESTS.map((i) => i.id) as readonly string[];
+
+/**
+ * Private "tell Cam directly" feedback from /review. Not a shopping interest, so it is NOT in INTERESTS
+ * (which drives the visit-form tiles and the note topics); only the lead API accepts it.
+ */
+export const FEEDBACK_INTEREST = "feedback";
+export const LEAD_INTEREST_IDS = [...INTEREST_IDS, FEEDBACK_INTEREST] as readonly string[];

@@ -7,7 +7,8 @@ import SectionHead from "@/components/SectionHead";
 import CtaBand from "@/components/CtaBand";
 import RichTitle from "@/components/RichTitle";
 import { getPage, getSettings } from "@/lib/sanity";
-import { addressOf, getSiteUrl } from "@/lib/site";
+import { socialMeta } from "@/lib/seo";
+import { addressOf } from "@/lib/site";
 import type { HomeContent } from "@/content/types";
 
 // Content: Sanity documents "page-home" + "siteSettings" (fallback: src/content).
@@ -15,29 +16,13 @@ export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const c = await getPage<HomeContent>("/");
-  return { title: { absolute: c.seo.title }, description: c.seo.description };
+  return { title: { absolute: c.seo.title }, description: c.seo.description, ...socialMeta({ fullTitle: c.seo.title, description: c.seo.description, path: "/", ogKey: "home", ogAlt: c.hero.alt }) };
 }
 
 export default async function Home() {
   const [c, s] = await Promise.all([getPage<HomeContent>("/"), getSettings()]);
-  const url = getSiteUrl();
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": ["HomeAndConstructionBusiness", "Store"],
-    "@id": `${url}/#business`,
-    name: s.legalName,
-    url,
-    telephone: s.phoneTel,
-    email: s.email,
-    address: { "@type": "PostalAddress", streetAddress: s.address.line1, addressLocality: s.address.city, addressRegion: s.address.state, postalCode: s.address.zip, addressCountry: "US" },
-    openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "10:00", closes: "16:00" }],
-    areaServed: s.serviceArea.map((city) => ({ "@type": "City", name: city })),
-  };
-
   return (
     <main>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
       {/* HERO: Cal Spas leads */}
       <section style={{ position: "relative", height: "100vh", minHeight: 660, overflow: "hidden" }}>
         <Image src={c.hero.image} alt={c.hero.alt} fill priority sizes="100vw" style={{ objectFit: "cover", objectPosition: c.hero.position || "center" }} />

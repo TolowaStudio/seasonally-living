@@ -5,7 +5,9 @@ import Icon from "@/components/Icon";
 import LeadForm from "@/components/LeadForm";
 import PreOwnedPhotos from "@/components/PreOwnedPhotos";
 import { statusLabel } from "@/components/PreOwnedGallery";
+import Crumbs from "@/components/Crumbs";
 import { getPreOwnedSpa, getSettings } from "@/lib/sanity";
+import { SITE_TITLE_SUFFIX, socialMeta } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -15,9 +17,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const spa = await getPreOwnedSpa(slug);
   if (!spa) return { title: "Pre-owned spa" };
+  const description = `${spa.title}, a pre-owned hot tub inspected by the Seasonally Living shop in Wenatchee. Call for price.`;
   return {
     title: spa.title,
-    description: `${spa.title}, a pre-owned hot tub inspected by the Seasonally Living shop in Spokane. Call for price.`,
+    description,
+    ...socialMeta({ fullTitle: `${spa.title} | ${SITE_TITLE_SUFFIX}`, description, path: `/pre-owned/${slug}`, ogKey: "pre-owned", ogAlt: spa.title }),
   };
 }
 
@@ -37,6 +41,7 @@ export default async function PreOwnedSpaPage({ params }: Props) {
 
   return (
     <main style={{ paddingTop: "var(--nav-h)" }}>
+      <Crumbs path={`/pre-owned/${slug}`} leaf={spa.title} />
       <section className="section-sm">
         <div className="wrap">
           <Link href="/pre-owned#floor" className="small body-muted">&larr; Back to the floor</Link>

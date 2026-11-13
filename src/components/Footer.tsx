@@ -3,6 +3,7 @@ import Icon from "./Icon";
 import { Logo } from "./Nav";
 import NoteForm from "./NoteForm";
 import { addressOf, mapsUrlOf } from "@/lib/site";
+import { AREAS } from "@/content/areas";
 import type { SiteSettings } from "@/content/types";
 
 export default function Footer({ settings: s }: { settings: SiteSettings }) {
@@ -77,7 +78,16 @@ export default function Footer({ settings: s }: { settings: SiteSettings }) {
             </Link>
           </div>
         </div>
-        <p className="tiny" style={{ marginTop: 56, color: "var(--faint)" }}>
+        <p className="small body-muted" style={{ marginTop: 48 }}>
+          <Link className="ul-link" href="/areas">Serving</Link>{" "}
+          {AREAS.map((a, i) => (
+            <span key={a.slug}>
+              <Link className="ul-link" href={`/areas/${a.slug}`}>{a.label}</Link>
+              {i < AREAS.length - 1 ? " · " : ""}
+            </span>
+          ))}
+        </p>
+        <p className="tiny" style={{ marginTop: 20, color: "var(--faint)" }}>
           © {new Date().getFullYear()} {s.legalName}. Stûv and Cal Spas are trademarks of their respective owners.
         </p>
       </div>

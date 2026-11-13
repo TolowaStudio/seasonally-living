@@ -567,3 +567,32 @@ h1, h2, h3, h4 {
 .brand-card:hover .brand-card-photo img { transform: scale(1.03); }
 @media (max-width: 940px) { .brand-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 640px) { .brand-grid { grid-template-columns: 1fr; } }
+
+/* ---- Review cards (/review/card): 4-up on US Letter, 4.25in x 5.5in each ---- */
+.rc-sheet { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 340px)); gap: 20px; justify-content: center; padding: 8px 16px 72px; }
+.rc-card {
+  background: #fff; color: #111; border: 1px dashed #9a9a9a; border-radius: 6px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 22px 20px 18px; aspect-ratio: 4.25 / 5.5; font-family: var(--font-hanken), "Helvetica Neue", Arial, sans-serif;
+}
+.rc-logo { height: 54px; width: auto; max-width: 80%; object-fit: contain; }
+.rc-title { font-family: var(--font-archivo), "Helvetica Neue", Arial, sans-serif; font-weight: 700; font-size: 26px; margin-top: 12px; color: #111; }
+.rc-sub { font-size: 14px; line-height: 1.35; margin-top: 6px; max-width: 24ch; color: #333; }
+.rc-qr { width: 58%; height: auto; margin-top: 10px; }
+.rc-scan { font-size: 12px; font-weight: 600; margin-top: 2px; color: #111; }
+.rc-url { font-size: 15px; font-weight: 700; margin-top: 6px; color: #111; }
+.rc-foot { font-size: 11px; margin-top: auto; padding-top: 8px; color: #444; }
+@media print {
+  @page { size: letter portrait; margin: 0; }
+  body:has(.rc-page) header, body:has(.rc-page) footer, body:has(.rc-page) .skip-link, body:has(.rc-page) .theme-dock, .rc-screen { display: none !important; }
+  body:has(.rc-page), .rc-page { background: #fff !important; padding: 0 !important; }
+  .rc-sheet { display: grid; grid-template-columns: 4.25in 4.25in; grid-auto-rows: 5.5in; gap: 0; width: 8.5in; margin: 0; padding: 0; justify-content: start; }
+  .rc-card { width: 4.25in; height: 5.5in; aspect-ratio: auto; border: 1px dashed #bbb; border-radius: 0; padding: 0.3in 0.3in 0.25in; break-inside: avoid; }
+  .rc-logo { height: 0.65in; flex: none; }
+  .rc-title { font-size: 30pt; margin-top: 0.15in; }
+  .rc-sub { font-size: 13pt; max-width: 24ch; }
+  .rc-qr { width: 2in; flex: none; margin-top: 0.12in; }
+  .rc-scan { font-size: 10pt; }
+  .rc-url { font-size: 14pt; }
+  .rc-foot { font-size: 9pt; }
+}

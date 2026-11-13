@@ -7,7 +7,9 @@ import SectionHead from "@/components/SectionHead";
 import RelatedLines from "@/components/RelatedLines";
 import CtaBand from "@/components/CtaBand";
 import RichTitle from "@/components/RichTitle";
+import Crumbs from "@/components/Crumbs";
 import { getPage, getSettings } from "@/lib/sanity";
+import { SITE_TITLE_SUFFIX, socialMeta } from "@/lib/seo";
 import type { AboutContent } from "@/content/types";
 
 // Content: Sanity documents "page-about" + "siteSettings" (fallback: src/content).
@@ -15,13 +17,14 @@ export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const c = await getPage<AboutContent>("/about");
-  return { title: c.seo.title, description: c.seo.description };
+  return { title: c.seo.title, description: c.seo.description, ...socialMeta({ fullTitle: `${c.seo.title} | ${SITE_TITLE_SUFFIX}`, description: c.seo.description, path: "/about", ogKey: "about", ogAlt: c.hero.alt }) };
 }
 
 export default async function AboutPage() {
   const [c, s] = await Promise.all([getPage<AboutContent>("/about"), getSettings()]);
   return (
     <main>
+      <Crumbs path="/about" />
       <PageHero kicker={c.hero.kicker} title={<RichTitle t={c.hero.title} />} lead={c.hero.lead} image={c.hero.image} alt={c.hero.alt} position={c.hero.position}>
         <Link href="/visit#book" className="btn btn-primary btn-lg">{c.hero.cta} <Icon name="arrow" size={18} /></Link>
       </PageHero>

@@ -9,7 +9,9 @@ import CtaBand from "@/components/CtaBand";
 import NoteForm from "@/components/NoteForm";
 import RelatedLines from "@/components/RelatedLines";
 import RichTitle from "@/components/RichTitle";
+import Crumbs from "@/components/Crumbs";
 import { getBrands, getPage } from "@/lib/sanity";
+import { SITE_TITLE_SUFFIX, socialMeta } from "@/lib/seo";
 import type { BrandContent, FireplacesContent } from "@/content/types";
 
 const brandHref = (brands: BrandContent[], name: string) => {
@@ -24,7 +26,7 @@ export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const c = await getPage<FireplacesContent>("/fireplaces");
-  return { title: c.seo.title, description: c.seo.description };
+  return { title: c.seo.title, description: c.seo.description, ...socialMeta({ fullTitle: `${c.seo.title} | ${SITE_TITLE_SUFFIX}`, description: c.seo.description, path: "/fireplaces", ogKey: "fireplaces", ogAlt: c.hero.alt }) };
 }
 
 export default async function FireplacesPage() {
@@ -32,6 +34,7 @@ export default async function FireplacesPage() {
   const book = "/visit?interest=hearth#book";
   return (
     <main>
+      <Crumbs path="/fireplaces" />
       <PageHero kicker={c.hero.kicker} title={<RichTitle t={c.hero.title} />} lead={c.hero.lead} image={c.hero.image} alt={c.hero.alt} position={c.hero.position}>
         <Link href={book} className="btn btn-primary btn-lg">{c.hero.cta} <Icon name="arrow" size={18} /></Link>
         <Link href="#collection" className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)" }}>{c.hero.secondaryCta}</Link>

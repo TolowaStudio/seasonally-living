@@ -1,15 +1,28 @@
 import type { MetadataRoute } from "next";
+import { AREAS } from "@/content/areas";
 import { allPagesOf, getSiteUrl } from "@/lib/site";
-import { getSettings } from "@/lib/sanity";
+import { getBrands, getPreOwnedSpas, getSettings } from "@/lib/sanity";
 
 export const revalidate = 3600;
 
+// Everything public and indexable: the home page, every nav page, every hearth brand, each pre-owned spa on
+// the floor and the service-area pages. /review, /review/card and /api are deliberately absent (noindex).
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = getSiteUrl();
-  const paths = ["", ...new Set(allPagesOf(await getSettings()).map((p) => p.href))];
+  const [settings, brands, spas] = await Promise.all([getSettings(), getBrands(), getPreOwnedSpas()]);
+  const paths = [
+    ...new Set([
+      "",
+      ...allPagesOf(settings).map((p) => p.href),
+      ...brands.map((b) => `/fireplaces/${b.slug}`),
+      ...spas.map((s) => `/pre-owned/${s.slug}`),
+      "/areas",
+      ...AREAS.map((a) => `/areas/${a.slug}`),
+    ]),
+  ];
   return paths.map((p) => ({
     url: `${base}${p}`,
-    changeFrequency: "monthly",
-    priority: p === "" ? 1 : p === "/hot-tubs" || p === "/fireplaces" ? 0.9 : 0.7,
+    changeFrequency: p.startsWith("/pre-owned/") ? "weekly" : "monthly",
+    priority: p === "" ? 1 : p === "/hot-tubs" || p === "/fireplaces" ? 0.9 : p.startsWith("/areas") ? 0.6 : 0.7,
   }));
 }
