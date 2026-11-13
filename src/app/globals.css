@@ -832,3 +832,6 @@ h1, h2, h3, h4 {
 .sh-lines.four .ph { aspect-ratio: 4 / 5; }
 @media (max-width: 1000px) { .sh-lines.four { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 620px) { .sh-lines.four { grid-template-columns: 1fr; } .sh-lines.four .ph { aspect-ratio: 4 / 3; } }
+
+/* Inline links inside running text must be distinguishable without relying on colour alone. */
+.lead a:not(.btn), .body-muted a:not(.btn):not(.ul-link) { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
