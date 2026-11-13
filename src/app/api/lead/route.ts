@@ -121,24 +121,29 @@ export async function POST(req: NextRequest) {
     .filter((l, i, all) => l !== "" || all[i - 1] !== "")
     .join("\n");
 
-  const staff = await sendMail({ to: staffRecipients(), subject, text, replyTo: email });
-  if (!staff.ok && !staff.skipped) return fail(502, "delivery_failed", "Delivery failed");
-
   // Double opt-in: nothing is added to any list until the signed link is clicked.
   let pending = false;
-  if (optIn) {
+  async function sendConfirmation(): Promise<boolean> {
+    if (!optIn) return true;
     const link = signingAvailable()
-      ? confirmLink(base, { e: email, n: name || undefined, i: interests, s: source, g: guide?.slug, ct: NOTE_CONSENT_TEXT, cv: NOTE_CONSENT_VERSION, ts: Date.now(), rid })
+      ? confirmLink(base, { e: email!, n: name || undefined, i: interests, s: source, g: guide?.slug, ct: NOTE_CONSENT_TEXT, cv: NOTE_CONSENT_VERSION, ts: Date.now(), rid })
       : null;
     if (!link) {
       console.error(JSON.stringify({ event: "lead.warn", rid, code: "no_signing_secret", note: "NOTE_SIGNING_SECRET unset: double opt-in email not sent" }));
-    } else {
-      const m = confirmRequestEmail({ name: name || undefined, interests, confirmUrl: link, guideTitle: guide?.title });
-      const sent = await sendMail({ to: email, subject: m.subject, text: m.text, html: m.html });
-      pending = sent.ok || !!sent.skipped;
-      if (!sent.ok && !sent.skipped && kind === "note") return fail(502, "confirm_failed", "We couldn't send the confirmation email. Please try again.");
+      return true;
     }
+    const m = confirmRequestEmail({ name: name || undefined, interests, confirmUrl: link, guideTitle: guide?.title });
+    const sent = await sendMail({ to: email!, subject: m.subject, text: m.text, html: m.html });
+    pending = sent.ok || !!sent.skipped;
+    return sent.ok || !!sent.skipped;
   }
+
+  // A note signup sends the confirmation first, so a failed send (and the person's retry) can't pile duplicate staff emails.
+  // A visit request always reaches staff first: the confirmation is a bonus.
+  if (kind === "note" && !(await sendConfirmation())) return fail(502, "confirm_failed", "We couldn't send the confirmation email. Please try again.");
+  const staff = await sendMail({ to: staffRecipients(), subject, text, replyTo: email });
+  if (!staff.ok && !staff.skipped) return fail(502, "delivery_failed", "Delivery failed");
+  if (kind === "visit") await sendConfirmation();
 
   console.log(JSON.stringify({
     event: "lead",
@@ -147,7 +152,7 @@ export async function POST(req: NextRequest) {
     interests,
     guide: guide?.slug,
     unit: unit || undefined,
-    source,
+    source: source.split("?")[0],
     optIn,
     pendingConfirmation: pending,
     who: await tagOf(email),

@@ -5,6 +5,9 @@ export const fromAddress = () => process.env.LEAD_FROM_EMAIL || "Seasonally Livi
 export const staffRecipients = () =>
   (process.env.LEAD_TO_EMAIL || "sales@seasonallyliving.com").split(",").map((s) => s.trim()).filter(Boolean);
 
+/** Error text from a provider can echo the recipient: keep the gist, drop addresses. */
+export const redact = (t: string) => t.replace(/[^\s"'<>,;]+@[^\s"'<>,;]+/g, "[email]").slice(0, 200);
+
 export type Mail = {
   to: string | string[];
   subject: string;
@@ -40,7 +43,7 @@ export async function sendMail(m: Mail): Promise<MailResult> {
       }),
       signal: AbortSignal.timeout(10000),
     });
-    if (!res.ok) console.error("mail: resend error", res.status, (await res.text()).slice(0, 300));
+    if (!res.ok) console.error("mail: resend error", res.status, redact(await res.text()));
     return { ok: res.ok, status: res.status };
   } catch (err) {
     console.error("mail: send failed", err instanceof Error ? err.message : err);

@@ -23,3 +23,6 @@ export function guideReadLink(base: string, slug: string, email: string): string
   const token = signToken({ t: "guide", e: email, g: slug, exp: Date.now() + TTL.guide });
   return token ? `${base}/guides/${slug}/read?t=${token}` : null;
 }
+
+/** RFC 8058 one-click unsubscribe: mail clients POST to the URL in the List-Unsubscribe header, so it must be the API route, not the page. */
+export const oneClickUnsubscribeUrl = (pageUrl: string) => pageUrl.replace("/note/unsubscribe?", "/api/note/unsubscribe?");

@@ -8,7 +8,8 @@
 //
 // Subscribe is only ever called AFTER the person clicks the signed double opt-in link.
 
-import { oneLine, tagOf } from "./text";
+import { redact } from "./mail";
+import { tagOf } from "./text";
 
 export type Subscriber = {
   email: string;
@@ -61,7 +62,7 @@ class ResendAudience implements AudienceProvider {
         signal: AbortSignal.timeout(10000),
       });
       if (!res.ok) {
-        const error = oneLine(await res.text(), 200);
+        const error = redact(await res.text());
         console.error("audience: resend error", res.status, error);
         return { ok: false, provider: this.name, error: `resend ${res.status}` };
       }

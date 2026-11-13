@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAudience } from "@/lib/audience";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { mailConfigured, sendMail, staffRecipients } from "@/lib/mail";
-import { guideReadLink, linkBase, unsubscribeLink } from "@/lib/note-links";
+import { guideReadLink, linkBase, oneClickUnsubscribeUrl, unsubscribeLink } from "@/lib/note-links";
 import { signToken, verifyToken } from "@/lib/tokens";
 import { getGuide } from "@/lib/sanity";
 import { confirmedEmail } from "@/emails/note-emails";
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       subject: m.subject,
       text: m.text,
       html: m.html,
-      headers: unsub ? { "List-Unsubscribe": `<${unsub}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } : undefined,
+      headers: unsub ? { "List-Unsubscribe": `<${oneClickUnsubscribeUrl(unsub)}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } : undefined,
     });
   }
 

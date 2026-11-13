@@ -6,6 +6,7 @@
 
 import { bookingUrl, renderEmail } from "./render";
 import { sendMail, type MailResult } from "@/lib/mail";
+import { oneClickUnsubscribeUrl } from "@/lib/note-links";
 
 export const WELCOME_DAYS = [0, 4, 10] as const;
 
@@ -212,7 +213,7 @@ export async function sendWelcomeEmail(o: Parameters<typeof welcomeEmail>[0] & {
     subject: m.subject,
     text: m.text,
     html: m.html,
-    headers: { "List-Unsubscribe": `<${o.unsubscribeUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
+    headers: { "List-Unsubscribe": `<${oneClickUnsubscribeUrl(o.unsubscribeUrl)}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
   });
   return { ...r, subject: m.subject };
 }
