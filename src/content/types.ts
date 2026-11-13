@@ -125,3 +125,32 @@ export type PreOwnedSpa = {
   featured?: boolean;
   sortOrder?: number;
 };
+
+// Hearth brand pages (/fireplaces/[brand]). Content lives in code (src/content/brands.ts) for now.
+// Images are Cloudinary public IDs under seasonally-living/brands/<slug>/ (manufacturer imagery, dealer use).
+export type BrandModel = {
+  name: string;
+  type?: string; // e.g. "Wood stove", "Gas insert"
+  description: string;
+  facts: string[];
+  image?: string;
+  alt?: string;
+  url?: string; // maker's product page
+  inShowroom?: boolean;
+};
+export type BrandSection = { name: string; summary: string; image?: string; alt?: string; models: BrandModel[] };
+export type BrandContent = {
+  slug: string; // route segment, e.g. "stuv"
+  name: string; // display name, e.g. "Stûv"
+  origin: string; // e.g. "Belgium"
+  categories: string[]; // e.g. ["Wood stoves", "Wood inserts"]
+  tagline: { before?: string; emphasis?: string; after?: string };
+  summary: string;
+  heroImage: string;
+  heroAlt: string;
+  heroPosition?: string;
+  points: { title: string; body: string }[];
+  sections: BrandSection[];
+  makerUrl: string;
+  sourceNote: string; // credit line for manufacturer imagery
+};

@@ -106,7 +106,7 @@ export default async function Home() {
               ))}
             </div>
             <div style={{ display: "flex", gap: 14, marginTop: 36, flexWrap: "wrap" }}>
-              <Link href="/fireplaces" className="btn btn-primary">{c.stuv.cta} <Icon name="arrow" size={16} /></Link>
+              <Link href="/fireplaces/stuv" className="btn btn-primary">{c.stuv.cta} <Icon name="arrow" size={16} /></Link>
               <Link href="/service" className="btn btn-outline">{c.stuv.secondaryCta}</Link>
             </div>
           </Reveal>

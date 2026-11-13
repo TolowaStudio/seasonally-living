@@ -36,7 +36,11 @@ export const SETTINGS: SiteSettings = {
       label: "Fire",
       href: "/fireplaces",
       items: [
-        { href: "/fireplaces", label: "Stûv wood stoves & fireplaces", note: "The feature collection" },
+        { href: "/fireplaces", label: "Fireplaces & stoves", note: "Every line, by kind of fire" },
+        { href: "/fireplaces/stuv", label: "Stûv", note: "Belgian wood stoves & fireplaces" },
+        { href: "/fireplaces/kuma", label: "Kuma", note: "American-built wood stoves" },
+        { href: "/fireplaces/morso", label: "Morsø", note: "Danish cast-iron stoves" },
+        { href: "/fireplaces/napoleon", label: "Napoleon", note: "Gas & electric fireplaces" },
         { href: "/fireplaces/gas-electric", label: "Gas & electric inserts", note: "Heat on burn-ban days" },
         { href: "/hearth-supplies", label: "Hearth & venting supplies", note: "Mantels, venting, parts" },
         { href: "/service", label: "Venting service", note: "Design, install, inspections" },
