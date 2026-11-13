@@ -1,0 +1,7 @@
+node_modules
+.next
+.astro
+.wrangler
+.git
+out
+.env*

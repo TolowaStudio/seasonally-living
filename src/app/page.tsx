@@ -1,267 +1,202 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MarketingImage } from "@/components/marketing-image";
-import {
-  exploreCardByHref,
-  homeAtmosphere,
-  homeHeroSide,
-} from "@/lib/imagery";
-import { primaryNav } from "@/lib/nav";
-import { LEGACY_SITE_URL, site } from "@/lib/site";
+import Icon from "@/components/Icon";
+import Reveal from "@/components/RevealWrapper";
+import SectionHead from "@/components/SectionHead";
+import CtaBand from "@/components/CtaBand";
+import { PHOTOS, photoUrl } from "@/lib/images";
+import { site, addressBlock, getSiteUrl } from "@/lib/site";
 
-const highlights = [
-  {
-    title: "Showroom-first",
-    body: "See models in person, compare finishes, and get sizing right before you buy.",
-  },
-  {
-    title: "Outdoor living",
-    body: "Hot tubs, spas, and backyard pieces chosen for Pacific Northwest seasons.",
-  },
-  {
-    title: "Straight answers",
-    body: "We help you pick what fits your space and budget — without runaround.",
-  },
+const LINES = [
+  { href: "/fireplaces", kicker: "Fire", title: "Stûv stoves & fireplaces", body: "Belgian-designed wood stoves, inserts and fireplaces, installed and vented by our own crew.", img: PHOTOS.stoveCabin },
+  { href: "/hot-tubs", kicker: "Soak", title: "Cal Spas hot tubs", body: "Wet-test before you buy. Delivery, setup and an orientation with every tub.", img: PHOTOS.hotTubDeck },
+  { href: "/swim-spas", kicker: "Swim", title: "Swim spas", body: "Year-round swimming and therapy at a fraction of a pool. Dry consults now, wet tests in spring.", img: PHOTOS.swimmer },
+  { href: "/pools", kicker: "Build", title: "Pools", body: "Projects, not products. Spring 2027 build slots are planned over the winter.", img: PHOTOS.pool },
 ];
 
-function exploreSpanClass(i: number) {
-  if (i === 0) return "lg:col-span-7";
-  if (i === 1) return "lg:col-span-5";
-  if (i === 2) return "lg:col-span-5";
-  if (i === 3) return "lg:col-span-7";
-  return "lg:col-span-12 lg:max-w-xl";
-}
+const SEASONS = [
+  { name: "Winter", lead: "Hearth, stoves and the winter soak", note: "Burn-ban-ready heat, venting checks, hot tubs under snow." },
+  { name: "Spring", lead: "Swim spas, openings and pool starts", note: "Wet tests open. Pool builds break ground." },
+  { name: "Summer", lead: "Backyard builds and clearance", note: "Installs, deliveries and pre-owned value." },
+  { name: "Fall", lead: "Burn prep and sweeps", note: "Inspections and venting before the first cold night." },
+];
 
 export default function Home() {
+  const url = getSiteUrl();
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": ["HomeAndConstructionBusiness", "Store"],
+    "@id": `${url}/#business`,
+    name: site.legalName,
+    url,
+    telephone: site.phoneTel,
+    email: site.email,
+    address: { "@type": "PostalAddress", streetAddress: site.address.line1, addressLocality: site.address.city, addressRegion: site.address.state, postalCode: site.address.zip, addressCountry: "US" },
+    openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "10:00", closes: "16:00" }],
+    areaServed: site.serviceArea.map((c) => ({ "@type": "City", name: c })),
+  };
+
   return (
-    <>
-      <section className="sl-hero-surface shadow-[0_1px_0_color-mix(in_srgb,var(--sl-ink)_6%,transparent)]">
-        {/* Mobile: full-bleed hero image first — reads as a proper cover */}
-        <div className="relative sl-fullbleed h-[min(52vh,520px)] overflow-hidden lg:hidden">
-          <Image
-            src={homeHeroSide.src}
-            alt={homeHeroSide.alt}
-            fill
-            priority
-            className="object-cover object-[center_35%]"
-            sizes="100vw"
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-t from-[var(--sl-bg)] via-[color-mix(in_srgb,var(--sl-bg)_45%,transparent)] to-[color-mix(in_srgb,var(--sl-bg)_8%,transparent)]"
-            aria-hidden="true"
-          />
-          <div className="absolute inset-x-0 bottom-0 z-10 p-6 pb-8">
-            <p className="font-display text-base font-medium leading-snug text-[var(--sl-primary)]">
-              Wenatchee showroom — next to Home Depot.
-            </p>
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--sl-muted)]">
-              Walk the floor, talk through install, leave with a clear next step.
-            </p>
-          </div>
-        </div>
+    <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-        <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16 lg:py-28">
-          <div className="hidden items-center gap-12 lg:grid lg:grid-cols-12 lg:gap-16">
-            <div className="sl-animate-hero lg:col-span-7">
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--sl-muted)]">
-                {site.region}
-              </p>
-              <h1 className="font-display mt-4 max-w-[14ch] text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-tight text-[var(--sl-ink)]">
-                Outdoor living, done with intention.
-              </h1>
-              <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-[var(--sl-muted)] sm:text-xl">
-                {site.description} Start with a showroom visit — we&apos;ll help
-                you plan a backyard you&apos;ll actually use.
-              </p>
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link
-                  href="/book"
-                  className="sl-btn-primary inline-flex h-12 min-h-12 items-center justify-center px-8 text-sm font-semibold"
-                >
-                  Plan a visit
-                </Link>
-                <a
-                  href={LEGACY_SITE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="sl-btn-secondary inline-flex h-12 min-h-12 items-center justify-center px-8 text-sm font-medium"
-                >
-                  Current catalog
-                </a>
-              </div>
-              <p className="mt-8 max-w-[52ch] text-sm leading-relaxed text-[var(--sl-muted)]">
-                This site is on a new stack while we migrate pages from
-                seasonallyliving.com — the link above stays the reference for
-                full product detail until DNS cuts over.
-              </p>
-            </div>
-            <div className="sl-animate-hero relative hidden overflow-hidden rounded-[1.75rem] border border-[var(--sl-border)] shadow-[var(--sl-shadow-card)] lg:col-span-5 lg:block lg:h-[min(58vh,560px)] lg:min-h-[380px]">
-              <Image
-                src={homeHeroSide.src}
-                alt={homeHeroSide.alt}
-                fill
-                priority
-                className="object-cover object-center"
-                sizes="(max-width: 1280px) 42vw, 520px"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--sl-bg)] via-[color-mix(in_srgb,var(--sl-bg)_48%,transparent)] to-[color-mix(in_srgb,var(--sl-bg)_12%,transparent)]" />
-              <div className="relative z-10 flex h-full min-h-[inherit] flex-col justify-end p-8">
-                <p className="font-display text-lg font-medium leading-snug text-[var(--sl-primary)]">
-                  Wenatchee showroom — next to Home Depot.
-                </p>
-                <p className="mt-2 max-w-xs text-sm leading-relaxed text-[var(--sl-muted)]">
-                  Walk the floor, talk through install realities, and leave with
-                  a clear next step.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile / tablet: headline block below the full-bleed image */}
-          <div className="lg:hidden">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--sl-muted)]">
-              {site.region}
-            </p>
-            <h1 className="font-display mt-4 text-[clamp(2.1rem,6vw,3rem)] font-semibold leading-[1.08] tracking-tight text-[var(--sl-ink)]">
-              Outdoor living, done with intention.
-            </h1>
-            <p className="mt-6 max-w-[52ch] text-lg leading-relaxed text-[var(--sl-muted)]">
-              {site.description} Start with a showroom visit — we&apos;ll help
-              you plan a backyard you&apos;ll actually use.
-            </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link
-                href="/book"
-                className="sl-btn-primary inline-flex h-12 min-h-12 items-center justify-center px-8 text-sm font-semibold"
-              >
-                Plan a visit
-              </Link>
-              <a
-                href={LEGACY_SITE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="sl-btn-secondary inline-flex h-12 min-h-12 items-center justify-center px-8 text-sm font-medium"
-              >
-                Current catalog
-              </a>
-            </div>
-            <p className="mt-8 text-sm leading-relaxed text-[var(--sl-muted)]">
-              This site is on a new stack while we migrate pages from
-              seasonallyliving.com — the link above stays the reference for full
-              product detail until DNS cuts over.
-            </p>
+      {/* HERO: the fire leads */}
+      <section style={{ position: "relative", height: "100vh", minHeight: 660, overflow: "hidden" }}>
+        <Image src={photoUrl(PHOTOS.flames, 2400)} alt="A wood fire burning in a modern living room on a winter evening" fill priority sizes="100vw" style={{ objectFit: "cover", objectPosition: "center 45%" }} />
+        <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(8,7,5,0.9) 0%, rgba(8,7,5,0.6) 28%, rgba(8,7,5,0.12) 56%, rgba(8,7,5,0) 72%), linear-gradient(to bottom, rgba(10,8,5,0.55) 0%, rgba(10,8,5,0.04) 24%, rgba(10,8,5,0.2) 55%, rgba(10,8,5,0.9) 100%)" }} />
+        <span className="figure-cap caption hero-credit" style={{ right: "max(32px, calc((100vw - var(--maxw)) / 2 + 32px))", bottom: 40, fontSize: 10.5 }}>
+          <span className="dot" /> Featuring Stûv <span className="sep">/</span> Wood stoves & fireplaces
+        </span>
+        <div className="wrap" style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "flex-end", paddingBottom: "clamp(52px, 9vh, 100px)" }}>
+          <p className="credential" style={{ marginBottom: 26, color: "rgba(247,242,234,0.75)" }}>
+            <span className="dot" style={{ background: "var(--clay-soft)" }} /> Wenatchee showroom · {site.address.note}
+          </p>
+          <h1 className="display" style={{ color: "#fff", maxWidth: "14ch", textShadow: "0 2px 26px rgba(0,0,0,0.55)" }}>
+            Your home resort, <em style={{ fontStyle: "italic", color: "var(--clay-soft)" }}>all four</em> seasons.
+          </h1>
+          <p className="lead" style={{ marginTop: 22, maxWidth: "48ch", color: "rgba(247,242,234,0.9)", textShadow: "0 1px 12px rgba(0,0,0,0.5)" }}>
+            Fire, soak, swim. Stûv stoves and fireplaces with venting done right, Cal Spas hot tubs, swim spas and pools,
+            all from one North Central Washington showroom.
+          </p>
+          <div style={{ display: "flex", gap: 14, marginTop: 34, flexWrap: "wrap" }}>
+            <Link href="/visit#book" className="btn btn-primary btn-lg">Book a showroom visit <Icon name="arrow" size={18} /></Link>
+            <Link href="/fireplaces" className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)", backdropFilter: "blur(10px)" }}>
+              See the Stûv collection
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-        <div className="max-w-2xl">
-          <h2 className="font-display text-2xl font-semibold text-[var(--sl-ink)] sm:text-3xl">
-            Explore
-          </h2>
-          <p className="mt-3 text-[var(--sl-muted)]">
-            Core pages on the new experience — deeper catalog content still links
-            to the live site for now.
-          </p>
-        </div>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-12">
-          {primaryNav.map((item, i) => {
-            const shot = exploreCardByHref[item.href];
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`group flex flex-col overflow-hidden rounded-2xl border border-[var(--sl-border)] bg-[var(--sl-surface)] shadow-[var(--sl-shadow-card)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--sl-muted)_28%,var(--sl-border))] hover:shadow-[var(--sl-shadow-card-hover)] motion-reduce:transform-none motion-reduce:transition-colors ${exploreSpanClass(i)}`}
-              >
-                {shot ? (
-                  <div className="relative w-full overflow-hidden">
-                    <MarketingImage
-                      src={shot.src}
-                      alt={shot.alt}
-                      aspect="cardFeature"
-                      className="[&_img]:transition [&_img]:duration-500 motion-reduce:[&_img]:transition-none group-hover:[&_img]:scale-[1.03] motion-reduce:group-hover:[&_img]:scale-100"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 700px"
-                      imageClassName="object-cover object-center"
-                    />
-                  </div>
-                ) : null}
-                <div className="flex flex-1 flex-col p-6 pt-5">
-                  <span className="font-display text-lg font-semibold tracking-tight text-[var(--sl-ink)] group-hover:text-[var(--sl-primary)]">
-                    {item.label}
-                  </span>
-                  <span className="mt-3 block text-sm text-[var(--sl-muted)]">
-                    View page
-                  </span>
+      {/* STÛV FEATURE */}
+      <section className="section">
+        <div className="wrap split">
+          <Reveal>
+            <span className="kicker">This winter&apos;s feature</span>
+            <h2 className="h-xl" style={{ marginTop: 18 }}>Stûv: the fire, designed.</h2>
+            <p className="lead" style={{ marginTop: 18 }}>
+              Stûv builds wood stoves, inserts and fireplaces in Belgium and adapts them for North America. Clean lines,
+              a fire you can actually watch, and serious heat. We help you pick the model, then design and install the venting
+              so it burns the way it should.
+            </p>
+            <div className="grid-3" style={{ marginTop: 36, gap: 18 }}>
+              {[
+                ["s[16]", "Compact stoves, cube to tall"],
+                ["s[30C]", "The rotating three-door classic"],
+                ["s[21]", "Single and double-sided fireplaces"],
+              ].map(([m, d]) => (
+                <div key={m} style={{ borderTop: "1px solid var(--line-strong)", paddingTop: 14 }}>
+                  <p className="model-tag h-md">{m}</p>
+                  <p className="small body-muted" style={{ marginTop: 6 }}>{d}</p>
                 </div>
-              </Link>
-            );
-          })}
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 14, marginTop: 36, flexWrap: "wrap" }}>
+              <Link href="/fireplaces" className="btn btn-primary">Explore Stûv <Icon name="arrow" size={16} /></Link>
+              <Link href="/service" className="btn btn-outline">How we vent it</Link>
+            </div>
+          </Reveal>
+          <Reveal delay={120}>
+            <div className="photo" style={{ aspectRatio: "4 / 5" }}>
+              <Image src={photoUrl(PHOTOS.stoveMinimal, 1200)} alt="A modern wood stove burning in a bright living room" fill sizes="(max-width: 940px) 100vw, 50vw" />
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      <section className="border-y border-[var(--sl-border)] bg-[var(--sl-surface-warm)]/40 py-0">
-        <div className="sl-fullbleed">
-          <div className="relative overflow-hidden shadow-[inset_0_1px_0_color-mix(in_srgb,var(--sl-ink)_5%,transparent)]">
-            <MarketingImage
-              src={homeAtmosphere.src}
-              alt={homeAtmosphere.alt}
-              aspect="coverBand"
-              sizes="100vw"
-              imageClassName="object-cover object-[center_30%] sm:object-center"
-            />
-            <div
-              className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[var(--sl-bg)]/80 via-transparent to-[var(--sl-bg)]/25 sm:from-[var(--sl-bg)]/65"
-              aria-hidden="true"
-            />
+      {/* VENTING */}
+      <section className="section-sm bg-paper2">
+        <div className="wrap grid-4" style={{ alignItems: "start" }}>
+          <div style={{ gridColumn: "span 2" }}>
+            <span className="kicker">Venting & chimney</span>
+            <h2 className="h-lg" style={{ marginTop: 16, maxWidth: "20ch" }}>A stove is only as good as its venting.</h2>
+            <p className="body-muted" style={{ marginTop: 14, maxWidth: "48ch" }}>
+              We started as Chim Chimney. Venting, liners, inspections and sweeps are still the heart of what we do, for the
+              stove you buy here and the one you already own.
+            </p>
+            <Link href="/service" className="btn btn-ghost" style={{ marginTop: 18, color: "var(--clay)" }}>
+              Book venting or a sweep <Icon name="arrow" size={16} className="arrow" />
+            </Link>
           </div>
-        </div>
-        <div className="mx-auto max-w-6xl px-6 py-10 sm:py-12">
-          <p className="max-w-2xl text-base leading-relaxed text-[var(--sl-muted)] sm:text-lg">
-            Built for long summers and real winters — we help you choose outdoor
-            pieces that feel right for North Central Washington.
-          </p>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <h2 className="font-display text-2xl font-semibold text-[var(--sl-ink)] sm:text-3xl">
-          Why visit us first
-        </h2>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {highlights.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-2xl border border-[var(--sl-border)] bg-[var(--sl-surface)] p-6 shadow-[var(--sl-shadow-card)]"
-            >
-              <h3 className="font-display text-lg font-semibold text-[var(--sl-ink)]">
-                {item.title}
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-[var(--sl-muted)]">
-                {item.body}
-              </p>
+          {[
+            ["shield", "Sized and installed to code", "Flue, liner and clearances matched to the appliance."],
+            ["clock", "Before the first cold night", "Fall inspections and sweeps so you're ready for burn season."],
+          ].map(([icon, t, b]) => (
+            <div key={t} className="season-card">
+              <Icon name={icon} size={22} style={{ color: "var(--clay)" }} />
+              <p className="h-md" style={{ fontSize: 20, marginTop: 14 }}>{t}</p>
+              <p className="small body-muted" style={{ marginTop: 8 }}>{b}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="border-t border-[var(--sl-border)] bg-[var(--sl-surface-tonal)]/50">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 px-6 py-16 md:flex-row md:items-center">
-          <div>
-            <h2 className="font-display text-2xl font-semibold text-[var(--sl-ink)]">
-              Ready to pick a time?
-            </h2>
-            <p className="mt-2 max-w-xl text-[var(--sl-muted)]">
-              Call or email the shop for now — online scheduling is on the way.
-            </p>
+      {/* THE LINES */}
+      <section className="section">
+        <div className="wrap">
+          <SectionHead kicker="The home resort" title="Fire, soak and swim." lead="Everything we sell, we deliver, install and service ourselves. Come see it running in the showroom." />
+          <div className="grid-2" style={{ marginTop: 56 }}>
+            {LINES.map((l, i) => (
+              <Reveal key={l.href} delay={i * 80}>
+                <Link href={l.href} className="card hoverable" style={{ display: "block" }}>
+                  <div className="photo" style={{ aspectRatio: "16 / 10", borderRadius: 0 }}>
+                    <Image src={photoUrl(l.img, 1200)} alt={l.title} fill sizes="(max-width: 940px) 100vw, 50vw" />
+                  </div>
+                  <div style={{ padding: 28 }}>
+                    <span className="eyebrow">{l.kicker}</span>
+                    <h3 className="h-md" style={{ marginTop: 10 }}>{l.title}</h3>
+                    <p className="body-muted" style={{ marginTop: 10 }}>{l.body}</p>
+                    <span className="btn-ghost" style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 16, fontWeight: 600, color: "var(--clay)" }}>
+                      Explore <Icon name="arrow" size={16} className="arrow" />
+                    </span>
+                  </div>
+                </Link>
+              </Reveal>
+            ))}
           </div>
-          <Link
-            href="/book"
-            className="sl-btn-primary inline-flex h-12 min-h-12 shrink-0 items-center justify-center px-8 text-sm font-semibold"
-          >
-            Contact &amp; visit
-          </Link>
         </div>
       </section>
-    </>
+
+      {/* FOUR SEASONS */}
+      <section className="section bg-ink">
+        <div className="wrap">
+          <SectionHead kicker="Live for the season" title="Something worth doing every month of the year." />
+          <div className="grid-4" style={{ marginTop: 48 }}>
+            {SEASONS.map((s, i) => (
+              <Reveal key={s.name} delay={i * 80} className="season-card">
+                <span className="index">0{i + 1}</span>
+                <p className="h-md" style={{ marginTop: 18 }}>{s.name}</p>
+                <p style={{ marginTop: 8, fontWeight: 600 }}>{s.lead}</p>
+                <p className="small body-muted" style={{ marginTop: 8 }}>{s.note}</p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SHOWROOM */}
+      <section className="section">
+        <div className="wrap split">
+          <div className="photo" style={{ aspectRatio: "5 / 4" }}>
+            <Image src={photoUrl(PHOTOS.hotTubSnow, 1400)} alt="A hot tub steaming in a snowy forest" fill sizes="(max-width: 940px) 100vw, 50vw" />
+          </div>
+          <div>
+            <span className="kicker">Visit the showroom</span>
+            <h2 className="h-xl" style={{ marginTop: 18 }}>Feel the heat. Try the water.</h2>
+            <p className="lead" style={{ marginTop: 18 }}>
+              Stoves burning, tubs filled, no pressure. Bring a photo of the room or the backyard and we&apos;ll give you a
+              straight answer on what fits.
+            </p>
+            <ul className="list-check" style={{ marginTop: 26 }}>
+              <li><Icon name="pin" size={16} /> {addressBlock} ({site.address.note})</li>
+              <li><Icon name="clock" size={16} /> Tuesday – Saturday, 10am – 4pm. Sunday & Monday by appointment.</li>
+              <li><Icon name="phone" size={16} /> {site.phoneDisplay}</li>
+            </ul>
+            <Link href="/visit#book" className="btn btn-primary btn-lg" style={{ marginTop: 30 }}>Book a visit <Icon name="arrow" size={18} /></Link>
+          </div>
+        </div>
+      </section>
+
+      <CtaBand />
+    </main>
   );
 }
