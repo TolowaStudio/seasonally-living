@@ -231,7 +231,13 @@ export const schemaTypes = [
         description: "The page lives at /fireplaces/<this>. Changing it breaks old links.",
         options: { source: "name", maxLength: 40 },
         validation: (r) =>
-          r.required().custom((v) => (v?.current === "gas-electric" ? "gas-electric is taken by the gas & electric page" : true)),
+          r.required().custom((v) =>
+            !v?.current || /^[a-z0-9]+(-[a-z0-9]+)*$/.test(v.current)
+              ? v?.current === "gas-electric"
+                ? "gas-electric is taken by the gas & electric page"
+                : true
+              : "Lowercase letters, numbers and dashes only, e.g. stuv",
+          ),
       }),
       defineField({ name: "sortOrder", title: "Sort order", type: "number", group: "page", description: "Lower numbers show first on the fireplaces page." }),
       defineField({ ...str("origin", "Made in", { description: 'e.g. "Belgium"' }), group: "page" }),

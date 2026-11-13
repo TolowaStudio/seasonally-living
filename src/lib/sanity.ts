@@ -58,7 +58,8 @@ export async function getSettings(): Promise<SiteSettings> {
 // ---- Pre-owned spas ("on the floor") ----
 const SPA_FIELDS = `_id, title, "slug": slug.current, status, brand, model, year, seats, size, electrical, highlights, condition, photos[]{image, alt}, featured, sortOrder`;
 
-// One fetch per query per render, aborted after 4s; null on any failure so callers fall back.
+// Aborted after 4s; null on any failure so callers fall back. (cache() keys params by reference, so
+// per-render dedupe only happens in callers that are cached themselves, like getBrands.)
 const fetchQuery = cache(async <T>(tag: string, query: string, params: Record<string, unknown>): Promise<T | null> => {
   try {
     return await client.fetch<T>(query, params, {
