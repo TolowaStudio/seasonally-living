@@ -20,14 +20,14 @@ export const metadata: Metadata = {
   robots: process.env.NEXT_PUBLIC_NOINDEX === "1" ? { index: false, follow: false } : undefined,
 };
 
-export const viewport: Viewport = { themeColor: "#121110" };
+export const viewport: Viewport = { themeColor: "#0e1316" };
 
 // Applies a saved comp theme before paint so the page doesn't flash.
 const themeBoot = `try{var p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('sl-theme');if(p==='ember'||p==='alpine'||p==='linen')document.documentElement.dataset.theme=p}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="ember" className={`${archivo.variable} ${hanken.variable}`} suppressHydrationWarning>
+    <html lang="en" data-theme="alpine" className={`${archivo.variable} ${hanken.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
       </head>

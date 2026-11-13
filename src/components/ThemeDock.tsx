@@ -10,7 +10,7 @@ const THEMES = [
 
 /** Comp switcher for the design review. Hidden unless NEXT_PUBLIC_SHOW_COMPS=1 or ?comps=1. */
 export default function ThemeDock({ enabled }: { enabled: boolean }) {
-  const [theme, setTheme] = useState("ember");
+  const [theme, setTheme] = useState("alpine");
   const [show, setShow] = useState(enabled);
 
   const apply = useCallback((id: string) => {

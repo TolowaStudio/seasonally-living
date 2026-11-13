@@ -1,7 +1,7 @@
 /* ============================================================
    SEASONALLY LIVING — design tokens & global styles
    Base system ported from Klarity Surfaces (editorial, dark luxury).
-   Three comp palettes via [data-theme]: ember (default), alpine, linen.
+   Three palettes via [data-theme]: alpine (default, chosen 2026-11-12), ember, linen.
    ============================================================ */
 
 :root,

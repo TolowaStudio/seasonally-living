@@ -6,7 +6,7 @@ import { NAV, site, addressBlock, mapsUrl } from "@/lib/site";
 
 export default function Footer() {
   return (
-    <footer style={{ background: "var(--band)", color: "#f0ede8", paddingTop: 88, paddingBottom: 40 }} data-theme="ember">
+    <footer style={{ background: "var(--band)", color: "#f0ede8", paddingTop: 88, paddingBottom: 40 }} data-theme="alpine">
       <div className="wrap">
         <div className="split" style={{ alignItems: "start", paddingBottom: 64, borderBottom: "1px solid var(--line)" }}>
           <div>
