@@ -16,7 +16,6 @@ export const IMG = {
   csSwimCommander: B + "calspas/swim-commander-f1655",
   // Licensed stock
   flames: B + "stock/flames",
-  stoveCabin: B + "stock/stove-cabin",
   stoveMinimal: B + "stock/stove-minimal",
   stoveLiving: B + "stock/stove-living",
   gasLinear: B + "stock/gas-linear",
@@ -97,7 +96,7 @@ export const HOME: HomeContent = {
       { href: "/pre-owned", kicker: "Soak", title: "Pre-owned spas", body: "Inspected, repaired trade-ins. Browse what's on the floor and ask about any spa.", image: IMG.csPlatinumCourtyard },
       { href: "/pools", kicker: "Swim", title: "Swimming pools", body: "Installed by our own crew, with the surround that finishes it. Spring 2027 installs are planned this winter.", image: IMG.poolBlueHour },
       { href: "/spa-care", kicker: "Care", title: "Pool & spa chemicals", body: "Water care, filters and supplies at the showroom counter. Call ahead and we'll have it ready.", image: IMG.water },
-      { href: "/fireplaces", kicker: "Fire", title: "Stûv stoves & fireplaces", body: "Belgian-designed wood stoves, inserts and fireplaces, installed and vented by our crew.", image: IMG.stoveCabin },
+      { href: "/fireplaces", kicker: "Fire", title: "Stûv stoves & fireplaces", body: "Belgian-designed wood stoves, inserts and fireplaces, installed and vented by our crew.", image: IMG.stoveLiving },
       { href: "/fireplaces/gas-electric", kicker: "Fire", title: "Gas & electric inserts", body: "Turn an old fireplace into clean, instant heat. No ash, and warm on burn-ban days.", image: IMG.gasLinear },
       { href: "/service", kicker: "Fire", title: "Venting", body: "Venting design and install, and venting inspections, since 1979.", image: IMG.flames },
       { href: "/hearth-supplies", kicker: "Fire", title: "Hearth & venting supplies", body: "Venting parts, mantels, screens and stove care on the shelf.", image: IMG.mantelBrick },
@@ -272,7 +271,7 @@ export const FIREPLACES: FireplacesContent = {
   _type: "fireplacesPage",
   pageId: "/fireplaces",
   seo: { title: "Stûv Wood Stoves & Fireplaces", description: "See Stûv wood stoves, inserts and fireplaces in Wenatchee, plus gas and electric inserts. Model selection, venting design and installation by Seasonally Living (Chim Chimney)." },
-  hero: { kicker: "Fireplaces & stoves · Featuring Stûv", title: { before: "The essential fire, ", emphasis: "done right." }, lead: "Stûv wood stoves, inserts and fireplaces, designed in Belgium and adapted for North America. We fit the model to your room, then design and install the venting ourselves.", image: IMG.stoveCabin, alt: "A wood stove in a timber A-frame living room", position: "center 55%", cta: "Book a fireplace consult", secondaryCta: "See the collection" },
+  hero: { kicker: "Fireplaces & stoves · Featuring Stûv", title: { before: "The essential fire, ", emphasis: "done right." }, lead: "Stûv wood stoves, inserts and fireplaces, designed in Belgium and adapted for North America. We fit the model to your room, then design and install the venting ourselves.", image: IMG.stoveMinimal, alt: "A modern wood stove with a glass door and log store, burning in a bright living room", position: "center 72%", cta: "Book a fireplace consult", secondaryCta: "See the collection" },
   collection: {
     kicker: "The Stûv collection",
     title: "Three ways to bring fire home.",
@@ -300,7 +299,7 @@ export const SERVICE: ServiceContent = {
   _type: "servicePage",
   pageId: "/service",
   seo: { title: "Stove & Fireplace Venting", description: "Venting design and installation, venting inspections and a full venting parts counter for stoves, inserts and fireplaces, from the Wenatchee crew that started as Chim Chimney in 1979. Hot tub service too." },
-  hero: { kicker: "Venting & service", title: { before: "Venting, ", emphasis: "done right." }, lead: "We started as Chim Chimney in 1979, and venting is still the heart of the trade. A stove or insert burns only as well as its venting, so we design it, install it and inspect it ourselves.", image: IMG.stoveCabin, alt: "A wood stove in a timber A-frame living room", position: "center 55%", cta: "Request service", secondaryCta: "Venting parts & supplies" },
+  hero: { kicker: "Venting & service", title: { before: "Venting, ", emphasis: "done right." }, lead: "We started as Chim Chimney in 1979, and venting is still the heart of the trade. A stove or insert burns only as well as its venting, so we design it, install it and inspect it ourselves.", image: IMG.stoveLiving, alt: "A wood stove with its flue pipe rising up a tiled wall", position: "center 70%", cta: "Request service", secondaryCta: "Venting parts & supplies" },
   services: { kicker: "What we do", title: "Service for every season.", items: [
     { icon: "ruler", title: "Venting design & install", body: "New venting for stoves, inserts and fireplaces, sized to the appliance and installed to code." },
     { icon: "shield", title: "Venting inspections", body: "A clear look at your existing venting before you buy, sell, add an insert or light the first fire of the season." },
