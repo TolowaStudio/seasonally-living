@@ -19,7 +19,7 @@ Everything is off until an env var is set. With none set: no tag script, no thir
 | Event | Fires when | Meta event |
 | --- | --- | --- |
 | `lead_submitted` | visit / consult form accepted (props: `interest`) | Lead |
-| `preowned_inquiry` | pre-owned spa inquiry accepted | Lead |
+| `preowned_inquiry` | pre-owned spa inquiry, or the sell / trade-in form (`interest=pre-owned-supply`), accepted | Lead |
 | `newsletter_signup` | monthly note form accepted | Subscribe |
 | `call_click` | click on any `a[href^="tel:"]` | Contact |
 | `directions_click` | click on a Google/Apple Maps link | FindLocation |

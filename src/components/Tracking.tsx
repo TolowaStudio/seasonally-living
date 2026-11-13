@@ -92,6 +92,9 @@ function useConversionListeners() {
         const unit = /Asking about:/.test(form.textContent ?? "");
         const picked = form.querySelector(".opt-tile.sel .ot-title")?.textContent ?? "";
         pending = { form, name: unit ? "preowned_inquiry" : "lead_submitted", interest: unit ? "pre-owned" : interestIdFor(picked) };
+      } else if (label === "Sell or trade in your hot tub") {
+        // Seller / trade-in lead (PreOwnedSellForm, TOL-2901): counts as a pre-owned inquiry, tagged as supply.
+        pending = { form, name: "preowned_inquiry", interest: "pre-owned-supply" };
       } else if (label.startsWith("Get the Seasonally Living note")) {
         const picked = [...form.querySelectorAll(".chip.active")].map((c) => interestIdFor(c.textContent ?? "") ?? "").filter(Boolean);
         pending = { form, name: "newsletter_signup", interest: picked.join(",") || undefined };
