@@ -4,32 +4,19 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "./Icon";
-import { NAV_GROUPS, NAV_LINKS, site, type NavGroup } from "@/lib/site";
+import type { NavGroup, SiteSettings } from "@/content/types";
 
-export function Wordmark({ size = 18, color }: { size?: number; color?: string }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "baseline", gap: 9, lineHeight: 1 }}>
-      <span
-        className="serif"
-        style={{ fontWeight: 600, fontSize: size, letterSpacing: "0.16em", textTransform: "uppercase", color: color || "var(--ink)" }}
-      >
-        Seasonally
-      </span>
-      <span style={{ fontSize: size * 0.46, fontWeight: 500, letterSpacing: "0.34em", textTransform: "uppercase", color: "var(--muted)" }}>
-        Living
-      </span>
-    </span>
-  );
-}
+const LOGO_BASE = "https://res.cloudinary.com/tolowa-studio/image/upload";
 
-function Mark({ size = 34 }: { size?: number }) {
-  // Four quarters: the four seasons, one in the accent colour.
+/** The client's script logotype from Cloudinary: white on dark/photo backgrounds, original blue on the light theme. */
+export function Logo({ id, height = 58, alt = "Seasonally Living by Chim Chimney" }: { id: string; height?: number; alt?: string }) {
+  const w = Math.round(height * 2.4);
   return (
-    <span aria-hidden style={{ width: size, height: size, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, padding: 6, borderRadius: 8, background: "var(--ink)" }}>
-      <span style={{ background: "var(--clay)", borderRadius: "6px 1px 1px 1px" }} />
-      <span style={{ background: "var(--base)", opacity: 0.85, borderRadius: "1px 6px 1px 1px" }} />
-      <span style={{ background: "var(--base)", opacity: 0.85, borderRadius: "1px 1px 1px 6px" }} />
-      <span style={{ background: "var(--base)", opacity: 0.85, borderRadius: "1px 1px 6px 1px" }} />
+    <span className="logo" style={{ display: "inline-flex", height }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="logo-white" src={`${LOGO_BASE}/e_trim/e_colorize:100,co_white/f_auto,q_auto,h_${height * 2}/${id}`} alt={alt} height={height} width={w} style={{ height, width: "auto" }} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="logo-blue" src={`${LOGO_BASE}/e_trim/f_auto,q_auto,h_${height * 2}/${id}`} alt={alt} height={height} width={w} style={{ height, width: "auto" }} />
     </span>
   );
 }
@@ -109,7 +96,8 @@ function Dropdown({ group, pathname, color }: { group: NavGroup; pathname: strin
   );
 }
 
-export default function Nav() {
+export default function Nav({ settings }: { settings: SiteSettings }) {
+  const { navGroups, navLinks } = settings;
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -143,6 +131,7 @@ export default function Nav() {
   return (
     <>
       <header
+        className={overPhoto ? "over-photo" : undefined}
         style={{
           position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, height: "var(--nav-h)",
           display: "flex", alignItems: "center",
@@ -154,16 +143,15 @@ export default function Nav() {
         }}
       >
         <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", gap: 20 }}>
-          <Link href="/" onClick={() => setOpen(false)} style={{ display: "inline-flex", alignItems: "center", gap: 12 }} aria-label={`${site.name} home`}>
-            <Mark />
-            <Wordmark color={overPhoto ? "#fff" : undefined} />
+          <Link href="/" onClick={() => setOpen(false)} style={{ display: "inline-flex", alignItems: "center", gap: 12 }} aria-label={`${settings.name} home`}>
+            <Logo id={settings.logo} height={68} alt={settings.legalName} />
           </Link>
 
           <nav className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 28 }} aria-label="Main navigation">
-            {NAV_GROUPS.map((g) => (
+            {navGroups.map((g) => (
               <Dropdown key={g.label} group={g} pathname={pathname} color={linkColor} />
             ))}
-            {NAV_LINKS.filter((l) => l.href !== "/visit").map((item) => (
+            {navLinks.filter((l) => l.href !== "/visit").map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -206,7 +194,7 @@ export default function Nav() {
         <Link href="/" onClick={() => setOpen(false)} className="serif" style={{ fontSize: 26, fontWeight: 500, display: "block", padding: "8px 0", color: pathname === "/" ? "var(--clay)" : "var(--ink)" }}>
           Home
         </Link>
-        {NAV_GROUPS.map((g) => (
+        {navGroups.map((g) => (
           <div key={g.label} style={{ borderTop: "1px solid var(--line)", padding: "14px 0 6px" }}>
             <p className="eyebrow" style={{ marginBottom: 6 }}>{g.label}</p>
             {g.items.map((item) => (
@@ -222,7 +210,7 @@ export default function Nav() {
           </div>
         ))}
         <div style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
-          {NAV_LINKS.map((item) => (
+          {navLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -237,8 +225,8 @@ export default function Nav() {
         <Link href="/visit#book" onClick={() => setOpen(false)} className="btn btn-primary btn-lg" style={{ marginTop: 22, justifyContent: "center", width: "100%" }}>
           Book a visit
         </Link>
-        <a href={`tel:${site.phoneTel}`} className="btn btn-outline btn-lg" style={{ marginTop: 10, justifyContent: "center", width: "100%" }}>
-          <Icon name="phone" size={18} /> {site.phoneDisplay}
+        <a href={`tel:${settings.phoneTel}`} className="btn btn-outline btn-lg" style={{ marginTop: 10, justifyContent: "center", width: "100%" }}>
+          <Icon name="phone" size={18} /> {settings.phoneDisplay}
         </a>
       </div>
     </>

@@ -84,7 +84,7 @@
   --shadow-md: 0 12px 36px rgba(0,0,0,0.35);
   --shadow-lg: 0 34px 84px rgba(0,0,0,0.45);
   --maxw: 1240px;
-  --nav-h: 76px;
+  --nav-h: 86px;
   --ease: cubic-bezier(.2,.8,.2,1);
 }
 
@@ -436,7 +436,7 @@ h1, h2, h3, h4 {
   .nav-cred { display: none !important; }
 }
 @media (max-width: 940px) {
-  :root { --nav-h: 66px; }
+  :root { --nav-h: 70px; }
   .wrap, .wrap-narrow { padding: 0 22px; }
   .nav-desktop { display: none !important; }
   .nav-burger { display: inline-flex !important; }
@@ -476,6 +476,12 @@ h1, h2, h3, h4 {
 ::-webkit-scrollbar-track { background: var(--base); }
 
 /* ---------- Seasonally additions ---------- */
+/* Logo: white by default (dark themes, over photos); original blue on the light theme's solid nav. */
+.logo img { display: block; }
+@media (max-width: 940px) { .logo, .logo img { height: 54px !important; } }
+.logo .logo-blue { display: none; }
+[data-theme="linen"] header:not(.over-photo) .logo .logo-white { display: none; }
+[data-theme="linen"] header:not(.over-photo) .logo .logo-blue { display: block; }
 /* Nav dropdowns */
 .nav-dd-panel {
   position: absolute; top: 100%; left: -18px; min-width: 300px; padding: 10px;

@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ThemeDock from "@/components/ThemeDock";
 import { getSiteUrl, site } from "@/lib/site";
+import { getSettings } from "@/lib/sanity";
 
 // Self-hosted (SIL OFL, licences in ./fonts) so builds never depend on fonts.googleapis.com.
 // Latin-subset variable files from Google Fonts, fetched 2026-11-12.
@@ -27,7 +28,7 @@ const hanken = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "Seasonally Living | Stûv Fireplaces, Hot Tubs & Swim Spas in Wenatchee",
+    default: "Seasonally Living | Cal Spas Hot Tubs, Swim Spas & Stûv Fireplaces in Wenatchee",
     template: "%s | Seasonally Living, Wenatchee",
   },
   description: site.description,
@@ -40,7 +41,9 @@ export const viewport: Viewport = { themeColor: "#0e1316" };
 // Applies a saved comp theme before paint so the page doesn't flash.
 const themeBoot = `try{var p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('sl-theme');if(p==='ember'||p==='alpine'||p==='linen')document.documentElement.dataset.theme=p}catch(e){}`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Nav, footer and contact details come from the Sanity siteSettings document.
+  const settings = await getSettings();
   return (
     <html lang="en" data-theme="alpine" className={`${archivo.variable} ${hanken.variable}`} suppressHydrationWarning>
       <head>
@@ -48,9 +51,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <a href="#main" className="btn btn-primary skip-link">Skip to content</a>
-        <Nav />
+        <Nav settings={settings} />
         <div id="main">{children}</div>
-        <Footer />
+        <Footer settings={settings} />
         <ThemeDock enabled={process.env.NEXT_PUBLIC_SHOW_COMPS === "1"} />
       </body>
     </html>

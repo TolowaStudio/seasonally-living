@@ -5,40 +5,32 @@ import PageHero from "@/components/PageHero";
 import SectionHead from "@/components/SectionHead";
 import CtaBand from "@/components/CtaBand";
 import RelatedLines from "@/components/RelatedLines";
-import { PHOTOS } from "@/lib/images";
+import RichTitle from "@/components/RichTitle";
+import { getPage } from "@/lib/sanity";
+import type { ServiceContent } from "@/content/types";
 
-export const metadata: Metadata = {
-  title: "Venting, Chimney & Spa Service",
-  description: "Stove and fireplace venting, chimney liners, inspections and sweeps, plus hot tub service, from the Chim Chimney crew in Wenatchee.",
-};
+// Content: Sanity document "page-service" (fallback: src/content/pages.ts).
+export const revalidate = 60;
 
-const SERVICES = [
-  { icon: "ruler", title: "Venting design & install", body: "New flues and chimney liners for stoves, inserts and fireplaces, sized to the appliance." },
-  { icon: "shield", title: "Inspections", body: "A clear look at your chimney and venting before you buy, sell or light the first fire of the season." },
-  { icon: "sparkle", title: "Sweeps", body: "Creosote removal and a cleaner, safer burn. Book in fall before the rush." },
-  { icon: "layers", title: "Insert retrofits", body: "Turn an open masonry fireplace into an efficient heater with an insert and a new liner." },
-  { icon: "hands", title: "Hot tub service", body: "Start-ups, repairs, water care help and winterizing for the tubs we sell and many we don't." },
-  { icon: "compass", title: "Seasonal open & close", body: "For second homes around Chelan and Leavenworth: we open in spring and close down in fall." },
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getPage<ServiceContent>("/service");
+  return { title: c.seo.title, description: c.seo.description };
+}
 
-export default function ServicePage() {
+export default async function ServicePage() {
+  const c = await getPage<ServiceContent>("/service");
+  const book = "/visit?interest=venting#book";
   return (
     <main>
-      <PageHero
-        kicker="Venting & service"
-        title={<>We started as <em style={{ fontStyle: "italic", color: "var(--clay-soft)" }}>Chim Chimney.</em></>}
-        lead="Since 1979, venting, liners, inspections and sweeps have been the heart of the business. If it burns or it bubbles, we'll keep it running."
-        image={PHOTOS.chimneySmoke}
-        alt="Smoke rising from a chimney"
-      >
-        <Link href="/visit?interest=venting#book" className="btn btn-primary btn-lg">Request service <Icon name="arrow" size={18} /></Link>
-        <Link href="/hearth-supplies" className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)" }}>Venting parts & supplies</Link>
+      <PageHero kicker={c.hero.kicker} title={<RichTitle t={c.hero.title} />} lead={c.hero.lead} image={c.hero.image} alt={c.hero.alt} position={c.hero.position}>
+        <Link href={book} className="btn btn-primary btn-lg">{c.hero.cta} <Icon name="arrow" size={18} /></Link>
+        <Link href="/hearth-supplies" className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)" }}>{c.hero.secondaryCta}</Link>
       </PageHero>
       <section className="section">
         <div className="wrap">
-          <SectionHead kicker="What we do" title="Service for every season." />
+          <SectionHead kicker={c.services.kicker} title={c.services.title} />
           <div className="grid-3" style={{ marginTop: 52 }}>
-            {SERVICES.map((s) => (
+            {c.services.items.map((s) => (
               <div key={s.title} className="card" style={{ padding: 30 }}>
                 <Icon name={s.icon} size={24} style={{ color: "var(--clay)" }} />
                 <h3 className="h-md" style={{ marginTop: 16, fontSize: 22 }}>{s.title}</h3>
@@ -49,7 +41,7 @@ export default function ServicePage() {
         </div>
       </section>
       <RelatedLines current="/service" />
-      <CtaBand title="Get on the fall schedule." body="Inspections and sweeps fill up fast once the first cold snap hits. Tell us what you've got and we'll find a time." cta="Request service" href="/visit?interest=venting#book" />
+      <CtaBand title={c.closing.title} body={c.closing.body} cta={c.closing.cta} href={book} />
     </main>
   );
 }

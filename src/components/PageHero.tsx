@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { photoUrl } from "@/lib/images";
 
 export default function PageHero({
   kicker,
@@ -20,7 +19,7 @@ export default function PageHero({
 }) {
   return (
     <section style={{ position: "relative", minHeight: "78vh", display: "flex", alignItems: "flex-end", overflow: "hidden" }}>
-      <Image src={photoUrl(image, 2400)} alt={alt} fill priority sizes="100vw" style={{ objectFit: "cover", objectPosition: position }} />
+      <Image src={image} alt={alt} fill priority sizes="100vw" style={{ objectFit: "cover", objectPosition: position }} />
       <div
         aria-hidden
         style={{

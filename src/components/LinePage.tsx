@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Icon from "./Icon";
@@ -6,27 +7,24 @@ import SectionHead from "./SectionHead";
 import CtaBand from "./CtaBand";
 import NoteForm from "./NoteForm";
 import RelatedLines from "./RelatedLines";
-import { photoUrl } from "@/lib/images";
+import RichTitle from "./RichTitle";
+import { getPage } from "@/lib/sanity";
+import type { LineContent } from "@/content/types";
 
-export type LinePageProps = {
-  interest: string;
-  path: string;
-  hero: { kicker: string; title: React.ReactNode; lead: string; image: string; alt: string; cta: string; position?: string };
-  points: { kicker: string; title: string; lead: string; items: { title: string; body: string }[] };
-  models?: { kicker: string; title: string; lead?: string; items: { name: string; tag?: string; body: string; bullets?: string[] }[] };
-  feature: { kicker: string; title: string; body: string; bullets: string[]; image: string; alt: string };
-  magnet?: { title: string; body: string };
-  closing: { title: string; body: string; cta: string };
-  children?: React.ReactNode;
-};
+export async function lineMetadata(pageId: string): Promise<Metadata> {
+  const c = await getPage<LineContent>(pageId);
+  return { title: c.seo.title, description: c.seo.description };
+}
 
-export default function LinePage({ interest, path, hero, points, models, feature, magnet, closing, children }: LinePageProps) {
+/** Renders a product-line page from its Sanity document (falls back to src/content/pages.ts). */
+export default async function LinePage({ pageId }: { pageId: string }) {
+  const { interest, hero, points, models, feature, magnet, closing, quickLinks } = await getPage<LineContent>(pageId);
   const book = `/visit?interest=${interest}#book`;
   return (
     <main>
-      <PageHero kicker={hero.kicker} title={hero.title} lead={hero.lead} image={hero.image} alt={hero.alt} position={hero.position}>
+      <PageHero kicker={hero.kicker} title={<RichTitle t={hero.title} />} lead={hero.lead} image={hero.image} alt={hero.alt} position={hero.position}>
         <Link href={book} className="btn btn-primary btn-lg">{hero.cta} <Icon name="arrow" size={18} /></Link>
-        <a href={`#more`} className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)" }}>
+        <a href="#more" className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)" }}>
           Learn more
         </a>
       </PageHero>
@@ -37,7 +35,7 @@ export default function LinePage({ interest, path, hero, points, models, feature
           <div className="grid-3" style={{ marginTop: 52 }}>
             {points.items.map((p, i) => (
               <div key={p.title} className="season-card">
-                <span className="index" style={{ fontSize: 40 }}>0{i + 1}</span>
+                <span className="index" style={{ fontSize: 40 }}>{String(i + 1).padStart(2, "0")}</span>
                 <p className="h-md" style={{ marginTop: 14, fontSize: 22 }}>{p.title}</p>
                 <p className="body-muted" style={{ marginTop: 8 }}>{p.body}</p>
               </div>
@@ -46,7 +44,7 @@ export default function LinePage({ interest, path, hero, points, models, feature
         </div>
       </section>
 
-      {models && (
+      {models && models.items.length > 0 && (
         <section className="section-sm" style={{ paddingTop: 0 }}>
           <div className="wrap">
             <SectionHead kicker={models.kicker} title={models.title} lead={models.lead} />
@@ -56,7 +54,7 @@ export default function LinePage({ interest, path, hero, points, models, feature
                   {m.tag && <span className="eyebrow">{m.tag}</span>}
                   <h3 className="h-md" style={{ marginTop: m.tag ? 10 : 0 }}>{m.name}</h3>
                   <p className="body-muted" style={{ marginTop: 10 }}>{m.body}</p>
-                  {m.bullets && (
+                  {m.bullets && m.bullets.length > 0 && (
                     <ul className="list-check" style={{ marginTop: 18 }}>
                       {m.bullets.map((b) => (
                         <li key={b}><Icon name="check" size={16} /> {b}</li>
@@ -73,7 +71,7 @@ export default function LinePage({ interest, path, hero, points, models, feature
       <section className="section bg-paper2">
         <div className="wrap split">
           <div className="photo" style={{ aspectRatio: "4 / 5" }}>
-            <Image src={photoUrl(feature.image, 1200)} alt={feature.alt} fill sizes="(max-width: 940px) 100vw, 50vw" />
+            <Image src={feature.image} alt={feature.alt} fill sizes="(max-width: 940px) 100vw, 50vw" />
           </div>
           <div>
             <span className="kicker">{feature.kicker}</span>
@@ -89,7 +87,15 @@ export default function LinePage({ interest, path, hero, points, models, feature
         </div>
       </section>
 
-      {children}
+      {quickLinks && quickLinks.length > 0 && (
+        <section className="section-sm">
+          <div className="wrap" style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+            {quickLinks.map((q) => (
+              <Link key={q.href} href={q.href} className="btn btn-outline">{q.label}</Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {magnet && (
         <section className="section-sm bg-bone">
@@ -104,7 +110,7 @@ export default function LinePage({ interest, path, hero, points, models, feature
         </section>
       )}
 
-      <RelatedLines current={path} />
+      <RelatedLines current={pageId} />
 
       <CtaBand title={closing.title} body={closing.body} cta={closing.cta} href={book} />
     </main>
