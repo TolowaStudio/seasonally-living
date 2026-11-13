@@ -1,13 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Hanken_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ThemeDock from "@/components/ThemeDock";
 import { getSiteUrl, site } from "@/lib/site";
 
-const archivo = Archivo({ subsets: ["latin"], variable: "--font-archivo", display: "swap", weight: ["300", "400", "500", "600", "700"], style: ["normal", "italic"] });
-const hanken = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-hanken", display: "swap", weight: ["400", "500", "600", "700"] });
+// Self-hosted (SIL OFL, licences in ./fonts) so builds never depend on fonts.googleapis.com.
+// Latin-subset variable files from Google Fonts, fetched 2026-11-12.
+const archivo = localFont({
+  src: [
+    { path: "./fonts/archivo-latin.woff2", weight: "300 700", style: "normal" },
+    { path: "./fonts/archivo-italic-latin.woff2", weight: "300 700", style: "italic" },
+  ],
+  variable: "--font-archivo",
+  display: "swap",
+  fallback: ["Helvetica Neue", "Arial", "sans-serif"],
+});
+const hanken = localFont({
+  src: [{ path: "./fonts/hanken-grotesk-latin.woff2", weight: "400 700", style: "normal" }],
+  variable: "--font-hanken",
+  display: "swap",
+  fallback: ["Helvetica Neue", "Arial", "sans-serif"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
