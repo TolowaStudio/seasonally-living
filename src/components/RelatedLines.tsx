@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Icon from "./Icon";
-import { NAV_GROUPS } from "@/lib/site";
+import { getSettings } from "@/lib/sanity";
 
-/** "Explore the rest of the home resort": every other line, so no page is a dead end. */
-export default function RelatedLines({ current }: { current: string }) {
-  const links = NAV_GROUPS.flatMap((g) => g.items.map((i) => ({ ...i, group: g.label }))).filter((l) => l.href !== current);
+/** "Explore the home resort": every other line, so no page is a dead end. Nav comes from Sanity siteSettings. */
+export default async function RelatedLines({ current }: { current: string }) {
+  const settings = await getSettings();
+  const links = settings.navGroups.flatMap((g) => g.items.map((i) => ({ ...i, group: g.label }))).filter((l) => l.href !== current);
   return (
     <section className="section-sm">
       <div className="wrap">

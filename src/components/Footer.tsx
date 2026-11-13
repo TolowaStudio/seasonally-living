@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Icon from "./Icon";
-import { Wordmark } from "./Nav";
+import { Logo } from "./Nav";
 import NoteForm from "./NoteForm";
-import { NAV_GROUPS, NAV_LINKS, site, addressBlock, mapsUrl } from "@/lib/site";
+import { addressOf, mapsUrlOf } from "@/lib/site";
+import type { SiteSettings } from "@/content/types";
 
-export default function Footer() {
+export default function Footer({ settings: s }: { settings: SiteSettings }) {
   return (
     <footer style={{ background: "var(--band)", color: "#f0ede8", paddingTop: 88, paddingBottom: 40 }} data-theme="alpine">
       <div className="wrap">
@@ -15,7 +16,7 @@ export default function Footer() {
               One useful note a month. Never a blast.
             </h2>
             <p className="body-muted" style={{ marginTop: 14, maxWidth: "46ch" }}>
-              Fireplace tips for burn-ban season, winter hot tub care, pre-owned arrivals, and spring pool planning.
+              Winter hot tub care, pre-owned arrivals, fireplace tips for burn-ban season and spring pool planning.
               Pick what you care about.
             </p>
             <Link href="/note" className="small ul-link" style={{ display: "inline-block", marginTop: 14, color: "var(--clay)" }}>
@@ -27,12 +28,12 @@ export default function Footer() {
 
         <div className="footer-cols" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr 1fr 1.1fr", gap: 36, paddingTop: 56 }}>
           <div>
-            <Wordmark color="#f0ede8" />
+            <Logo id={s.logo} height={96} alt={s.legalName} />
             <p className="small body-muted" style={{ marginTop: 18, maxWidth: "30ch" }}>
-              {site.legalName}. Family-owned by {site.owners} since {site.founded}. Showroom open since {site.showroomOpened}.
+              {s.legalName}. Family-owned by {s.owners} since {s.founded}. Showroom open since {s.showroomOpened}.
             </p>
           </div>
-          {NAV_GROUPS.map((g) => (
+          {s.navGroups.map((g) => (
             <div key={g.label}>
               <p className="eyebrow muted" style={{ marginBottom: 16 }}>{g.label}</p>
               <ul style={{ listStyle: "none", display: "grid", gap: 10 }}>
@@ -47,28 +48,28 @@ export default function Footer() {
           <div>
             <p className="eyebrow muted" style={{ marginBottom: 16 }}>Company</p>
             <ul style={{ listStyle: "none", display: "grid", gap: 10, marginBottom: 28 }}>
-              {NAV_LINKS.map((n) => (
+              {s.navLinks.map((n) => (
                 <li key={n.href}>
                   <Link className="ul-link small" href={n.href}>{n.label}</Link>
                 </li>
               ))}
             </ul>
             <p className="eyebrow muted" style={{ marginBottom: 16 }}>Showroom</p>
-            <a className="small ul-link" href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
-              {addressBlock}
+            <a className="small ul-link" href={mapsUrlOf(s)} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
+              {addressOf(s)}
             </a>
-            <p className="small body-muted" style={{ marginTop: 6 }}>{site.address.note}</p>
-            {site.hours.map((h) => (
+            <p className="small body-muted" style={{ marginTop: 6 }}>{s.address.note}</p>
+            {s.hours.map((h) => (
               <p key={h.days} className="small body-muted" style={{ marginTop: 6 }}>
                 {h.days}: {h.time}
               </p>
             ))}
-            <a className="small ul-link" href={`tel:${site.phoneTel}`} style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 14 }}>
-              <Icon name="phone" size={15} /> {site.phoneDisplay}
+            <a className="small ul-link" href={`tel:${s.phoneTel}`} style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 14 }}>
+              <Icon name="phone" size={15} /> {s.phoneDisplay}
             </a>
             <br />
-            <a className="small ul-link" href={`mailto:${site.email}`} style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-              <Icon name="mail" size={15} /> {site.email}
+            <a className="small ul-link" href={`mailto:${s.email}`} style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+              <Icon name="mail" size={15} /> {s.email}
             </a>
             <br />
             <Link className="small ul-link" href="/visit#book" style={{ display: "inline-flex", gap: 8, alignItems: "center", marginTop: 8, color: "var(--clay)" }}>
@@ -77,7 +78,7 @@ export default function Footer() {
           </div>
         </div>
         <p className="tiny" style={{ marginTop: 56, color: "var(--faint)" }}>
-          © {new Date().getFullYear()} {site.legalName}. Stûv, Cal Spas, Cal Saunas and Cal Flame are trademarks of their respective owners.
+          © {new Date().getFullYear()} {s.legalName}. Stûv, Cal Spas, Cal Saunas and Cal Flame are trademarks of their respective owners.
         </p>
       </div>
     </footer>

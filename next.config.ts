@@ -6,11 +6,10 @@ const nextConfig: NextConfig = {
   turbopack: { root: __dirname },
   // Pins file tracing so Next never infers $HOME as the workspace root.
   outputFileTracingRoot: __dirname,
+  // Every next/image src is a Cloudinary public ID (cloud tolowa-studio); Cloudinary resizes and serves.
   images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
-      { protocol: "https", hostname: "res.cloudinary.com", pathname: "/tolowa-studio/**" },
-    ],
+    loader: "custom",
+    loaderFile: "./src/lib/cloudinary-loader.ts",
   },
   async redirects() {
     return [
@@ -37,6 +36,8 @@ const nextConfig: NextConfig = {
       { source: "/pool-spa-care", destination: "/spa-care", permanent: true },
       { source: "/our-story", destination: "/about", permanent: true },
       { source: "/cart", destination: "/visit", permanent: true },
+      // Editors: the content studio is hosted by Sanity.
+      { source: "/studio", destination: "https://seasonally-living.sanity.studio/", permanent: false },
     ];
   },
 };
