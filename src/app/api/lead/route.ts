@@ -12,13 +12,14 @@ type Payload = {
   message?: string;
   optIn?: boolean;
   source?: string;
+  unit?: string;
   company?: string; // honeypot
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const clip = (v: unknown, n = 500) => (typeof v === "string" ? v.trim().slice(0, n) : "");
-// Single-line fields go into the subject/header lines: no CR/LF.
-const line = (v: unknown, n = 200) => clip(v, n).replace(/[\r\n]+/g, " ");
+// Single-line fields go into the subject/header lines: no CR/LF or other control characters.
+const line = (v: unknown, n = 200) => clip(v, n).replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
 const label = (id: string) => INTERESTS.find((i) => i.id === id)?.label ?? id;
 
 export async function POST(req: NextRequest) {
@@ -52,8 +53,10 @@ export async function POST(req: NextRequest) {
   const interests = (kind === "note" ? (Array.isArray(d.interests) ? d.interests : []) : [d.interest ?? ""]).filter((i) => INTEREST_IDS.includes(i));
   const tags = interests.map(label).join(", ") || "General";
 
+  // Only pre-owned inquiries carry a unit (the spa's title and slug, set by the detail page).
+  const unit = kind === "visit" && interests.includes("pre-owned") ? line(d.unit, 160) : "";
   const subject =
-    kind === "visit" ? `Visit request: ${name} (${tags})` : `Note signup: ${email} (${tags})`;
+    kind === "visit" ? `Visit request: ${name} (${tags})${unit ? ` - ${unit}` : ""}` : `Note signup: ${email} (${tags})`;
   const text = [
     kind === "visit" ? "New visit / consult request from seasonallyliving.com" : "New Seasonally Living note signup",
     "",
@@ -61,6 +64,7 @@ export async function POST(req: NextRequest) {
     `Email: ${email}`,
     `Phone: ${line(d.phone, 40) || "-"}`,
     `Interest: ${tags}`,
+    unit ? `Unit: ${unit}` : "",
     kind === "visit" ? `Best time: ${line(d.when, 120) || "-"}` : "",
     kind === "visit" ? `Note opt-in: ${d.optIn ? "yes" : "no"}` : "Note opt-in: yes",
     `Source page: ${line(d.source, 200) || "-"}`,

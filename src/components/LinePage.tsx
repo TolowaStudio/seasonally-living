@@ -17,7 +17,7 @@ export async function lineMetadata(pageId: string): Promise<Metadata> {
 }
 
 /** Renders a product-line page from its Sanity document (falls back to src/content/pages.ts). */
-export default async function LinePage({ pageId }: { pageId: string }) {
+export default async function LinePage({ pageId, afterHero }: { pageId: string; afterHero?: React.ReactNode }) {
   const { interest, hero, points, models, feature, magnet, closing, quickLinks } = await getPage<LineContent>(pageId);
   const book = `/visit?interest=${interest}#book`;
   return (
@@ -28,6 +28,8 @@ export default async function LinePage({ pageId }: { pageId: string }) {
           Learn more
         </a>
       </PageHero>
+
+      {afterHero}
 
       <section className="section" id="more" style={{ scrollMarginTop: "var(--nav-h)" }}>
         <div className="wrap">

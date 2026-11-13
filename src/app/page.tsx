@@ -146,6 +146,11 @@ export default async function Home() {
           <div className="grid-4" style={{ marginTop: 48 }}>
             {c.seasons.items.map((season, i) => (
               <Reveal key={season.name} delay={i * 80} className="season-card">
+                {season.image && (
+                  <div className="photo" style={{ aspectRatio: "4 / 5", marginBottom: 22 }}>
+                    <Image src={season.image} alt={season.alt ?? ""} fill sizes="(max-width: 940px) 50vw, 25vw" />
+                  </div>
+                )}
                 <span className="index">{String(i + 1).padStart(2, "0")}</span>
                 <p className="h-md" style={{ marginTop: 18 }}>{season.name}</p>
                 <p style={{ marginTop: 8, fontWeight: 600 }}>{season.lead}</p>
@@ -153,6 +158,7 @@ export default async function Home() {
               </Reveal>
             ))}
           </div>
+          {c.seasons.credit && <p className="tiny body-muted" style={{ marginTop: 20 }}>{c.seasons.credit}</p>}
         </div>
       </section>
 
