@@ -572,13 +572,11 @@ h1, h2, h3, h4 {
 /* One visible keyboard focus ring everywhere; inputs keep their own border + glow. */
 :where(a, button, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--clay);
-  outline-offset: 3px;
-  border-radius: 4px;
+  outline-offset: 3px; /* the ring follows each element's own border-radius; never override it here */
 }
-.btn:focus-visible, .chip:focus-visible { border-radius: 999px; }
 header:not(.over-photo) :where(a, button):focus-visible,
 .over-photo :where(a, button):focus-visible { outline-color: var(--clay-soft); }
-.input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: none; }
+/* Inputs: .input:focus already swaps the border to --clay (>=5:1 on every palette) and adds a glow. */
 
 /* Touch targets: 44px minimum for controls people actually tap. */
 .nav-burger { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
