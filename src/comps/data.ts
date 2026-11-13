@@ -14,7 +14,7 @@ export const COMPS: Record<V, { letter: string; name: string; line: string; rati
   b: {
     letter: "B",
     name: "The family shop",
-    line: "Warm and editorial. Cam & Susan, 40 years, craft and service first.",
+    line: "Warm and editorial. Cam & Susan, 47 years, craft and service first.",
     rationale: "Most human. Turns \"family-owned since 1979\" into the reason to buy. Best against big-box and online.",
   },
   c: {
