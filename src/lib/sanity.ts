@@ -6,6 +6,7 @@ import { DEMO_PRE_OWNED } from "@/content/pre-owned";
 import { JUST_ARRIVED_DAYS, RECENTLY_SOLD_DAYS, RECON_CHECKLIST } from "@/content/pre-owned-checklist";
 import { BRANDS } from "@/content/brands";
 import { LANDING_PAGES, type LandingContent } from "@/content/landing";
+import { GUIDES, type Guide } from "@/content/guides";
 import type { BrandContent, PageContent, PreOwnedSpa, PreOwnedStatus, SiteSettings } from "@/content/types";
 import { mergeContent } from "./merge";
 import { brandFromSanity } from "./brand-content";
@@ -185,4 +186,61 @@ export async function getLanding(slug: string): Promise<LandingContent | null> {
   const fallback = LANDING_PAGES.find((p) => p.slug === slug);
   if (!fallback) return null;
   return mergeContent(fallback, await fetchDoc(`landingPage-${slug}`));
+}
+
+// ---- Lead-magnet guides (/guides/[slug]) ----
+// Code defaults in src/content/guides.ts. A Sanity "guide" document with the same slug overrides the
+// matching default field by field; a guide with a new slug is added if it has a title and sections.
+const GUIDE_FIELDS = `"slug": slug.current, title, interest, kicker, summary, gives, readMinutes, intro,
+  sections[]{heading, body, bullets}, closing{title, body, cta}, seo{title, description}`;
+
+// Studio-authored sections can have blank fields; never let one reach the page as null.
+function cleanSections(raw: unknown): Guide["sections"] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((x): x is Record<string, unknown> => !!x && typeof x === "object")
+    .map((x) => ({
+      heading: typeof x.heading === "string" ? x.heading : "",
+      body: typeof x.body === "string" ? x.body : "",
+      bullets: Array.isArray(x.bullets) ? x.bullets.filter((b): b is string => typeof b === "string" && b.trim() !== "") : undefined,
+    }))
+    .filter((x) => x.heading.trim() && (x.body.trim() || x.bullets?.length));
+}
+
+export const getGuides = cache(async (): Promise<Guide[]> => {
+  const rows = await fetchQuery<unknown[]>("guide", `*[_type == "guide" && defined(slug.current)]{${GUIDE_FIELDS}}`, {});
+  const out = new Map<string, Guide>(GUIDES.map((g) => [g.slug, g]));
+  for (const r of rows ?? []) {
+    const slug = r && typeof r === "object" ? (r as { slug?: unknown }).slug : undefined;
+    if (typeof slug !== "string" || !/^[a-z0-9-]{1,96}$/.test(slug)) continue;
+    const base = out.get(slug);
+    if (base) {
+      const sections = cleanSections((r as { sections?: unknown }).sections);
+      // Sections replace the default list as a whole (merging by index would show another section's text under a new heading).
+      out.set(slug, { ...mergeContent(base, r), slug, sections: sections.length ? sections : base.sections });
+    } else {
+      const g = r as Partial<Guide>;
+      const sections = cleanSections(g.sections);
+      if (g.title && sections.length) {
+        out.set(slug, {
+          slug,
+          interest: g.interest || "hot-tub",
+          kicker: g.kicker || "Guide",
+          title: g.title,
+          summary: g.summary || "",
+          gives: g.gives ?? [],
+          readMinutes: g.readMinutes || 5,
+          intro: g.intro || "",
+          sections,
+          closing: { title: g.closing?.title || "Book a visit.", body: g.closing?.body || "", cta: g.closing?.cta || "Book a visit" },
+          seo: g.seo,
+        });
+      }
+    }
+  }
+  return [...out.values()];
+});
+
+export async function getGuide(slug: string): Promise<Guide | undefined> {
+  return (await getGuides()).find((g) => g.slug === slug);
 }
