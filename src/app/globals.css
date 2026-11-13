@@ -679,7 +679,7 @@ h1, h2, h3, h4 {
 .chip { min-height: 44px; }
 .btn-ghost { min-height: 44px; }
 @media (max-width: 940px) {
-  .footer-cols a, a.ul-link.small { display: inline-flex; align-items: center; min-height: 44px; }
+  .footer-cols a, footer a.ul-link.small { display: inline-flex; align-items: center; min-height: 44px; }
   .footer-cols li { line-height: 1; }
 }
 
