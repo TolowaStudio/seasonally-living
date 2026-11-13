@@ -41,16 +41,18 @@ export default function Footer() {
                     <Link className="ul-link small" href={n.href}>{n.label}</Link>
                   </li>
                 ))}
-                {g.label === "Outdoor" &&
-                  NAV_LINKS.filter((l) => l.href !== "/visit").map((n) => (
-                    <li key={n.href}>
-                      <Link className="ul-link small" href={n.href}>{n.label}</Link>
-                    </li>
-                  ))}
               </ul>
             </div>
           ))}
           <div>
+            <p className="eyebrow muted" style={{ marginBottom: 16 }}>Company</p>
+            <ul style={{ listStyle: "none", display: "grid", gap: 10, marginBottom: 28 }}>
+              {NAV_LINKS.map((n) => (
+                <li key={n.href}>
+                  <Link className="ul-link small" href={n.href}>{n.label}</Link>
+                </li>
+              ))}
+            </ul>
             <p className="eyebrow muted" style={{ marginBottom: 16 }}>Showroom</p>
             <a className="small ul-link" href={mapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
               {addressBlock}

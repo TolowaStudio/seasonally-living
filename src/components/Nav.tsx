@@ -38,13 +38,19 @@ function Dropdown({ group, pathname, color }: { group: NavGroup; pathname: strin
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const active = group.items.some((i) => pathname === i.href);
+  const panelId = `nav-${group.label.toLowerCase()}`;
 
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      // Drop focus-within so the CSS-open state closes too.
+      (document.activeElement as HTMLElement | null)?.blur();
+    };
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -58,12 +64,19 @@ function Dropdown({ group, pathname, color }: { group: NavGroup; pathname: strin
       ref={ref}
       className="nav-dd"
       onMouseLeave={() => setOpen(false)}
+      onKeyDown={(e) => {
+        // Covers the focus-opened (CSS) state, which has no document listener.
+        if (e.key === "Escape") {
+          setOpen(false);
+          (document.activeElement as HTMLElement | null)?.blur();
+        }
+      }}
       style={{ position: "relative" }}
     >
       <button
         type="button"
         aria-expanded={open}
-        aria-haspopup="true"
+        aria-controls={panelId}
         onClick={() => setOpen((o) => !o)}
         style={{
           display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", padding: "10px 0",
@@ -75,12 +88,11 @@ function Dropdown({ group, pathname, color }: { group: NavGroup; pathname: strin
           <path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" />
         </svg>
       </button>
-      <div className="nav-dd-panel" data-open={open} role="menu">
+      <div className="nav-dd-panel" data-open={open} id={panelId}>
         {group.items.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            role="menuitem"
             onClick={(e) => {
               setOpen(false);
               e.currentTarget.blur();
@@ -109,6 +121,13 @@ export default function Nav() {
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
