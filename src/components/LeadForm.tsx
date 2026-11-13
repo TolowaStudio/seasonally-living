@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Icon from "./Icon";
-import { INTERESTS } from "@/lib/interests";
-import { NOTE_CONSENT_TEXT } from "@/lib/consent";
+import { PICKABLE_INTERESTS } from "@/lib/interests";
+import { NOTE_CONSENT_TEXT } from "@/lib/note-consent";
 import { getAttribution, trackConversion } from "@/lib/attribution";
 
 type Status = "idle" | "sending" | "sent" | "error";
@@ -43,7 +43,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
       if (!res.ok || !data.success) throw new Error(data.error || "Something went wrong");
       setConfirmSent(data.pending === true);
       setStatus("sent");
-      trackConversion("lead_submitted", { interest: unit ? "pre-owned" : interest, source: window.location.pathname, note_opt_in: fd.get("optIn") === "on" });
+      trackConversion(unit ? "preowned_inquiry" : "lead_submitted", { interest: unit ? "pre-owned" : interest, source: window.location.pathname, note_opt_in: fd.get("optIn") === "on" });
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -70,7 +70,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
       <div>
         <span className="field-label">What are you thinking about?</span>
         <div className="tile-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 10 }}>
-          {INTERESTS.map((i) => (
+          {PICKABLE_INTERESTS.map((i) => (
             <button
               type="button"
               key={i.id}

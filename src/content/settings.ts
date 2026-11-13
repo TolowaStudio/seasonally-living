@@ -28,6 +28,7 @@ export const SETTINGS: SiteSettings = {
         { href: "/hot-tubs", label: "Cal Spas hot tubs", note: "Try one in the showroom" },
         { href: "/swim-spas", label: "Swim spas", note: "Swim Pro & Swim Pro X" },
         { href: "/pre-owned", label: "Pre-owned spas", note: "Inspected trade-ins" },
+        { href: "/pre-owned/sell", label: "Sell or trade in your tub", note: "We haul it away" },
         { href: "/pools", label: "Swimming pools", note: "Installed by our crew" },
         { href: "/spa-care", label: "Pool & spa care", note: "Chemicals, filters, supplies" },
       ],

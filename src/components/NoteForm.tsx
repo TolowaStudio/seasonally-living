@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Icon from "./Icon";
-import { INTERESTS } from "@/lib/interests";
-import { NOTE_CONSENT_TEXT } from "@/lib/consent";
+import { PICKABLE_INTERESTS } from "@/lib/interests";
+import { NOTE_CONSENT_TEXT } from "@/lib/note-consent";
 import { getAttribution, trackConversion } from "@/lib/attribution";
 
 // With `guide` set (a /guides/[slug] page) the topic is fixed by the guide and the person gets that guide after confirming.
@@ -40,7 +40,7 @@ export default function NoteForm({ compact = false, defaultInterest, guide, guid
       if (!res.ok || !data.success) throw new Error(data.error || "");
       setPending(data.pending !== false);
       setStatus("sent");
-      trackConversion("note_signup", { guide, interests: picked.join(","), source: window.location.pathname });
+      trackConversion("newsletter_signup", { guide, interests: picked.join(","), source: window.location.pathname });
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "");
@@ -63,7 +63,7 @@ export default function NoteForm({ compact = false, defaultInterest, guide, guid
   return (
     <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }} aria-label="Get the Seasonally Living note">
       {!guide && <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {INTERESTS.map((i) => (
+        {PICKABLE_INTERESTS.map((i) => (
           <button
             type="button"
             key={i.id}

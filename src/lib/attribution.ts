@@ -150,7 +150,11 @@ const handlers = new Set<ConversionHandler>();
  * code, or listen for the `sl:conversion` window event (detail: { name, props }). Both are no-ops when
  * nothing is listening, and a throwing handler can never break a form.
  *
- * Event names fired today: lead_submitted (visit request), note_signup (newsletter / guide signup).
+ * Event names fired today (same names as lib/tracking-config.ts ConversionName): lead_submitted (visit request),
+ * preowned_inquiry (visit request about a specific spa), newsletter_signup (note / guide signup).
+ *
+ * TOL-3346 note: components/Tracking.tsx currently fires the ad tags from a DOM success observer. Do NOT also
+ * register a handler that calls lib/track.ts until that observer is removed, or every conversion counts twice.
  */
 export function registerConversionHandler(fn: ConversionHandler): () => void {
   handlers.add(fn);

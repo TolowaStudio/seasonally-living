@@ -5,7 +5,7 @@ import { cleanAttribution, describeTouch } from "@/lib/attribution";
 import { cleanEmail, multiLine, oneLine, tagOf } from "@/lib/text";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { mailConfigured, sendMail, staffRecipients } from "@/lib/mail";
-import { NOTE_CONSENT_TEXT, NOTE_CONSENT_VERSION } from "@/lib/consent";
+import { NOTE_CONSENT_TEXT, NOTE_CONSENT_VERSION } from "@/lib/note-consent";
 import { signingAvailable } from "@/lib/tokens";
 import { confirmLink, linkBase } from "@/lib/note-links";
 import { confirmRequestEmail } from "@/emails/note-emails";
