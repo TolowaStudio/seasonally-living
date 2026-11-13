@@ -41,7 +41,7 @@ export default function NoteForm({ compact = false, defaultInterest }: { compact
       <div className="form-status" role="status">
         <p className="h-md">You&apos;re in.</p>
         <p className="body-muted" style={{ marginTop: 8 }}>
-          {picked.length ? "Your guide is on its way, and the first note lands next month." : "The first note lands next month."}
+          Thanks for signing up. The first note goes out next month.
         </p>
       </div>
     );
@@ -72,7 +72,7 @@ export default function NoteForm({ compact = false, defaultInterest }: { compact
         {status === "sending" ? "Sending..." : "Get the note"} <Icon name="arrow" size={16} />
       </button>
       {status === "error" && <p className="small" style={{ color: "#d4573f" }}>That didn&apos;t go through. Please try again or call (509) 667-8833.</p>}
-      <p className="tiny" style={{ color: "var(--muted)" }}>Monthly at most. Unsubscribe in one click. We never sell your email.</p>
+      <p className="tiny" style={{ color: "var(--muted)" }}>Monthly at most. Unsubscribe any time. We never sell your email.</p>
     </form>
   );
 }

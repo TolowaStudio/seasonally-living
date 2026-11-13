@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
       </head>
       <body>
-        <a href="#main" className="btn btn-primary" style={{ position: "absolute", left: -9999 }}>Skip to content</a>
+        <a href="#main" className="btn btn-primary skip-link">Skip to content</a>
         <Nav />
         <div id="main">{children}</div>
         <Footer />

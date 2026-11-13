@@ -16,7 +16,7 @@ export default function NotePage() {
           <div>
             <span className="kicker">The Seasonally Living note</span>
             <h1 className="h-xl" style={{ marginTop: 18 }}>One useful note a month.</h1>
-            <p className="lead" style={{ marginTop: 16 }}>Pick what you care about and we&apos;ll send the matching guide right away.</p>
+            <p className="lead" style={{ marginTop: 16 }}>Pick what you care about and we&apos;ll tailor what we send you.</p>
             <ul className="list-check" style={{ marginTop: 26 }}>
               {INTERESTS.map((i) => (
                 <li key={i.id}><Icon name="arrow" size={16} /> <span><strong style={{ color: "var(--ink)" }}>{i.label}:</strong> {i.magnet}</span></li>

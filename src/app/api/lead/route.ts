@@ -17,6 +17,8 @@ type Payload = {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const clip = (v: unknown, n = 500) => (typeof v === "string" ? v.trim().slice(0, n) : "");
+// Single-line fields go into the subject/header lines: no CR/LF.
+const line = (v: unknown, n = 200) => clip(v, n).replace(/[\r\n]+/g, " ");
 const label = (id: string) => INTERESTS.find((i) => i.id === id)?.label ?? id;
 
 export async function POST(req: NextRequest) {
@@ -34,16 +36,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Invalid request" }, { status: 400 });
   }
 
+  if (!d || typeof d !== "object" || Array.isArray(d)) {
+    return NextResponse.json({ success: false, error: "Invalid request" }, { status: 400 });
+  }
+
   // Bots fill the hidden field; pretend success.
   if (clip(d.company)) return NextResponse.json({ success: true });
 
   const kind = d.kind === "note" ? "note" : "visit";
-  const email = clip(d.email, 200);
-  const name = clip(d.name, 120);
+  const email = line(d.email, 200);
+  const name = line(d.name, 120);
   if (!EMAIL_RE.test(email)) return NextResponse.json({ success: false, error: "Please enter a valid email" }, { status: 400 });
   if (kind === "visit" && !name) return NextResponse.json({ success: false, error: "Please add your name" }, { status: 400 });
 
-  const interests = (kind === "note" ? d.interests ?? [] : [d.interest ?? ""]).filter((i) => INTEREST_IDS.includes(i));
+  const interests = (kind === "note" ? (Array.isArray(d.interests) ? d.interests : []) : [d.interest ?? ""]).filter((i) => INTEREST_IDS.includes(i));
   const tags = interests.map(label).join(", ") || "General";
 
   const subject =
@@ -53,11 +59,11 @@ export async function POST(req: NextRequest) {
     "",
     `Name: ${name || "-"}`,
     `Email: ${email}`,
-    `Phone: ${clip(d.phone, 40) || "-"}`,
+    `Phone: ${line(d.phone, 40) || "-"}`,
     `Interest: ${tags}`,
-    kind === "visit" ? `Best time: ${clip(d.when, 120) || "-"}` : "",
+    kind === "visit" ? `Best time: ${line(d.when, 120) || "-"}` : "",
     kind === "visit" ? `Note opt-in: ${d.optIn ? "yes" : "no"}` : "Note opt-in: yes",
-    `Source page: ${clip(d.source, 200) || "-"}`,
+    `Source page: ${line(d.source, 200) || "-"}`,
     "",
     kind === "visit" ? `Message:\n${clip(d.message, 2000) || "(none)"}` : "",
   ]

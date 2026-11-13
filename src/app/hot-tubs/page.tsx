@@ -17,7 +17,7 @@ export default function Page() {
         { title: "Delivered and set up", body: "Site prep advice, delivery, placement and start-up by our crew." },
         { title: "Orientation for every buyer", body: "We walk you through water care, filters and settings so it stays easy." },
       ] }}
-      feature={{ kicker: "Certified pre-owned", title: "Pre-owned, inspected and ready.", body: "Trade-ins come back through our shop. When a good one is ready, subscribers to the note hear about it first.", bullets: ["Inspected and repaired by our techs", "Cleaned and sanitized", "Delivered like a new tub"], image: PHOTOS.hotTubGarden, alt: "Hot tub on a wooden deck in a garden" }}
+      feature={{ kicker: "Pre-owned", title: "Pre-owned, inspected and ready.", body: "Trade-ins come back through our shop. When a good one is ready, subscribers to the note hear about it first.", bullets: ["Inspected and repaired by our techs", "Cleaned and sanitized", "Delivered like a new tub"], image: PHOTOS.hotTubGarden, alt: "Hot tub on a wooden deck in a garden" }}
       magnet={{ title: "Get the winter hot tub care guide.", body: "Freeze protection, water care in the cold, and when to call us. Pick pre-owned too and you'll see arrivals first." }}
       closing={{ title: "Come sit in one.", body: "The fastest way to choose a tub is to try a few. Book a time and we'll have them warm.", cta: "Book a try-out" }}
     />
