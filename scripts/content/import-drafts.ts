@@ -44,9 +44,14 @@ const res = await fetch(`https://${PROJECT}.api.sanity.io/v2025-01-01/data/mutat
   headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
   body: JSON.stringify({ mutations: docs.map(({ doc }) => ({ createIfNotExists: doc })) }),
 });
-const body = (await res.json()) as { transactionId?: string };
+const body = (await res.json()) as { transactionId?: string; results?: { id: string; operation: string }[] };
 if (!res.ok) {
   console.error("Sanity mutate failed", res.status, JSON.stringify(body).slice(0, 400));
   process.exit(1);
 }
-console.log(`Created ${docs.length} draft post(s) (existing ones were left alone). Transaction ${body.transactionId}`);
+// createIfNotExists reports "create" for new documents and "none" for ones that already existed.
+const created = (body.results ?? []).filter((r) => r.operation === "create").map((r) => r.id);
+const skipped = (body.results ?? []).filter((r) => r.operation !== "create").map((r) => r.id);
+console.log(`Created ${created.length}: ${created.join(", ") || "-"}`);
+if (skipped.length) console.log(`Skipped ${skipped.length} that already exist (NOT updated; edit them in the Studio): ${skipped.join(", ")}`);
+console.log(`Transaction ${body.transactionId}`);

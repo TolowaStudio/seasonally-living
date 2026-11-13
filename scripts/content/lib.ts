@@ -140,7 +140,7 @@ function normalise(d: Partial<Draft>): Draft {
 
 /** Things that must not slip out unreviewed. Returned as notes the human sees first. */
 export function lint(d: Draft): string[] {
-  const all = [d.title, d.excerpt, d.body_markdown, d.facebook, d.instagram_caption, d.gbp_text, d.video_hook ?? ""].join("\n");
+  const all = [d.title, d.excerpt, d.body_markdown, d.facebook, d.instagram_caption, d.gbp_text, d.video_hook ?? "", d.instagram_hashtags.join(" ")].join("\n");
   const notes: string[] = [];
   for (const m of all.matchAll(/\[\[([^\]]+)\]\]/g)) notes.push(`Fill in: ${m[1].replace(/^ADD:\s*/i, "")}`);
   if (/\$\s?\d|\b\d+\s?(dollars|bucks)\b/i.test(all)) notes.push("Mentions a price. The shop does not post prices; remove or confirm.");
@@ -200,7 +200,7 @@ export function markdownToBlocks(md: string) {
 }
 
 export const slugify = (t: string) =>
-  t.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 70).replace(/-+$/, "") || "post";
+  t.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").replace(/^(.{1,64})(-.*)?$/, "$1").slice(0, 80) || "post"; // whole words where possible, never over 80 characters
 
 /** UTC offset of Pacific time on a calendar date, e.g. "-08:00" in winter, "-07:00" in summer. */
 export function pacificOffset(isoDate: string): string {

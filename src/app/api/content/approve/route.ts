@@ -32,8 +32,10 @@ function sameSecret(given: string, expected: string): boolean {
 type PostRow = { _rev: string; status?: string; publishAt?: string; needsConfirm?: string[]; text?: string };
 
 export async function POST(req: NextRequest) {
-  const secret = process.env.CONTENT_APPROVE_SECRET;
+  const secret = process.env.CONTENT_APPROVE_SECRET?.trim(); // a trailing newline from a mounted secret must not break auth
   if (!secret) return new NextResponse("Not Found", { status: 404 });
+  // The route is internet-reachable and has no rate limit, so a guessable secret is not allowed to turn it on.
+  if (secret.length < 32) return json({ ok: false, error: "CONTENT_APPROVE_SECRET must be at least 32 characters" }, 503);
 
   const auth = req.headers.get("authorization") ?? "";
   const given = auth.startsWith("Bearer ") ? auth.slice(7) : (req.headers.get("x-approve-secret") ?? "");

@@ -151,6 +151,7 @@ export const postType = defineType({
       name: "status",
       type: "string",
       group: "queue",
+      description: "After you change this, press PUBLISH (bottom right). The site and the posting queue only see published changes.",
       initialValue: "draft",
       options: {
         list: [

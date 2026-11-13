@@ -28,7 +28,10 @@ if (!args.length || args.includes("--help") || args.includes("-h")) {
 }
 const opt = (name: string) => {
   const i = args.indexOf(`--${name}`);
-  return i >= 0 ? args[i + 1] : undefined;
+  if (i < 0) return undefined;
+  const v = args[i + 1];
+  if (v === undefined || v.startsWith("--")) throw new Error(`--${name} needs a value`);
+  return v;
 };
 const flagValues = new Set(["angle", "line", "season", "date", "model", "out"].map((n) => opt(n)).filter(Boolean));
 const file = args.find((a) => !a.startsWith("--") && !flagValues.has(a));
@@ -42,7 +45,10 @@ const season = (opt("season") as keyof typeof SEASONS | undefined) ?? seasonOf(n
 const line = (opt("line") ?? "local") as Line;
 const article = args.includes("--article");
 const model = opt("model") ?? DEFAULT_MODEL;
-const date = opt("date") ?? new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+const date = opt("date") ?? (() => {
+  const d = new Date(Date.now() + 86_400_000); // tomorrow, as a local calendar date
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+})();
 const outDir = opt("out") ?? "out/content-drafts/transcripts";
 
 const user = `Draft one piece of content from a video transcript.

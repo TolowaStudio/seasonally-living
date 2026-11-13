@@ -325,7 +325,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst prev = $('Post to Facebook?').item.json;\nconst res = $json;\nif (res.error || !res.id) return { json: { ...prev, errors: [...prev.errors, 'Facebook: ' + (res.error && (res.error.message || JSON.stringify(res.error)) || 'no post id returned')] } };\nreturn { json: { ...prev, results: { ...prev.results, facebookUrl: 'https://www.facebook.com/' + res.id } } };"
+        "jsCode": "\nconst prev = $('Post to Facebook?').item.json;\nconst res = $json;\nif (res.error || !res.id) return { json: { ...prev, errors: [...prev.errors, 'Facebook: ' + (res.error && (res.error.message || JSON.stringify(res.error)) || 'no post id returned')] } };\nconst url = 'https://www.facebook.com/' + res.id;\nreturn { json: { ...prev, results: { ...prev.results, facebookUrl: url }, persist: [{ patch: { id: prev.id, setIfMissing: { results: {} } } }, { patch: { id: prev.id, set: { 'results.facebookUrl': url } } }] } };"
       },
       "id": "5e1a7c00-0000-4000-8000-000000000024",
       "name": "Facebook result",
@@ -460,8 +460,10 @@
         }
       },
       "onError": "continueRegularOutput",
-      "retryOnFail": false,
-      "notes": "Skipped automatically when 'create media' failed (no creation id): the call then errors and is recorded."
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 8000,
+      "notes": "Retried because the photo may still be processing. A creation_id can only be published once, so a retry cannot post a second copy. TODO-verify with one real test post before activating. When 'create media' failed there is no creation id and every try errors; that is recorded."
     },
     {
       "parameters": {
@@ -504,7 +506,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst prev = $('Post to Instagram?').item.json;\nconst created = $('Instagram: create media').item.json;\nconst published = $('Instagram: publish media').item.json;\nconst link = $json;\nif (created.error || !created.id) return { json: { ...prev, errors: [...prev.errors, 'Instagram (create): ' + (created.error && (created.error.message || JSON.stringify(created.error)) || 'no media id returned')] } };\nif (published.error || !published.id) return { json: { ...prev, errors: [...prev.errors, 'Instagram (publish): ' + (published.error && (published.error.message || JSON.stringify(published.error)) || 'no media id returned')] } };\n// The photo is live even if the permalink lookup failed; keep a usable link.\nconst url = (link && link.permalink) || 'https://www.instagram.com/';\nreturn { json: { ...prev, results: { ...prev.results, instagramUrl: url } } };"
+        "jsCode": "\nconst prev = $('Post to Instagram?').item.json;\nconst created = $('Instagram: create media').item.json;\nconst published = $('Instagram: publish media').item.json;\nconst link = $json;\nif (created.error || !created.id) return { json: { ...prev, errors: [...prev.errors, 'Instagram (create): ' + (created.error && (created.error.message || JSON.stringify(created.error)) || 'no media id returned')] } };\nif (published.error || !published.id) return { json: { ...prev, errors: [...prev.errors, 'Instagram (publish): ' + (published.error && (published.error.message || JSON.stringify(published.error)) || 'no media id returned')] } };\n// The photo is live even if the permalink lookup failed; keep a usable link.\nconst url = (link && link.permalink) || 'https://www.instagram.com/';\nreturn { json: { ...prev, results: { ...prev.results, instagramUrl: url }, persist: [{ patch: { id: prev.id, setIfMissing: { results: {} } } }, { patch: { id: prev.id, set: { 'results.instagramUrl': url } } }] } };"
       },
       "id": "5e1a7c00-0000-4000-8000-000000000031",
       "name": "Instagram result",
@@ -583,7 +585,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst prev = $('Post to Google?').item.json;\nconst res = $json;\nif (res.error || !res.name) return { json: { ...prev, errors: [...prev.errors, 'Google: ' + (res.error && (res.error.message || JSON.stringify(res.error)) || 'no post name returned')] } };\nreturn { json: { ...prev, results: { ...prev.results, gbpUrl: res.searchUrl || ('https://business.google.com/posts/l/' + res.name) } } };"
+        "jsCode": "\nconst prev = $('Post to Google?').item.json;\nconst res = $json;\nif (res.error || !res.name) return { json: { ...prev, errors: [...prev.errors, 'Google: ' + (res.error && (res.error.message || JSON.stringify(res.error)) || 'no post name returned')] } };\nconst url = res.searchUrl || ('https://business.google.com/posts/l/' + res.name);\nreturn { json: { ...prev, results: { ...prev.results, gbpUrl: url }, persist: [{ patch: { id: prev.id, setIfMissing: { results: {} } } }, { patch: { id: prev.id, set: { 'results.gbpUrl': url } } }] } };"
       },
       "id": "5e1a7c00-0000-4000-8000-000000000035",
       "name": "Google result",
@@ -699,6 +701,249 @@
           "name": "Seasonally Living: alert email"
         }
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000041",
+              "leftValue": "={{ Array.isArray($json.persist) && $json.persist.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000042",
+      "name": "Saved Facebook?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://{{ $('Config').first().json.sanityProject }}.api.sanity.io/v2025-01-01/data/mutate/{{ $('Config').first().json.sanityDataset }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mutations: $json.persist }) }}"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000043",
+      "name": "Sanity: save Facebook link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2220,
+        340
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Sanity token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Safe to retry: set is idempotent."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst { persist, ...state } = $('Saved Facebook?').item.json;\nreturn { json: state };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000044",
+      "name": "Restore after Facebook save",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000045",
+              "leftValue": "={{ Array.isArray($json.persist) && $json.persist.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000046",
+      "name": "Saved Instagram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3500,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://{{ $('Config').first().json.sanityProject }}.api.sanity.io/v2025-01-01/data/mutate/{{ $('Config').first().json.sanityDataset }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mutations: $json.persist }) }}"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000047",
+      "name": "Sanity: save Instagram link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3720,
+        340
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Sanity token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Safe to retry: set is idempotent."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst { persist, ...state } = $('Saved Instagram?').item.json;\nreturn { json: state };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000048",
+      "name": "Restore after Instagram save",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3940,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000049",
+              "leftValue": "={{ Array.isArray($json.persist) && $json.persist.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000050",
+      "name": "Saved Google?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://{{ $('Config').first().json.sanityProject }}.api.sanity.io/v2025-01-01/data/mutate/{{ $('Config').first().json.sanityDataset }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mutations: $json.persist }) }}"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000051",
+      "name": "Sanity: save Google link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4420,
+        340
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Sanity token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Safe to retry: set is idempotent."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst { persist, ...state } = $('Saved Google?').item.json;\nreturn { json: state };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000052",
+      "name": "Restore after Google save",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4640,
+        340
+      ]
     }
   ],
   "connections": {
@@ -826,6 +1071,46 @@
       "main": [
         [
           {
+            "node": "Saved Facebook?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved Facebook?": {
+      "main": [
+        [
+          {
+            "node": "Sanity: save Facebook link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post to Instagram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanity: save Facebook link": {
+      "main": [
+        [
+          {
+            "node": "Restore after Facebook save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore after Facebook save": {
+      "main": [
+        [
+          {
             "node": "Post to Instagram?",
             "type": "main",
             "index": 0
@@ -899,6 +1184,46 @@
       "main": [
         [
           {
+            "node": "Saved Instagram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved Instagram?": {
+      "main": [
+        [
+          {
+            "node": "Sanity: save Instagram link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post to Google?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanity: save Instagram link": {
+      "main": [
+        [
+          {
+            "node": "Restore after Instagram save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore after Instagram save": {
+      "main": [
+        [
+          {
             "node": "Post to Google?",
             "type": "main",
             "index": 0
@@ -936,6 +1261,46 @@
       ]
     },
     "Google result": {
+      "main": [
+        [
+          {
+            "node": "Saved Google?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved Google?": {
+      "main": [
+        [
+          {
+            "node": "Sanity: save Google link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build the Sanity update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanity: save Google link": {
+      "main": [
+        [
+          {
+            "node": "Restore after Google save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore after Google save": {
       "main": [
         [
           {

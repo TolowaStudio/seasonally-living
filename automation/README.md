@@ -20,8 +20,9 @@ draft ──(Cam or Kimberly approve)──> approved ──(n8n posts)──> p
    A draft is invisible on the site and ignored by n8n.
 2. **A person proofs it.** In the Studio they read the article and the three social versions, fix
    anything, clear the "Check with Cam or Susan first" list, then set **Status = Approved**
-   (and press Publish in the Studio, which is Sanity's own save step). The Studio refuses Approved
-   while that list has items.
+   **and presses Publish in the Studio.** This matters: the site and n8n only see *published*
+   documents, so an "Approved" that was never published does nothing (and, by design, posts nothing).
+   The Studio refuses Approved while that list has items.
 3. **Phone tap (optional).** `POST /api/content/approve` flips draft to approved in one tap (see below).
 4. **n8n posts.** Every 15 minutes between 8am and 8pm Pacific, n8n finds approved posts whose
    `publishAt` has passed (or is blank), at most five per run, and posts each to the channels listed on
@@ -58,17 +59,23 @@ Manager (project `tolowa-studio`), never in the JSON or this repo. `metaGraphVer
 ## Failure behaviour (it never loops and never double-posts)
 
 - **Nothing is retried automatically on a publish call.** A retried publish could post twice.
+- **Every channel's link is saved to Sanity the moment that channel posts** (before the next channel
+  starts), so a crash later in the run cannot repost it.
 - **A channel fails** (expired token, API error): the post goes back to **Draft**, the reason is in
   "Last problem" in the Studio, and the approvers get an email. Channels that already worked keep
-  their links and are **skipped** when the post is approved again, so nothing is posted twice.
+  their links and are **skipped** when the post is approved again, so they are not posted twice.
 - **The text is not safe to send** (an `[[ADD]]` or `TODO` placeholder, an empty channel, a Google post
   over 1,500 characters, an Instagram caption over 2,200): nothing is posted; the post goes back to
   Draft with the reason.
 - **Instagram's photo step succeeds but the permalink lookup fails:** the post counts as live; the link
   falls back to the Instagram home page. (Check the feed.)
-- **Writing the result back to Sanity fails:** retried up to three times (safe: `set` is idempotent).
-  If it still fails the post stays `approved` and the next run would try the not-yet-recorded channels
-  again, which is why the n8n execution log should be watched during the first week.
+- **Saving a link to Sanity fails** (after three tries, right after a successful post): the post stays
+  `approved`, and the next run would post that one channel again. This is the one remaining way to
+  double-post, and it needs Sanity to be down for a few seconds exactly then. The first week of
+  runs is supervised for this reason; the execution log shows any save that failed.
+- **Instagram's publish call is retried** (3 tries, 8 seconds apart) because the photo may still be
+  processing. A container id can only be published once, so a retry cannot post a second copy
+  (TODO-verify with one real test post before activating).
 - **Sanity or n8n is down:** nothing happens; the next run picks the posts up.
 
 ## Turning it on (when Jeramey says so)
@@ -97,13 +104,17 @@ curl -X POST https://seasonallyliving.com/api/content/approve \
   `approvedBy` and `approvedAt`. It posts nothing.
 - It refuses a post that still has items in "Check with Cam or Susan first", unfilled `[[ADD]]`
   placeholders, or no text, and it refuses to overwrite a post that was edited while approving.
-- The secret is a long random value in GCP Secret Manager and the Cloud Run env. To wire a phone, use
+- The secret must be at least 32 random characters (shorter and the route refuses to run). There is no
+  rate limit, so keep it long and random; it lives in GCP Secret Manager and the Cloud Run env only. To wire a phone, use
   an iOS Shortcut or an n8n "Send and Wait for Response" email whose Approve button calls this route
   from n8n (so the secret never lives on a phone). This is not built yet.
 - Not wired to Cloud Run: setting the two env vars is a deploy step for Jeramey.
 
 ## Known limits (see the Linear follow-ups)
 
+- Google: the Local Posts endpoint (`mybusiness.googleapis.com/v4/.../localPosts`) and the "call" button
+  rules should be re-checked against Google's current docs at setup time; Google may reject some CTA /
+  category combinations, which would show up as "Google: ..." in "Last problem".
 - Posts publish as a link post on Facebook (the article's social card shows the hero photo) and as a
   single-photo post on Instagram and Google. No video, carousels or stories yet.
 - Editing a post in the Studio while it is already `approved` and waiting is allowed; the text that

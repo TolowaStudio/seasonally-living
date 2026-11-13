@@ -32,7 +32,10 @@ if (args.includes("--help") || args.includes("-h")) {
 }
 const opt = (name: string) => {
   const i = args.indexOf(`--${name}`);
-  return i >= 0 ? args[i + 1] : undefined;
+  if (i < 0) return undefined;
+  const v = args[i + 1];
+  if (v === undefined || v.startsWith("--")) throw new Error(`--${name} needs a value`);
+  return v;
 };
 const text = (name: string) => opt(name) ?? (opt(`${name}-file`) ? readFileSync(opt(`${name}-file`)!, "utf8").trim() : undefined);
 
@@ -41,7 +44,8 @@ const DAY_INDEX: Record<Day, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4,
 function comingMonday(): string {
   const d = new Date();
   d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
-  return d.toISOString().slice(0, 10);
+  // Local calendar date (toISOString would shift to UTC and land a day late on a Pacific evening).
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 const addDays = (iso: string, n: number) => {
   const d = new Date(`${iso}T12:00:00Z`);
