@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Icon from "./Icon";
-import { INTERESTS } from "@/lib/interests";
+import { PICKABLE_INTERESTS } from "@/lib/interests";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -63,7 +63,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
       <div>
         <span className="field-label">What are you thinking about?</span>
         <div className="tile-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 10 }}>
-          {INTERESTS.map((i) => (
+          {PICKABLE_INTERESTS.map((i) => (
             <button
               type="button"
               key={i.id}

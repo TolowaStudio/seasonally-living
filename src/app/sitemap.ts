@@ -10,11 +10,13 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = getSiteUrl();
   const [settings, brands, spas] = await Promise.all([getSettings(), getBrands(), getPreOwnedSpas()]);
+  // Pre-owned: the sell/trade-in page plus every spa on the floor (sold and in-shop spas are never listed).
   const paths = [
     ...new Set([
       "",
       ...allPagesOf(settings).map((p) => p.href),
       ...brands.map((b) => `/fireplaces/${b.slug}`),
+      "/pre-owned/sell",
       ...spas.map((s) => `/pre-owned/${s.slug}`),
       "/areas",
       ...AREAS.map((a) => `/areas/${a.slug}`),

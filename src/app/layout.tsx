@@ -4,6 +4,8 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ThemeDock from "@/components/ThemeDock";
+import SiteChrome from "@/components/SiteChrome";
+import Tracking from "@/components/Tracking";
 import JsonLd from "@/components/JsonLd";
 import { getSiteUrl, site } from "@/lib/site";
 import { getPage, getSettings } from "@/lib/sanity";
@@ -59,9 +61,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Site-wide business entity: NAP, hours, geo, service area. Pages add breadcrumbs / FAQs. */}
         <JsonLd data={localBusinessJsonLd(settings, cloudinaryUrl(home.hero.image, "f_auto,q_auto,c_fill,w_1200,h_630"))} />
         <a href="#main" className="btn btn-primary skip-link">Skip to content</a>
-        <Nav settings={settings} />
+        <SiteChrome><Nav settings={settings} /></SiteChrome>
         <div id="main">{children}</div>
-        <Footer settings={settings} />
+        <SiteChrome><Footer settings={settings} /></SiteChrome>
+        <Tracking />
         <ThemeDock enabled={process.env.NEXT_PUBLIC_SHOW_COMPS === "1"} />
       </body>
     </html>

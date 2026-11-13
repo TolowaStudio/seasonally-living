@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Icon from "@/components/Icon";
 import NoteForm from "@/components/NoteForm";
-import { INTERESTS } from "@/lib/interests";
+import { PICKABLE_INTERESTS } from "@/lib/interests";
 import Crumbs from "@/components/Crumbs";
 import { getPage } from "@/lib/sanity";
 import { SITE_TITLE_SUFFIX, socialMeta } from "@/lib/seo";
@@ -27,7 +27,7 @@ export default async function NotePage() {
             <h1 className="h-xl" style={{ marginTop: 18 }}>{c.title}</h1>
             <p className="lead" style={{ marginTop: 16 }}>{c.lead}</p>
             <ul className="list-check" style={{ marginTop: 26 }}>
-              {INTERESTS.map((i) => (
+              {PICKABLE_INTERESTS.map((i) => (
                 <li key={i.id}><Icon name="arrow" size={16} /> <span><strong style={{ color: "var(--ink)" }}>{i.label}:</strong> {i.magnet}</span></li>
               ))}
             </ul>
