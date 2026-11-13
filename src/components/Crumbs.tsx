@@ -13,7 +13,7 @@ export default async function Crumbs({ path, leaf }: { path: string; leaf?: stri
   const nameOf = (href: string) => pages.find((p) => p.href === href)?.label;
   const trail: Crumb[] = [];
   const parent = path.startsWith("/fireplaces/") ? "/fireplaces" : path.startsWith("/pre-owned/") ? "/pre-owned" : null;
-  if (parent) trail.push({ name: nameOf(parent) ?? "Fireplaces & stoves", path: parent });
+  if (parent) trail.push({ name: nameOf(parent) ?? (parent === "/pre-owned" ? "Pre-owned spas" : "Fireplaces & stoves"), path: parent });
   trail.push({ name: leaf ?? nameOf(path) ?? path.split("/").pop()!.replace(/-/g, " "), path });
   return <JsonLd data={breadcrumbJsonLd(trail)} />;
 }

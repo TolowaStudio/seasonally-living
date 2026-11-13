@@ -33,7 +33,7 @@ export default async function ReviewPage() {
 
             <div style={{ display: "grid", gap: 14, marginTop: 32, maxWidth: 460 }}>
               <a href={urls.google} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg" style={{ justifyContent: "center", fontSize: 18, padding: "22px 34px" }}>
-                Leave a Google review <Icon name="arrow" size={20} />
+                {urls.googleIsPlaceholder ? "Find us on Google" : "Leave a Google review"} <Icon name="arrow" size={20} />
               </a>
               {urls.facebook && (
                 <a href={urls.facebook} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-lg" style={{ justifyContent: "center" }}>
@@ -42,7 +42,7 @@ export default async function ReviewPage() {
               )}
             </div>
             <p className="small body-muted" style={{ marginTop: 16, maxWidth: "46ch" }}>
-              It takes about a minute. Good, bad or in between, we read every one. We don&rsquo;t offer anything in return for a review, and we
+              {urls.googleIsPlaceholder ? "On the Google page that opens, tap Reviews, then Write a review. " : ""}It takes about a minute. Good, bad or in between, we read every one. We don&rsquo;t offer anything in return for a review, and we
               never ask anyone to leave only the good ones.
             </p>
           </div>
