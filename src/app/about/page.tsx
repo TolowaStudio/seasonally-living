@@ -37,8 +37,8 @@ export default async function AboutPage() {
               {c.owners.caption && <figcaption className="small body-muted" style={{ marginTop: 12 }}>{c.owners.caption}</figcaption>}
             </figure>
             <div className="grid-3" style={{ marginTop: 40 }}>
-              {c.owners.paragraphs.map((para) => (
-                <p key={para.slice(0, 24)} className="lead" style={{ fontSize: 19 }}>{para}</p>
+              {c.owners.paragraphs.map((para, i) => (
+                <p key={i} className="lead" style={{ fontSize: 19 }}>{para}</p>
               ))}
             </div>
           </div>

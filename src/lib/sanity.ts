@@ -68,7 +68,8 @@ const fetchQuery = cache(async <T>(query: string, params: Record<string, unknown
   }
 });
 
-const demo = () => process.env.PREOWNED_DEMO === "1";
+// Demo listings are for local previews only and never render in production.
+const demo = () => process.env.PREOWNED_DEMO === "1" && process.env.NODE_ENV !== "production";
 
 export async function getPreOwnedSpas(): Promise<PreOwnedSpa[]> {
   const rows = await fetchQuery<PreOwnedSpa[]>(
