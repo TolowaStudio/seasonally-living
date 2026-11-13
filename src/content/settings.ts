@@ -20,6 +20,14 @@ export const SETTINGS: SiteSettings = {
   ],
   serviceArea: ["Wenatchee", "East Wenatchee", "Leavenworth", "Chelan", "Cashmere", "Manson"],
   logo: "seasonally-living/brand/logo/seasonally-living-script-blue",
+  // TODO-confirm (TOL-2908): set the real Google review link in the Studio once the profile is claimed.
+  googleReviewUrl: "",
+  // TODO-confirm: the business Facebook page (not Susan's personal profile).
+  facebookUrl: "",
+  facebookReviewUrl: "",
+  sameAs: [],
+  // Geocoded from 1407 Maiden Ln, Wenatchee (OpenStreetMap, 2026-11-12). TODO-confirm against the Google pin.
+  geo: { lat: 47.453, lng: -120.3357 },
   navGroups: [
     {
       label: "Water",
@@ -28,6 +36,7 @@ export const SETTINGS: SiteSettings = {
         { href: "/hot-tubs", label: "Cal Spas hot tubs", note: "Try one in the showroom" },
         { href: "/swim-spas", label: "Swim spas", note: "Swim Pro & Swim Pro X" },
         { href: "/pre-owned", label: "Pre-owned spas", note: "Inspected trade-ins" },
+        { href: "/pre-owned/sell", label: "Sell or trade in your tub", note: "We haul it away" },
         { href: "/pools", label: "Swimming pools", note: "Installed by our crew" },
         { href: "/spa-care", label: "Pool & spa care", note: "Chemicals, filters, supplies" },
       ],
@@ -48,6 +57,7 @@ export const SETTINGS: SiteSettings = {
     },
   ],
   navLinks: [
+    { href: "/journal", label: "Journal" },
     { href: "/builders", label: "Builders" },
     { href: "/about", label: "Our story" },
     { href: "/visit", label: "Visit" },

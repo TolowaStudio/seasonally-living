@@ -47,7 +47,7 @@ export const HOME: HomeContent = {
   seo: {
     title: "Seasonally Living | Cal Spas Hot Tubs, Swim Spas & Stûv Fireplaces in Wenatchee",
     description:
-      "Wenatchee's home resort showroom: Cal Spas hot tubs and swim spas, pre-owned spas, swimming pool installation, Stûv wood stoves, gas and electric inserts, and venting done right.",
+      "Wenatchee's home resort showroom: Cal Spas hot tubs and swim spas, pre-owned spas, pools built by our crew, Stûv stoves and venting.",
   },
   hero: {
     kicker: "Hero",
@@ -253,7 +253,7 @@ export const LINES: LineContent[] = [
   }),
   line({
     pageId: "/builders",
-    seo: { title: "For Builders & Remodelers: Hearth and Spa Supply", description: "Stûv stoves, fireplaces, gas and electric inserts, venting and Cal Spas hot tubs for builders, remodelers and property managers in North Central Washington, supplied and installed by one local crew." },
+    seo: { title: "For Builders & Remodelers: Hearth and Spa Supply", description: "Stûv stoves, gas and electric inserts, venting and Cal Spas hot tubs for builders and remodelers around Wenatchee, supplied and installed by one local crew." },
     interest: "builder",
     hero: { kicker: "For builders & remodelers", title: { before: "You build the house. ", emphasis: "We bring the fire and the water." }, lead: "We supply and install what goes inside: Stûv stoves, fireplaces and inserts, the venting behind them, and Cal Spas hot tubs and swim spas, from Wenatchee to Chelan and Leavenworth.", image: IMG.gasLinear, alt: "A modern linear fireplace in a bright room with big windows", cta: "Talk trade with us" },
     points: { kicker: "Why builders use us", title: "Less coordination, fewer callbacks.", lead: "We've been installing stoves, fireplaces and venting in this valley since 1979.", items: [
@@ -270,7 +270,7 @@ export const LINES: LineContent[] = [
 export const FIREPLACES: FireplacesContent = {
   _type: "fireplacesPage",
   pageId: "/fireplaces",
-  seo: { title: "Wood Stoves, Fireplaces & Inserts: Stûv, Kuma, Morsø, Napoleon", description: "Wood stoves and inserts from Stûv, Kuma and Morsø, gas and electric fireplaces from Napoleon, at the Seasonally Living showroom in Wenatchee. Venting designed and installed by our crew." },
+  seo: { title: "Wood Stoves, Fireplaces & Inserts: Stûv, Kuma, Morsø, Napoleon", description: "Stûv, Kuma and Morsø wood stoves and Napoleon gas and electric fireplaces at our Wenatchee showroom, with venting designed and installed by our crew." },
   hero: { kicker: "Fireplaces & stoves · Stûv · Kuma · Morsø · Napoleon", title: { before: "The essential fire, ", emphasis: "done right." }, lead: "Wood stoves and inserts from Stûv, Kuma and Morsø. Gas and electric from Napoleon. We fit the right fire to your room, then design and install the venting ourselves.", image: IMG.stoveMinimal, alt: "A modern wood stove with a glass door and log store, burning in a bright living room", position: "center 72%", cta: "Book a fireplace consult", secondaryCta: "Shop by kind of fire" },
   collection: {
     kicker: "Shop by kind of fire",
@@ -299,7 +299,7 @@ export const FIREPLACES: FireplacesContent = {
 export const SERVICE: ServiceContent = {
   _type: "servicePage",
   pageId: "/service",
-  seo: { title: "Stove & Fireplace Venting", description: "Venting design and installation, venting inspections and a full venting parts counter for stoves, inserts and fireplaces, from the Wenatchee crew that started as Chim Chimney in 1979. Hot tub service too." },
+  seo: { title: "Stove & Fireplace Venting", description: "Venting design, installation and inspections plus a parts counter for stoves, inserts and fireplaces in Wenatchee, from the crew behind Chim Chimney since 1979." },
   hero: { kicker: "Venting & service", title: { before: "Venting, ", emphasis: "done right." }, lead: "We started as Chim Chimney in 1979, and venting is still the heart of the trade. A stove or insert burns only as well as its venting, so we design it, install it and inspect it ourselves.", image: IMG.stoveLiving, alt: "A wood stove with its flue pipe rising up a tiled wall", position: "center 70%", cta: "Request service", secondaryCta: "Venting parts & supplies" },
   services: { kicker: "What we do", title: "Service for every season.", items: [
     { icon: "ruler", title: "Venting design & install", body: "New venting for stoves, inserts and fireplaces, sized to the appliance and installed to code." },

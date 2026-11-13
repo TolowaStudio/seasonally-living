@@ -42,3 +42,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# content engine drafts (also covered by /out/ above)
+/out/content-drafts/

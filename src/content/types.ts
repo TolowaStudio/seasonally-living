@@ -102,25 +102,51 @@ export type SiteSettings = {
   hours: { days: string; time: string }[];
   serviceArea: string[];
   logo: string;
+  /** Google Business Profile "write a review" link. Empty until the profile is claimed (TOL-2908); see reviewUrlsOf(). */
+  googleReviewUrl?: string;
+  /** The business Facebook page, e.g. https://www.facebook.com/<page>. Empty until confirmed. */
+  facebookUrl?: string;
+  /** Where Facebook recommendations are written (usually <facebookUrl>/reviews). */
+  facebookReviewUrl?: string;
+  /** Other listings (BBB, Yelp, the Google profile) for the LocalBusiness sameAs list. */
+  sameAs?: string[];
+  /** Showroom coordinates for LocalBusiness geo. */
+  geo?: { lat: number; lng: number };
   navGroups: NavGroup[];
   navLinks: NavLink[];
 };
 
 export type PageContent = LineContent | HomeContent | FireplacesContent | ServiceContent | AboutContent | SimpleContent;
 
+/** Public status of a pre-owned spa. Intake and reconditioning stages exist in Sanity but never reach the site. */
+export type PreOwnedStatus = "listed" | "reserved" | "sold";
+
+/** Public view of a pre-owned spa. Internal intake fields (source, costs, notes) are never selected into this type. */
 export type PreOwnedSpa = {
   _id?: string;
   title: string;
   slug: string;
-  status: "available" | "pending" | "sold";
+  status: PreOwnedStatus;
   brand?: string;
   model?: string;
   year?: number;
   seats?: number;
   size?: string;
   electrical?: string;
+  /** Filterable feature tags (fixed list in the Studio). */
+  features?: string[];
   highlights?: string[];
+  /** "What our shop did" free text. */
   condition?: string;
+  /** Labels of the shop checklist items staff ticked for this unit. */
+  checklist?: string[];
+  /** Warranty terms for this unit, as written by staff. Blank = not shown as a promise. */
+  warranty?: string;
+  /** ISO date (YYYY-MM-DD) the spa went on the floor. */
+  listedDate?: string;
+  soldDate?: string;
+  /** Listed within the last few weeks (computed on the server). */
+  justArrived?: boolean;
   photos?: { image: string; alt?: string }[];
   featured?: boolean;
   sortOrder?: number;

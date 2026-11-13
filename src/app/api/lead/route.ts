@@ -1,99 +1,175 @@
+import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { INTERESTS, INTEREST_IDS } from "@/lib/interests";
+import { FEEDBACK_INTEREST, INTERESTS, INTEREST_IDS, LEAD_INTEREST_IDS } from "@/lib/interests";
+import { cleanAttribution, describeTouch } from "@/lib/attribution";
+import { cleanEmail, multiLine, oneLine, tagOf } from "@/lib/text";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { mailConfigured, sendMail, staffRecipients } from "@/lib/mail";
+import { NOTE_CONSENT_TEXT, NOTE_CONSENT_VERSION } from "@/lib/note-consent";
+import { signingAvailable } from "@/lib/tokens";
+import { confirmLink, linkBase } from "@/lib/note-links";
+import { confirmRequestEmail } from "@/emails/note-emails";
+import { getGuide, getPreOwnedSpa } from "@/lib/sanity";
+
+// POST /api/lead: visit requests ("visit") and note / guide signups ("note").
+// Every error is { success: false, error, code }. A caller can never put a CR/LF or other control
+// character into a subject, header or reply-to: every reflected field goes through oneLine().
 
 type Payload = {
-  kind?: "visit" | "note";
-  interest?: string;
-  interests?: string[];
-  name?: string;
-  email?: string;
-  phone?: string;
-  when?: string;
-  message?: string;
-  optIn?: boolean;
-  source?: string;
-  unit?: string;
-  company?: string; // honeypot
+  kind?: unknown;
+  interest?: unknown;
+  interests?: unknown;
+  name?: unknown;
+  email?: unknown;
+  phone?: unknown;
+  when?: unknown;
+  message?: unknown;
+  optIn?: unknown;
+  source?: unknown;
+  unit?: unknown;
+  guide?: unknown;
+  attribution?: unknown;
+  company?: unknown; // honeypot
 };
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const clip = (v: unknown, n = 500) => (typeof v === "string" ? v.trim().slice(0, n) : "");
-// Single-line fields go into the subject/header lines: no CR/LF or other control characters.
-const line = (v: unknown, n = 200) => clip(v, n).replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
-const label = (id: string) => INTERESTS.find((i) => i.id === id)?.label ?? id;
+const MAX_BODY = 20_000;
+const fail = (status: number, code: string, error: string, headers?: Record<string, string>) =>
+  NextResponse.json({ success: false, error, code }, { status, headers });
+const label = (id: string) => (id === FEEDBACK_INTEREST ? "Private feedback for Cam" : (INTERESTS.find((i) => i.id === id)?.label ?? id));
 
 export async function POST(req: NextRequest) {
-  const key = process.env.RESEND_API_KEY;
   const isProd = process.env.NODE_ENV === "production";
-  if (!key && isProd) {
-    console.error("lead: RESEND_API_KEY is not set");
-    return NextResponse.json({ success: false, error: "Email is not configured" }, { status: 503 });
+  if (!mailConfigured() && isProd) {
+    console.error(JSON.stringify({ event: "lead.error", code: "mail_not_configured" }));
+    return fail(503, "not_configured", "Email is not configured");
   }
 
+  const ip = clientIp(req.headers);
+  const byIp = rateLimit(`ip:${ip}`, 8, 10 * 60_000);
+  if (!byIp.ok) return fail(429, "rate_limited", "Too many requests. Please wait a few minutes or call (509) 667-8833.", { "Retry-After": String(byIp.retryAfter) });
+  if (!rateLimit("global", 300, 60 * 60_000).ok) return fail(429, "rate_limited", "We're getting a lot of requests right now. Please call (509) 667-8833.", { "Retry-After": "600" });
+
+  if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY) return fail(413, "too_large", "Request too large");
   let d: Payload;
   try {
-    d = await req.json();
+    const raw = await req.text();
+    if (raw.length > MAX_BODY) return fail(413, "too_large", "Request too large");
+    d = JSON.parse(raw);
   } catch {
-    return NextResponse.json({ success: false, error: "Invalid request" }, { status: 400 });
+    return fail(400, "bad_json", "Invalid request");
   }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return fail(400, "bad_json", "Invalid request");
 
-  if (!d || typeof d !== "object" || Array.isArray(d)) {
-    return NextResponse.json({ success: false, error: "Invalid request" }, { status: 400 });
-  }
-
-  // Bots fill the hidden field; pretend success.
-  if (clip(d.company)) return NextResponse.json({ success: true });
+  // Bots fill the hidden field; pretend success and do nothing.
+  if (typeof d.company === "string" && d.company.trim()) return NextResponse.json({ success: true });
 
   const kind = d.kind === "note" ? "note" : "visit";
-  const email = line(d.email, 200);
-  const name = line(d.name, 120);
-  if (!EMAIL_RE.test(email)) return NextResponse.json({ success: false, error: "Please enter a valid email" }, { status: 400 });
-  if (kind === "visit" && !name) return NextResponse.json({ success: false, error: "Please add your name" }, { status: 400 });
+  const email = cleanEmail(d.email);
+  const name = oneLine(d.name, kind === "note" ? 60 : 120);
+  // "Tell Cam directly" (/review): a way to reply (email or phone) and the message. Name is optional.
+  const feedback = kind === "visit" && d.interest === FEEDBACK_INTEREST;
+  if (feedback) {
+    if (oneLine(d.email, 254) && !email) return fail(400, "bad_email", "That email doesn't look right");
+    if (!email && !oneLine(d.phone, 40)) return fail(400, "missing_contact", "Please add an email or phone so Cam can reply");
+    if (!multiLine(d.message, 2000)) return fail(400, "missing_message", "Please tell us what happened");
+  } else {
+    if (!email) return fail(400, "bad_email", "Please enter a valid email");
+    if (kind === "visit" && !name) return fail(400, "missing_name", "Please add your name");
+  }
+  if (email && !rateLimit(`email:${email}`, 4, 60 * 60_000).ok) return fail(429, "rate_limited", "That address was just used. Please check your inbox, or call (509) 667-8833.", { "Retry-After": "900" });
 
-  const interests = (kind === "note" ? (Array.isArray(d.interests) ? d.interests : []) : [d.interest ?? ""]).filter((i) => INTEREST_IDS.includes(i));
+  // Guide signups: the guide decides the interest tag.
+  const guideSlug = oneLine(d.guide, 96);
+  const guide = kind === "note" && guideSlug ? await getGuide(guideSlug) : undefined;
+  if (kind === "note" && guideSlug && !guide) return fail(400, "bad_guide", "That guide wasn't found");
+
+  const rawInterests = kind === "note" ? (Array.isArray(d.interests) ? d.interests : []) : [d.interest];
+  const interests = [...new Set([...(guide ? [guide.interest] : []), ...rawInterests.map((i) => oneLine(i, 40))])].filter((i) => (kind === "visit" ? LEAD_INTEREST_IDS : INTEREST_IDS).includes(i)).slice(0, 8);
   const tags = interests.map(label).join(", ") || "General";
 
-  // Only pre-owned inquiries carry a unit (the spa's title and slug, set by the detail page).
-  const unit = kind === "visit" && interests.includes("pre-owned") ? line(d.unit, 160) : "";
-  const subject =
-    kind === "visit" ? `Visit request: ${name} (${tags})${unit ? ` - ${unit}` : ""}` : `Note signup: ${email} (${tags})`;
+  // A unit is only accepted if its slug is a real pre-owned spa; the title is then rebuilt from our data.
+  let unit = "";
+  if (kind === "visit" && interests.includes("pre-owned")) {
+    const slug = /\(([a-z0-9-]{1,96})\)\s*$/.exec(oneLine(d.unit, 200))?.[1];
+    const spa = slug ? await getPreOwnedSpa(slug) : null;
+    if (spa) unit = oneLine(`${spa.title} (${spa.slug})`, 160);
+  }
+
+  const optIn = kind === "note" || (!feedback && d.optIn === true);
+  // A note signup without a working confirmation link would look like success while storing nothing.
+  if (kind === "note" && !signingAvailable()) {
+    console.error(JSON.stringify({ event: "lead.error", code: "no_signing_secret", note: "NOTE_SIGNING_SECRET unset: note signups disabled" }));
+    return fail(503, "not_configured", "Signups are temporarily unavailable. Please call (509) 667-8833.");
+  }
+  const source = oneLine(d.source, 200);
+  const attribution = cleanAttribution(d.attribution);
+  const rid = randomUUID().slice(0, 8);
+  const base = linkBase(req.nextUrl.origin);
+
+  const subject = feedback ? `Private feedback for Cam${name ? ` from ${name}` : ""}` : kind === "visit" ? `Visit request: ${name} (${tags})${unit ? ` - ${unit}` : ""}` : `Note signup (unconfirmed): ${email} (${tags})${guide ? ` - ${guide.title}` : ""}`;
   const text = [
-    kind === "visit" ? "New visit / consult request from seasonallyliving.com" : "New Seasonally Living note signup",
+    feedback
+      ? "Private feedback for Cam from the /review page. This person was also invited to post a public Google review; this form is a direct line, not a filter."
+      : kind === "visit" ? "New visit / consult request from seasonallyliving.com" : "New Seasonally Living note signup (waiting on email confirmation)",
     "",
     `Name: ${name || "-"}`,
-    `Email: ${email}`,
-    `Phone: ${line(d.phone, 40) || "-"}`,
+    `Email: ${email || "-"}`,
+    `Phone: ${oneLine(d.phone, 40) || "-"}`,
     `Interest: ${tags}`,
+    guide ? `Guide: ${guide.title}` : "",
     unit ? `Unit: ${unit}` : "",
-    kind === "visit" ? `Best time: ${line(d.when, 120) || "-"}` : "",
-    kind === "visit" ? `Note opt-in: ${d.optIn ? "yes" : "no"}` : "Note opt-in: yes",
-    `Source page: ${line(d.source, 200) || "-"}`,
+    kind === "visit" && !feedback ? `Best time: ${oneLine(d.when, 120) || "-"}` : "",
+    feedback ? "" : `Note opt-in: ${optIn ? "yes (double opt-in email sent)" : "no"}`,
+    `Source page: ${source || "-"}`,
     "",
-    kind === "visit" ? `Message:\n${clip(d.message, 2000) || "(none)"}` : "",
+    `First touch: ${describeTouch(attribution.first)}`,
+    `Last touch: ${describeTouch(attribution.last)}`,
+    `Ref: ${rid}`,
+    "",
+    kind === "visit" ? `Message:\n${multiLine(d.message, 2000) || "(none)"}` : "",
   ]
-    .filter((l) => l !== "")
+    .filter((l, i, all) => l !== "" || all[i - 1] !== "")
     .join("\n");
 
-  if (!key) {
-    console.log("=== LEAD (dev, not sent) ===\n" + subject + "\n" + text);
-    return NextResponse.json({ success: true });
+  // Double opt-in: nothing is added to any list until the signed link is clicked.
+  let pending = false;
+  async function sendConfirmation(): Promise<boolean> {
+    if (!optIn) return true;
+    const link = signingAvailable()
+      ? confirmLink(base, { e: email!, n: name || undefined, i: interests, s: source, g: guide?.slug, ct: NOTE_CONSENT_TEXT, cv: NOTE_CONSENT_VERSION, ts: Date.now(), rid })
+      : null;
+    if (!link) {
+      console.error(JSON.stringify({ event: "lead.warn", rid, code: "no_signing_secret", note: "NOTE_SIGNING_SECRET unset: double opt-in email not sent" }));
+      return true;
+    }
+    const m = confirmRequestEmail({ name: name || undefined, interests, confirmUrl: link, guideTitle: guide?.title });
+    const sent = await sendMail({ to: email!, subject: m.subject, text: m.text, html: m.html });
+    pending = sent.ok || !!sent.skipped;
+    return sent.ok || !!sent.skipped;
   }
 
-  const to = (process.env.LEAD_TO_EMAIL || "sales@seasonallyliving.com").split(",").map((s) => s.trim()).filter(Boolean);
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      from: process.env.LEAD_FROM_EMAIL || "Seasonally Living <noreply@seasonallyliving.com>",
-      to,
-      reply_to: email,
-      subject,
-      text,
-    }),
-  });
-  if (!res.ok) {
-    console.error("lead: resend error", res.status, await res.text());
-    return NextResponse.json({ success: false, error: "Delivery failed" }, { status: 502 });
-  }
-  return NextResponse.json({ success: true });
+  // A note signup sends the confirmation first, so a failed send (and the person's retry) can't pile duplicate staff emails.
+  // A visit request always reaches staff first: the confirmation is a bonus.
+  if (kind === "note" && !(await sendConfirmation())) return fail(502, "confirm_failed", "We couldn't send the confirmation email. Please try again.");
+  const staff = await sendMail({ to: staffRecipients(), subject, text, replyTo: email ?? undefined });
+  if (!staff.ok && !staff.skipped) return fail(502, "delivery_failed", "Delivery failed");
+  if (kind === "visit") await sendConfirmation();
+
+  console.log(JSON.stringify({
+    event: "lead",
+    rid,
+    kind,
+    interests,
+    guide: guide?.slug,
+    unit: unit || undefined,
+    source: source.split("?")[0],
+    optIn,
+    pendingConfirmation: pending,
+    who: email ? await tagOf(email) : undefined,
+    emailDomain: email ? email.split("@")[1] : undefined,
+    attribution,
+    staffMail: staff.ok ? "sent" : "dev-log",
+  }));
+
+  return NextResponse.json({ success: true, pending });
 }

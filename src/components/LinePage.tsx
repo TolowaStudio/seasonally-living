@@ -8,12 +8,21 @@ import CtaBand from "./CtaBand";
 import NoteForm from "./NoteForm";
 import RelatedLines from "./RelatedLines";
 import RichTitle from "./RichTitle";
+import Crumbs from "./Crumbs";
 import { getPage } from "@/lib/sanity";
+import { SITE_TITLE_SUFFIX, socialMeta } from "@/lib/seo";
 import type { LineContent } from "@/content/types";
+
+/** "/fireplaces/gas-electric" -> "fireplaces-gas-electric" (the /og/<key> share image). */
+export const ogKeyOf = (pageId: string) => (pageId === "/" ? "home" : pageId.replace(/^\//, "").replace(/\//g, "-"));
 
 export async function lineMetadata(pageId: string): Promise<Metadata> {
   const c = await getPage<LineContent>(pageId);
-  return { title: c.seo.title, description: c.seo.description };
+  return {
+    title: c.seo.title,
+    description: c.seo.description,
+    ...socialMeta({ fullTitle: `${c.seo.title} | ${SITE_TITLE_SUFFIX}`, description: c.seo.description, path: pageId, ogKey: ogKeyOf(pageId), ogAlt: c.hero.alt }),
+  };
 }
 
 /** Renders a product-line page from its Sanity document (falls back to src/content/pages.ts). */
@@ -22,6 +31,7 @@ export default async function LinePage({ pageId, afterHero }: { pageId: string; 
   const book = `/visit?interest=${interest}#book`;
   return (
     <main>
+      <Crumbs path={pageId} />
       <PageHero kicker={hero.kicker} title={<RichTitle t={hero.title} />} lead={hero.lead} image={hero.image} alt={hero.alt} position={hero.position}>
         <Link href={book} className="btn btn-primary btn-lg">{hero.cta} <Icon name="arrow" size={18} /></Link>
         <a href="#more" className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)" }}>
