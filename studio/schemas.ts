@@ -185,32 +185,117 @@ export const schemaTypes = [
     name: "preOwnedSpa",
     title: "Pre-owned spa",
     type: "document",
+    groups: [
+      { name: "listing", title: "Listing (public)", default: true },
+      { name: "intake", title: "Intake (staff only)" },
+    ],
     fields: [
-      defineField({ name: "title", type: "string", description: 'e.g. "2019 Cal Spas Escape"', validation: (r) => r.required() }),
-      defineField({ name: "slug", type: "slug", options: { source: "title", maxLength: 96 }, validation: (r) => r.required() }),
+      defineField({ name: "title", group: "listing", type: "string", description: 'e.g. "2019 Cal Spas Escape"', validation: (r) => r.required() }),
+      defineField({ name: "slug", group: "listing", type: "slug", options: { source: "title", maxLength: 96 }, validation: (r) => r.required() }),
       defineField({
         name: "status",
+        title: "Stage",
+        group: "listing",
         type: "string",
-        initialValue: "available",
-        options: { list: [{ title: "Available", value: "available" }, { title: "Sale pending", value: "pending" }, { title: "Sold (hidden from the site)", value: "sold" }], layout: "radio" },
+        initialValue: "intake",
+        description: "Only Listed, Reserved and Sold ever appear on the site. Sold shows in the Recently found homes strip (needs a sold date and a photo).",
+        options: {
+          list: [
+            { title: "1. Intake (not on the site)", value: "intake" },
+            { title: "2. Reconditioning (not on the site)", value: "reconditioning" },
+            { title: "3. Listed (on the floor)", value: "listed" },
+            { title: "4. Reserved (shown as Reserved)", value: "reserved" },
+            { title: "5. Sold (Recently found homes)", value: "sold" },
+          ],
+          layout: "radio",
+        },
+        validation: (r) =>
+          r.required().custom((v, ctx) => {
+            const photos = (ctx.document as { photos?: unknown[] } | undefined)?.photos;
+            if ((v === "listed" || v === "reserved") && !photos?.length) return "Add at least one photo before listing this spa.";
+            return true;
+          }),
       }),
-      str("brand"),
-      str("model"),
-      defineField({ name: "year", type: "number" }),
-      defineField({ name: "seats", type: "number" }),
-      str("size", "Size", { description: 'e.g. 84" x 84" x 36"' }),
-      str("electrical", "Electrical", { description: "e.g. 240V / 50A" }),
-      strings("highlights", "Highlights"),
-      defineField({ name: "condition", title: "What our shop did", type: "text", rows: 4, description: "What the shop inspected, tested or replaced." }),
+      defineField({ ...str("brand"), group: "listing" }),
+      defineField({ ...str("model"), group: "listing" }),
+      defineField({ name: "year", group: "listing", type: "number" }),
+      defineField({ name: "seats", group: "listing", type: "number" }),
+      defineField({ ...str("size", "Size", { description: 'e.g. 84" x 84" x 36"' }), group: "listing" }),
+      defineField({ ...str("electrical", "Electrical", { description: "e.g. 240V / 50A" }), group: "listing" }),
+      defineField({
+        name: "features",
+        title: "Features (used by the gallery filter)",
+        group: "listing",
+        type: "array",
+        of: [defineArrayMember({ type: "string" })],
+        // Keep in sync with SPA_FEATURES in src/content/pre-owned-checklist.ts.
+        options: { list: ["Lounger seat", "LED lighting", "Waterfall", "Bluetooth audio", "Cover included", "Swim / exercise"].map((v) => ({ title: v, value: v })) },
+      }),
+      defineField({ ...strings("highlights", "Highlights"), group: "listing", description: "Free-text bullets shown on the page." }),
+      defineField({ name: "condition", group: "listing", title: "What our shop did", type: "text", rows: 4, description: "What the shop inspected, tested or replaced." }),
+      defineField({
+        name: "warranty",
+        title: "Warranty terms for this spa",
+        group: "listing",
+        type: "text",
+        rows: 3,
+        description: "Write the exact terms (length, what is covered). Leave blank unless the terms are confirmed; the page then just says to ask us.",
+      }),
+      defineField({ name: "listedDate", title: "Listed date", group: "listing", type: "date", description: 'Set when it goes on the floor. Spas listed in the last few weeks get a "Just arrived" badge.' }),
+      defineField({ name: "soldDate", title: "Sold date", group: "listing", type: "date", description: "Set when sold. Drives the Recently found homes strip." }),
       defineField({
         name: "photos",
+        group: "listing",
         type: "array",
         of: [defineArrayMember({ type: "object", fields: [img(), str("alt", "Image description (alt text)")], preview: { select: { title: "alt", subtitle: "image" } } })],
       }),
-      defineField({ name: "featured", type: "boolean", initialValue: false, description: "Show first on the floor." }),
-      defineField({ name: "sortOrder", type: "number", description: "Lower numbers show first." }),
+      defineField({ name: "featured", group: "listing", type: "boolean", initialValue: false, description: "Show first on the floor." }),
+      defineField({ name: "sortOrder", group: "listing", type: "number", description: "Lower numbers show first." }),
+
+      // ---- Intake: INTERNAL. The site's queries never select these fields. ----
+      // WARNING: the production dataset is public, so anyone can read these through the Sanity API.
+      // Keep real costs out until the dataset is private (or intake moves to a private dataset).
+      // Never enter customer names, phone numbers or addresses here.
+      defineField({
+        name: "source",
+        title: "Where it came from",
+        group: "intake",
+        type: "string",
+        options: { list: [{ title: "Free pickup", value: "free-pickup" }, { title: "Trade-in", value: "trade-in" }, { title: "Purchased", value: "purchased" }], layout: "radio" },
+      }),
+      defineField({ name: "receivedDate", title: "Date received", group: "intake", type: "date" }),
+      defineField({ name: "acquisitionCost", title: "Acquisition cost ($)", group: "intake", type: "number", description: "0 for a free pickup.", validation: (r) => r.min(0) }),
+      defineField({ name: "reconCost", title: "Reconditioning cost so far ($)", group: "intake", type: "number", validation: (r) => r.min(0) }),
+      defineField({
+        name: "reconChecklist",
+        title: "Certified checklist (tick only what was actually done)",
+        group: "intake",
+        type: "object",
+        description: "Ticked items show on the public page as the shop checklist. Do not tick anything that was not done on this unit.",
+        // Keys match RECON_CHECKLIST in src/content/pre-owned-checklist.ts.
+        fields: [
+          defineField({ name: "inspected", title: "Full inspection by our shop techs", type: "boolean", initialValue: false }),
+          defineField({ name: "plumbing", title: "Plumbing checked for leaks", type: "boolean", initialValue: false }),
+          defineField({ name: "equipment", title: "Pumps, heater and controls tested", type: "boolean", initialValue: false }),
+          defineField({ name: "filters", title: "Filters cleaned or replaced", type: "boolean", initialValue: false }),
+          defineField({ name: "cabinet", title: "Shell and cabinet cleaned", type: "boolean", initialValue: false }),
+          defineField({ name: "sanitized", title: "Sanitized and filled for a test run", type: "boolean", initialValue: false }),
+          defineField({ name: "cover", title: "Cover checked", type: "boolean", initialValue: false }),
+        ],
+      }),
+      defineField({ name: "intakeNotes", title: "Internal notes", group: "intake", type: "text", rows: 4, description: "Repairs needed, parts ordered, quirks. Not shown on the site." }),
     ],
-    preview: { select: { title: "title", subtitle: "status" } },
+    orderings: [
+      { title: "Newest first", name: "newest", by: [{ field: "_createdAt", direction: "desc" }] },
+      { title: "Listed date", name: "listed", by: [{ field: "listedDate", direction: "desc" }] },
+    ],
+    preview: {
+      select: { title: "title", status: "status", seats: "seats", media: "photos.0.image" },
+      prepare: ({ title, status, seats }: { title?: string; status?: string; seats?: number }) => ({
+        title,
+        subtitle: [status, seats ? `${seats} seats` : null].filter(Boolean).join(" · "),
+      }),
+    },
   }),
   defineType({
     name: "hearthBrand",

@@ -3,8 +3,9 @@ import { createClient } from "@sanity/client";
 import { ALL_PAGES } from "@/content/pages";
 import { SETTINGS } from "@/content/settings";
 import { DEMO_PRE_OWNED } from "@/content/pre-owned";
+import { JUST_ARRIVED_DAYS, RECENTLY_SOLD_DAYS, RECON_CHECKLIST } from "@/content/pre-owned-checklist";
 import { BRANDS } from "@/content/brands";
-import type { BrandContent, PageContent, PreOwnedSpa, SiteSettings } from "@/content/types";
+import type { BrandContent, PageContent, PreOwnedSpa, PreOwnedStatus, SiteSettings } from "@/content/types";
 import { mergeContent } from "./merge";
 import { brandFromSanity } from "./brand-content";
 
@@ -56,7 +57,45 @@ export async function getSettings(): Promise<SiteSettings> {
 }
 
 // ---- Pre-owned spas ("on the floor") ----
-const SPA_FIELDS = `_id, title, "slug": slug.current, status, brand, model, year, seats, size, electrical, highlights, condition, photos[]{image, alt}, featured, sortOrder`;
+// Public projection only. Internal intake fields (source, acquisitionCost, reconCost, intakeNotes, receivedDate)
+// are never selected, and `reconChecklist` is read only to turn ticked items into public labels.
+// NOTE: the "production" dataset is public, so those fields are still readable straight from the Sanity API.
+// Do not enter real costs until the dataset is private or intake lives in a private dataset (see PR notes).
+const SPA_FIELDS = `_id, title, "slug": slug.current, "rawStatus": status, brand, model, year, seats, size, electrical, features, highlights,
+  condition, warranty, listedDate, soldDate, "recon": reconChecklist, photos[]{image, alt}, featured, sortOrder`;
+
+type RawSpa = Omit<PreOwnedSpa, "status" | "checklist" | "justArrived"> & {
+  rawStatus?: string;
+  recon?: Record<string, boolean | null> | null;
+};
+
+/** Sanity stage -> public status. Intake and reconditioning (and anything unknown) are not public. */
+export function publicStatus(raw?: string): PreOwnedStatus | null {
+  if (raw === "listed" || raw === "available") return "listed";
+  if (raw === "reserved" || raw === "pending") return "reserved";
+  if (raw === "sold") return "sold";
+  return null;
+}
+
+const daysSince = (iso?: string) => {
+  if (!iso) return Infinity;
+  const t = Date.parse(iso + "T12:00:00Z");
+  return Number.isNaN(t) ? Infinity : (Date.now() - t) / 86_400_000;
+};
+
+export function toPublicSpa(r: RawSpa): PreOwnedSpa | null {
+  const status = publicStatus(r.rawStatus);
+  if (!status || !r.slug) return null;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { rawStatus, recon, ...rest } = r;
+  const checklist = RECON_CHECKLIST.filter((c) => recon?.[c.key] === true).map((c) => c.label);
+  return {
+    ...rest,
+    status,
+    checklist,
+    justArrived: status === "listed" && daysSince(r.listedDate) <= JUST_ARRIVED_DAYS,
+  };
+}
 
 // Aborted after 4s; null on any failure so callers fall back. (cache() keys params by reference, so
 // per-render dedupe only happens in callers that are cached themselves, like getBrands.)
@@ -75,20 +114,40 @@ const fetchQuery = cache(async <T>(tag: string, query: string, params: Record<st
 // Demo listings are for local previews only and never render in production.
 const demo = () => process.env.PREOWNED_DEMO === "1" && process.env.NODE_ENV !== "production";
 
+const PUBLIC_RAW_STATUSES = ["listed", "available", "reserved", "pending"];
+
+/** On the floor: listed and reserved spas, available first. Sold, intake and reconditioning never appear. */
 export async function getPreOwnedSpas(): Promise<PreOwnedSpa[]> {
-  const rows = await fetchQuery<PreOwnedSpa[]>(
+  const rows = await fetchQuery<RawSpa[]>(
     "preOwnedSpa",
-    `*[_type == "preOwnedSpa" && defined(slug.current) && status != "sold"] | order(featured desc, sortOrder asc, _createdAt desc){${SPA_FIELDS}}`,
-    {},
+    `*[_type == "preOwnedSpa" && defined(slug.current) && status in $statuses] | order(featured desc, sortOrder asc, listedDate desc, _createdAt desc){${SPA_FIELDS}}`,
+    { statuses: PUBLIC_RAW_STATUSES },
   );
-  if (rows && rows.length) return rows;
+  const spas = (rows ?? []).map(toPublicSpa).filter((s): s is PreOwnedSpa => !!s);
+  if (spas.length) return spas.sort((a, b) => Number(a.status === "reserved") - Number(b.status === "reserved"));
   return demo() ? DEMO_PRE_OWNED.filter((s) => s.status !== "sold") : [];
 }
 
+/** Social proof strip: spas sold within RECENTLY_SOLD_DAYS that have a photo and a sold date. */
+export async function getRecentlySold(limit = 8): Promise<PreOwnedSpa[]> {
+  const rows = await fetchQuery<RawSpa[]>(
+    "preOwnedSpa",
+    `*[_type == "preOwnedSpa" && defined(slug.current) && status == "sold" && defined(soldDate) && defined(photos[0].image)] | order(soldDate desc)[0...20]{${SPA_FIELDS}}`,
+    {},
+  );
+  const sold = (rows ?? []).map(toPublicSpa).filter((s): s is PreOwnedSpa => !!s && daysSince(s.soldDate) <= RECENTLY_SOLD_DAYS);
+  if (sold.length) return sold.slice(0, limit);
+  return demo() ? DEMO_PRE_OWNED.filter((s) => s.status === "sold") : [];
+}
+
+/** One listed or reserved spa by slug; null for sold, intake, reconditioning or unknown. */
 export async function getPreOwnedSpa(slug: string): Promise<PreOwnedSpa | null> {
-  const row = await fetchQuery<PreOwnedSpa | null>("preOwnedSpa", `*[_type == "preOwnedSpa" && slug.current == $slug][0]{${SPA_FIELDS}}`, { slug });
-  if (row) return row;
-  return demo() ? (DEMO_PRE_OWNED.find((s) => s.slug === slug) ?? null) : null;
+  const row = await fetchQuery<RawSpa | null>("preOwnedSpa", `*[_type == "preOwnedSpa" && slug.current == $slug][0]{${SPA_FIELDS}}`, { slug });
+  const spa = row ? toPublicSpa(row) : null;
+  if (spa && spa.status !== "sold") return spa;
+  if (row) return null;
+  const d = demo() ? (DEMO_PRE_OWNED.find((s) => s.slug === slug) ?? null) : null;
+  return d && d.status !== "sold" ? d : null;
 }
 
 // ---- Hearth brands (/fireplaces/[brand]) ----

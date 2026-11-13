@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Icon from "./Icon";
-import { INTERESTS } from "@/lib/interests";
+import { PICKABLE_INTERESTS } from "@/lib/interests";
 
 export default function NoteForm({ compact = false, defaultInterest }: { compact?: boolean; defaultInterest?: string }) {
   const [picked, setPicked] = useState<string[]>(defaultInterest ? [defaultInterest] : []);
@@ -50,7 +50,7 @@ export default function NoteForm({ compact = false, defaultInterest }: { compact
   return (
     <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }} aria-label="Get the Seasonally Living note">
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {INTERESTS.map((i) => (
+        {PICKABLE_INTERESTS.map((i) => (
           <button
             type="button"
             key={i.id}
