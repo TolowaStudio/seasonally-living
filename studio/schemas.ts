@@ -127,19 +127,19 @@ export const schemaTypes = [
   }),
   defineType({
     name: "fireplacesPage",
-    title: "Fireplaces (Stûv) page",
+    title: "Fireplaces hub page",
     type: "document",
     fields: [
       pageId(),
       defineField({ name: "seo", type: "seo" }),
       obj("hero", "Hero", [...heroFields, str("secondaryCta", "Second button label")]),
-      obj("collection", "Stûv collection", [str("kicker"), str("title"), txt("lead"), txt("note"), list("families", "Families", [str("kicker"), str("title"), txt("body"), strings("models")])]),
+      obj("collection", "Collection by kind of fire", [str("kicker"), str("title"), txt("lead"), txt("note"), list("families", "Families", [str("kicker"), str("title"), txt("body"), strings("models")])]),
       obj("burnBan", "Burn-ban section", [str("kicker"), str("title"), txt("body"), strings("bullets"), img(), str("alt")]),
       obj("steps", "Steps", [str("kicker"), str("title"), list("items", "Steps", itemFields)]),
       obj("magnet", "Lead magnet", [str("title"), txt("body")]),
       obj("closing", "Closing call to action", [str("title"), txt("body"), str("cta")]),
     ],
-    preview: { prepare: () => ({ title: "Fireplaces (Stûv)" }) },
+    preview: { prepare: () => ({ title: "Fireplaces hub" }) },
   }),
   defineType({
     name: "servicePage",

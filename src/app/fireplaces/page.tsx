@@ -11,6 +11,12 @@ import RelatedLines from "@/components/RelatedLines";
 import RichTitle from "@/components/RichTitle";
 import { getPage } from "@/lib/sanity";
 import type { FireplacesContent } from "@/content/types";
+import { BRANDS } from "@/content/brands";
+
+const brandHref = (name: string) => {
+  const b = BRANDS.find((x) => x.name === name);
+  return b ? `/fireplaces/${b.slug}` : undefined;
+};
 
 // Content: Sanity document "page-fireplaces" (fallback: src/content/pages.ts).
 export const revalidate = 60;
@@ -30,19 +36,47 @@ export default async function FireplacesPage() {
         <Link href="#collection" className="btn btn-lg" style={{ background: "rgba(247,242,234,0.12)", color: "#fff", border: "1px solid rgba(247,242,234,0.32)" }}>{c.hero.secondaryCta}</Link>
       </PageHero>
 
+      <section className="section-sm">
+        <div className="wrap">
+          <SectionHead kicker="Lines we carry" title="Four makers we stand behind." lead="Each one earned its place on our floor. Pick a maker to see the range, or scroll on to shop by kind of fire." />
+          <div className="grid-4" style={{ marginTop: 44 }}>
+            {BRANDS.map((b, i) => (
+              <Reveal key={b.slug} delay={i * 80}>
+                <Link href={`/fireplaces/${b.slug}`} className="card brand-card">
+                  <div className="brand-card-photo">
+                    <Image src={b.heroImage} alt={b.heroAlt} fill sizes="(max-width: 940px) 50vw, 25vw" />
+                  </div>
+                  <div style={{ padding: 22 }}>
+                    <span className="eyebrow">{b.origin}</span>
+                    <p className="h-md" style={{ marginTop: 8, fontSize: 24 }}>{b.name}</p>
+                    <p className="small body-muted" style={{ marginTop: 6 }}>{b.categories.join(" · ")}</p>
+                    <span className="small" style={{ display: "inline-flex", gap: 6, alignItems: "center", marginTop: 14, color: "var(--clay)", fontWeight: 600 }}>See the range <Icon name="arrow" size={14} /></span>
+                  </div>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="section" id="collection">
         <div className="wrap">
           <SectionHead kicker={c.collection.kicker} title={c.collection.title} lead={c.collection.lead} />
-          <div className="grid-3" style={{ marginTop: 56 }}>
+          <div className="grid-4" style={{ marginTop: 56 }}>
             {c.collection.families.map((f, i) => (
               <Reveal key={f.title} delay={i * 90} className="card" style={{ padding: 30, display: "flex", flexDirection: "column" }}>
                 <span className="eyebrow">{f.kicker}</span>
                 <h3 className="h-md" style={{ marginTop: 12 }}>{f.title}</h3>
                 <p className="body-muted" style={{ marginTop: 12, flex: 1 }}>{f.body}</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 22 }}>
-                  {f.models.map((m) => (
-                    <span key={m} className="chip" style={{ cursor: "default" }}>{m}</span>
-                  ))}
+                  {f.models.map((m) => {
+                    const href = brandHref(m);
+                    return href ? (
+                      <Link key={m} href={href} className="chip">{m}</Link>
+                    ) : (
+                      <span key={m} className="chip" style={{ cursor: "default" }}>{m}</span>
+                    );
+                  })}
                 </div>
               </Reveal>
             ))}
