@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+/** Showroom page hero (comp C): type on the left, the photograph on the right. Text always sits on a pale ground, so it never depends on a scrim. */
 export default function PageHero({
   kicker,
   title,
@@ -8,6 +9,7 @@ export default function PageHero({
   alt,
   children,
   position = "center",
+  caption,
 }: {
   kicker: string;
   title: React.ReactNode;
@@ -16,29 +18,19 @@ export default function PageHero({
   alt: string;
   children?: React.ReactNode;
   position?: string;
+  caption?: string;
 }) {
   return (
-    <section style={{ position: "relative", minHeight: "78vh", display: "flex", alignItems: "flex-end", overflow: "hidden" }}>
-      <Image src={image} alt={alt} fill loading="eager" fetchPriority="high" sizes="100vw" style={{ objectFit: "cover", objectPosition: position }} />
-      <div
-        aria-hidden
-        style={{
-          position: "absolute", inset: 0,
-          background:
-            "linear-gradient(100deg, rgba(8,7,5,0.88) 0%, rgba(8,7,5,0.55) 34%, rgba(8,7,5,0.1) 70%), linear-gradient(to bottom, rgba(8,7,5,0.55) 0%, rgba(8,7,5,0) 26%, rgba(8,7,5,0.75) 100%)",
-        }}
-      />
-      <div className="wrap" style={{ position: "relative", width: "100%", paddingTop: "calc(var(--nav-h) + 60px)", paddingBottom: "clamp(52px, 9vh, 96px)" }}>
-        <span className="kicker" style={{ color: "var(--clay-soft)" }}>{kicker}</span>
-        <h1 className="display" style={{ color: "#fff", marginTop: 20, maxWidth: "16ch", textShadow: "0 2px 26px rgba(0,0,0,0.5)" }}>
-          {title}
-        </h1>
-        {lead && (
-          <p className="lead" style={{ marginTop: 22, color: "rgba(247,242,234,0.9)", maxWidth: "50ch" }}>
-            {lead}
-          </p>
-        )}
-        {children && <div style={{ display: "flex", gap: 14, marginTop: 32, flexWrap: "wrap" }}>{children}</div>}
+    <section className="sh-hero">
+      <div className="sh-hero-t">
+        <span className="kicker">{kicker}</span>
+        <h1>{title}</h1>
+        {lead && <p className="lead">{lead}</p>}
+        {children && <div className="sh-hero-actions">{children}</div>}
+      </div>
+      <div className="sh-hero-p">
+        <Image src={image} alt={alt} fill loading="eager" fetchPriority="high" sizes="(max-width: 1000px) 100vw, 58vw" style={{ objectFit: "cover", objectPosition: position }} />
+        {caption && <span className="sh-cap">{caption}</span>}
       </div>
     </section>
   );

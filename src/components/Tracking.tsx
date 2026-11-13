@@ -131,7 +131,7 @@ function ConsentBanner() {
     <div
       role="region"
       aria-label="Cookie preferences"
-      data-theme="alpine"
+      data-theme="showroom-dark"
       style={{
         position: "fixed", left: 16, bottom: 16, zIndex: 60, maxWidth: 340, padding: "14px 16px",
         background: "var(--paper)", color: "var(--ink)", border: "1px solid var(--line-strong)",
