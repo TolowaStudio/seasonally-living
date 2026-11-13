@@ -131,6 +131,22 @@ export const schemaTypes = [
     preview: { select: { title: "seo.title", subtitle: "pageId" } },
   }),
   defineType({
+    name: "landingPage",
+    title: "Campaign landing pages",
+    type: "document",
+    description: "Paid-ad landing pages at /lp/<slug>. Never indexed. Document id must be landingPage-<slug>.",
+    fields: [
+      defineField({ name: "slug", title: "Campaign slug", type: "string", readOnly: true, description: "Route: /lp/<slug>" }),
+      defineField({ name: "seo", type: "seo" }),
+      str("interest", "Lead-form interest tag", { readOnly: true }),
+      obj("hero", "Hero", heroFields),
+      obj("points", "Three points", [str("title"), list("items", "Points", itemFields)]),
+      obj("feature", "Photo feature", [str("kicker"), str("title"), txt("body"), strings("bullets"), img(), str("alt")]),
+      obj("form", "Form heading", [str("title"), txt("lead")]),
+    ],
+    preview: { select: { title: "seo.title", subtitle: "slug" } },
+  }),
+  defineType({
     name: "fireplacesPage",
     title: "Fireplaces hub page",
     type: "document",
