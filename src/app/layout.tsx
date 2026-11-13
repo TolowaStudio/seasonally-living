@@ -7,6 +7,7 @@ import ThemeDock from "@/components/ThemeDock";
 import SiteChrome from "@/components/SiteChrome";
 import Tracking from "@/components/Tracking";
 import JsonLd from "@/components/JsonLd";
+import AttributionCapture from "@/components/AttributionCapture";
 import { getSiteUrl, site } from "@/lib/site";
 import { getPage, getSettings } from "@/lib/sanity";
 import { cloudinaryUrl, localBusinessJsonLd, ogImageMeta } from "@/lib/seo";
@@ -65,6 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <div id="main">{children}</div>
         <SiteChrome><Footer settings={settings} /></SiteChrome>
         <Tracking />
+        <AttributionCapture />
         <ThemeDock enabled={process.env.NEXT_PUBLIC_SHOW_COMPS === "1"} />
       </body>
     </html>
