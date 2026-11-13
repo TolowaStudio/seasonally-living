@@ -4,6 +4,7 @@ import { ALL_PAGES } from "@/content/pages";
 import { SETTINGS } from "@/content/settings";
 import { DEMO_PRE_OWNED } from "@/content/pre-owned";
 import { BRANDS } from "@/content/brands";
+import { LANDING_PAGES, type LandingContent } from "@/content/landing";
 import type { BrandContent, PageContent, PreOwnedSpa, SiteSettings } from "@/content/types";
 import { mergeContent } from "./merge";
 import { brandFromSanity } from "./brand-content";
@@ -117,4 +118,12 @@ export const getBrands = cache(async (): Promise<BrandContent[]> => {
 
 export async function getBrand(slug: string): Promise<BrandContent | undefined> {
   return (await getBrands()).find((b) => b.slug === slug);
+}
+
+// ---- Campaign landing pages (/lp/[campaign]) ----
+// Document type "landingPage", id "landingPage-<slug>". Code defaults in src/content/landing.ts.
+export async function getLanding(slug: string): Promise<LandingContent | null> {
+  const fallback = LANDING_PAGES.find((p) => p.slug === slug);
+  if (!fallback) return null;
+  return mergeContent(fallback, await fetchDoc(`landingPage-${slug}`));
 }
