@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const spa = await getPreOwnedSpa(slug);
   if (!spa) return { title: "Pre-owned spa" };
-  const description = `${spa.title}${spa.seats ? `, ${spa.seats}-seat` : ""} pre-owned hot tub, inspected and reconditioned by the Seasonally Living shop in Wenatchee. Call for price.`;
+  const description = `${spa.title}${spa.seats ? `, ${spa.seats}-seat` : ""} pre-owned hot tub from the Seasonally Living shop in Wenatchee. Call for price.`;
   const photo = spa.photos?.[0];
   return {
     title: spa.title,
