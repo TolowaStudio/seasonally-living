@@ -88,6 +88,11 @@ export async function POST(req: NextRequest) {
   }
 
   const optIn = kind === "note" || d.optIn === true;
+  // A note signup without a working confirmation link would look like success while storing nothing.
+  if (kind === "note" && !signingAvailable()) {
+    console.error(JSON.stringify({ event: "lead.error", code: "no_signing_secret", note: "NOTE_SIGNING_SECRET unset: note signups disabled" }));
+    return fail(503, "not_configured", "Signups are temporarily unavailable. Please call (509) 667-8833.");
+  }
   const source = oneLine(d.source, 200);
   const attribution = cleanAttribution(d.attribution);
   const rid = randomUUID().slice(0, 8);

@@ -21,12 +21,20 @@ export function rateLimit(key: string, limit: number, windowMs: number): { ok: b
   return { ok: true, retryAfter: 0 };
 }
 
-/** Client address from the proxy chain (Cloud Run appends the real client to X-Forwarded-For). */
+/**
+ * Client address from the proxy chain. Callers can put anything they like at the FRONT of
+ * X-Forwarded-For; Cloud Run appends the address it actually saw at the END. So we read from the right.
+ * Behind an extra proxy or load balancer, set TRUSTED_PROXY_HOPS to the number of trusted proxies
+ * after Cloud Run (0 = Cloud Run directly, the default).
+ */
 export function clientIp(headers: Headers): string {
   const xff = headers.get("x-forwarded-for");
   if (xff) {
     const parts = xff.split(",").map((s) => s.trim()).filter(Boolean);
-    if (parts.length) return parts[0].slice(0, 64);
+    if (parts.length) {
+      const hops = Math.max(0, Math.floor(Number(process.env.TRUSTED_PROXY_HOPS) || 0));
+      return parts[Math.max(0, parts.length - 1 - hops)].slice(0, 64);
+    }
   }
   return headers.get("x-real-ip")?.slice(0, 64) || "unknown";
 }

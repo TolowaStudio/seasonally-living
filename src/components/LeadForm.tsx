@@ -13,6 +13,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
   const [interest, setInterest] = useState(unit ? "pre-owned" : defaultInterest);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
+  const [confirmSent, setConfirmSent] = useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -40,6 +41,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) throw new Error(data.error || "Something went wrong");
+      setConfirmSent(data.pending === true);
       setStatus("sent");
       trackConversion("lead_submitted", { interest: unit ? "pre-owned" : interest, source: window.location.pathname, note_opt_in: fd.get("optIn") === "on" });
     } catch (err) {
@@ -55,7 +57,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
         <p className="body-muted" style={{ marginTop: 8 }}>
           {unit ? "We\u2019ll call or email within one business day with the price and details." : "We\u2019ll call or email within one business day to confirm a time."} Need us sooner? Call (509) 667-8833.
         </p>
-        <p className="body-muted small" style={{ marginTop: 8 }}>If you ticked the note box, check your email for a link to confirm.</p>
+        {confirmSent && <p className="body-muted small" style={{ marginTop: 8 }}>Check your email for a link to confirm the note signup.</p>}
       </div>
     );
   }
