@@ -49,6 +49,7 @@ export const SETTINGS: SiteSettings = {
     },
   ],
   navLinks: [
+    { href: "/journal", label: "Journal" },
     { href: "/builders", label: "Builders" },
     { href: "/about", label: "Our story" },
     { href: "/visit", label: "Visit" },

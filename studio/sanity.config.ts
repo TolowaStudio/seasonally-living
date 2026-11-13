@@ -52,6 +52,8 @@ export default defineConfig({
                   ]),
               ),
             S.documentTypeListItem("simplePage").title("Visit & note pages"),
+            S.divider(),
+            S.documentTypeListItem("post").title("Journal & social posts"),
           ]),
     }),
   ],

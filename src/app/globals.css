@@ -616,3 +616,22 @@ h1, h2, h3, h4 {
 @media (max-width: 1100px) { .steps4 { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 940px) { .po-detail { grid-template-columns: 1fr; } .po-detail-info { position: static; } }
 @media (max-width: 700px) { .steps4 { grid-template-columns: 1fr; } .po-filter-row .field-label { min-width: 100%; } .po-sortbar .select { width: 100%; } }
+
+/* ---------- Journal ---------- */
+.jr-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+.jr-filters a.chip { text-decoration: none; }
+.jr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 40px; }
+.jr-card { display: block; padding: 0; color: inherit; text-decoration: none; }
+.jr-photo { aspect-ratio: 16 / 10; border-radius: 0; }
+.jr-body { padding: 22px 24px 26px; }
+.jr-meta { font-size: 12.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.jr-prose { font-size: 18px; line-height: 1.7; color: var(--ink-soft); }
+.jr-prose > * + * { margin-top: 1.1em; }
+.jr-prose h2 { margin-top: 2em; color: var(--ink); }
+.jr-prose h3 { margin-top: 1.6em; color: var(--ink); font-size: 20px; }
+.jr-prose strong { color: var(--ink); }
+.jr-prose a { color: var(--clay); text-decoration: underline; text-underline-offset: 3px; }
+.jr-prose ul, .jr-prose ol { padding-left: 1.3em; display: grid; gap: 0.6em; }
+.jr-prose blockquote { border-left: 3px solid var(--clay); padding-left: 1.1em; color: var(--ink); }
+@media (max-width: 1100px) { .jr-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px) { .jr-grid { grid-template-columns: 1fr; } .jr-prose { font-size: 17px; } }

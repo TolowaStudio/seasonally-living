@@ -1,4 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import { postType } from "./post-schema";
 
 // Mirrors src/content/types.ts. Images are Cloudinary public IDs in the tolowa-studio cloud.
 const IMAGE_HELP =
@@ -393,4 +394,5 @@ export const schemaTypes = [
     orderings: [{ title: "Sort order", name: "sortOrder", by: [{ field: "sortOrder", direction: "asc" }] }],
     preview: { select: { title: "name", subtitle: "origin" } },
   }),
+  postType,
 ];
