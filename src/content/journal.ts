@@ -41,6 +41,8 @@ export type JournalPost = {
   body: PortableBlock[];
   social?: SocialVariants;
   status: JournalStatus;
+  /** True once any channel has a posted link: the post stays on the site even if it was sent back to Draft, so a live Facebook link never 404s. */
+  posted?: boolean;
   /** ISO date/time. Posts with a future value stay off the site and out of the queue. */
   publishAt?: string;
   updatedAt?: string;
@@ -187,20 +189,20 @@ export const DEFAULT_POSTS: JournalPost[] = [
       h2("Know what it needs at your house"),
       p("Before you fall for a tub, check what it needs. Many full-size hot tubs run on 240 volts and need their own dedicated circuit, and a pad or deck that can carry the weight of a full tub. Ask for the electrical requirement and the dimensions. We list those, along with seats and year, on each spa's page."),
       h2("What we put on each spa's page"),
-      p("Every pre-owned spa on our floor has a “What our shop did” section, which says what the shop inspected, tested or replaced on that spa. We don't post prices; call us and we'll talk through the spa and your yard."),
+      p("On our pre-owned spa pages, the “What our shop did” section says what the shop inspected, tested or replaced on that spa. We don't post prices; call us and we'll talk through the spa and your yard."),
       p(`See what is on the floor right now, or call the shop at ${PHONE}.`),
     ],
     // TODO-confirm: that every pre-owned spa gets run/tested by the shop before listing, and what warranty (if any) the shop offers.
     social: {
       facebook:
-        "Thinking about a pre-owned hot tub? Good idea. Just ask the seller:\n\n- What was inspected, tested or replaced?\n- Was it filled and run for a few days?\n- Was it checked for leaks?\n- What shape is the cover in?\n- Is there a warranty, in writing?\n\nEvery spa on our floor lists what our shop did. See what's here this week on the journal.",
+        "Thinking about a pre-owned hot tub? Good idea. Just ask the seller:\n\n- What was inspected, tested or replaced?\n- Was it filled and run for a few days?\n- Was it checked for leaks?\n- What shape is the cover in?\n- Is there a warranty, in writing?\n\nOur spa pages list what our shop did. See what's here this week on the journal.",
       instagram: {
         caption:
           "Pre-owned hot tub shopping? Ask these:\n\n1. What was inspected, tested or replaced?\n2. Was it filled and run?\n3. Checked for leaks?\n4. How's the cover?\n5. Warranty in writing?\n\nSee what's on our floor (link in bio).",
         hashtags: ["#wenatchee", "#preowned", "#hottub", "#usedhottub", "#spa", "#seasonallyliving"],
       },
       gbp: {
-        text: "Buying a pre-owned hot tub? Ask what was inspected, tested or replaced, whether it was filled and run, whether it was checked for leaks, how the cover looks, and what the warranty is in writing. Every spa on our floor lists what our shop did. See what's here this week.",
+        text: "Buying a pre-owned hot tub? Ask what was inspected, tested or replaced, whether it was filled and run, whether it was checked for leaks, how the cover looks, and what the warranty is in writing. Our spa pages list what our shop did. See what's here this week.",
         cta: "LEARN_MORE",
       },
     },

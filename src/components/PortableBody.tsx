@@ -5,7 +5,7 @@ import type { PortableBlock, PortableSpan } from "@/content/journal";
 // Minimal portable-text renderer for the journal: paragraphs, h2/h3, quotes, bullet and numbered
 // lists, and bold / italic / link marks. Anything else Sanity sends is rendered as a plain paragraph.
 
-const SAFE_HREF = /^(\/[^\s]*|https:\/\/[^\s]+|tel:\+?[0-9]+)$/i;
+const SAFE_HREF = /^(\/(?!\/)[^\s]*|https:\/\/[^\s]+|tel:\+?[0-9]+)$/i;
 
 function Span({ span, block }: { span: PortableSpan; block: PortableBlock }) {
   let node: ReactNode = span.text;

@@ -17,7 +17,8 @@ import { SANITY_DATASET, SANITY_PROJECT_ID } from "@/lib/sanity";
 // Treat the secret like a password: long and random, in GCP Secret Manager / the Cloud Run env only.
 
 const API = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2025-01-01/data`;
-const ID_RE = /^post-[a-z0-9]+(-[a-z0-9]+)*$/;
+// Imported drafts are "post-<slug>"; posts created in the Studio get generated ids. Never a "drafts." id.
+const ID_RE = /^(?!drafts\.)[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 const APPROVERS = /^[A-Za-z][A-Za-z .'-]{0,39}$/;
 
 const json = (body: Record<string, unknown>, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -35,7 +36,10 @@ export async function POST(req: NextRequest) {
   const secret = process.env.CONTENT_APPROVE_SECRET?.trim(); // a trailing newline from a mounted secret must not break auth
   if (!secret) return new NextResponse("Not Found", { status: 404 });
   // The route is internet-reachable and has no rate limit, so a guessable secret is not allowed to turn it on.
-  if (secret.length < 32) return json({ ok: false, error: "CONTENT_APPROVE_SECRET must be at least 32 characters" }, 503);
+  if (secret.length < 32) {
+    console.error("approve: CONTENT_APPROVE_SECRET is shorter than 32 characters; the route stays off");
+    return new NextResponse("Not Found", { status: 404 });
+  }
 
   const auth = req.headers.get("authorization") ?? "";
   const given = auth.startsWith("Bearer ") ? auth.slice(7) : (req.headers.get("x-approve-secret") ?? "");
@@ -52,12 +56,12 @@ export async function POST(req: NextRequest) {
   }
   const id = typeof body.id === "string" ? body.id.trim() : "";
   const approvedBy = typeof body.approvedBy === "string" ? body.approvedBy.trim() : "";
-  if (!ID_RE.test(id)) return json({ ok: false, error: "id must look like post-<slug>" }, 400);
+  if (!ID_RE.test(id)) return json({ ok: false, error: "id must be a post document id (for example post-<slug>)" }, 400);
   if (!APPROVERS.test(approvedBy)) return json({ ok: false, error: "approvedBy (a first name) is required" }, 400);
 
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
   const q = new URLSearchParams({
-    query: `*[_id == $id][0]{_rev, status, publishAt, needsConfirm, "text": coalesce(social.facebook, "") + coalesce(social.instagram.caption, "") + coalesce(social.gbp.text, "") + coalesce(pt::text(body), "")}`,
+    query: `*[_id == $id && _type == "post"][0]{_rev, status, publishAt, needsConfirm, "text": coalesce(social.facebook, "") + coalesce(social.instagram.caption, "") + coalesce(social.gbp.text, "") + coalesce(pt::text(body), "")}`,
     $id: JSON.stringify(id),
     perspective: "raw",
   });

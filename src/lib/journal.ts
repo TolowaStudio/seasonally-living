@@ -17,7 +17,7 @@ const client = createClient({
   perspective: "published",
 });
 
-const FIELDS = `_id, title, "slug": slug.current, tags, season, heroImage, heroAlt, excerpt, body, status, publishAt, "updatedAt": _updatedAt`;
+const FIELDS = `_id, title, "slug": slug.current, tags, season, heroImage, heroAlt, excerpt, body, status, publishAt, "updatedAt": _updatedAt, "posted": defined(results.facebookUrl) || defined(results.instagramUrl) || defined(results.gbpUrl)`;
 const VISIBLE: JournalStatus[] = ["approved", "scheduled", "published"];
 const STATUSES: JournalStatus[] = ["draft", "approved", "scheduled", "published"];
 const SEASONS: JournalSeason[] = ["winter", "spring", "summer", "fall", "year-round"];
@@ -45,13 +45,15 @@ export function postFromSanity(row: unknown): JournalPost | null {
     excerpt: str(r.excerpt),
     body,
     status,
+    posted: r.posted === true,
     publishAt: publishAt && !Number.isNaN(Date.parse(publishAt)) ? publishAt : undefined,
     updatedAt: str(r.updatedAt) || undefined,
   };
 }
 
 /** True when the post should be on the public site right now. */
-export function isVisible(p: Pick<JournalPost, "status" | "publishAt">, now = Date.now()): boolean {
+export function isVisible(p: Pick<JournalPost, "status" | "publishAt" | "posted">, now = Date.now()): boolean {
+  if (p.posted) return true; // already linked from Facebook / Instagram / Google
   if (!VISIBLE.includes(p.status)) return false;
   return !p.publishAt || Date.parse(p.publishAt) <= now;
 }

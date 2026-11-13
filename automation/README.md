@@ -118,7 +118,12 @@ curl -X POST https://seasonallyliving.com/api/content/approve \
   category combinations, which would show up as "Google: ..." in "Last problem".
 - Posts publish as a link post on Facebook (the article's social card shows the hero photo) and as a
   single-photo post on Instagram and Google. No video, carousels or stories yet.
-- Editing a post in the Studio while it is already `approved` and waiting is allowed; the text that
-  goes out is whatever is saved when n8n runs.
+- **Do not leave an unpublished Studio edit on a post that is approved or already posted.** n8n and the
+  approve route write to the published document. If an editor's unpublished draft of the same post
+  exists and is published later, it overwrites the saved links and status, and the next run could post
+  again. Edit, press Publish, move on. (A sturdier design keeps posting state in a separate document the
+  editor never touches: filed as a follow-up.)
+- A post sent back to Draft after a partial failure **stays on the site** once any channel has a link,
+  so a live Facebook or Instagram link never lands on a 404.
 - The Sanity dataset is public (published documents are readable by anyone). Never put anything private
   in a post.
