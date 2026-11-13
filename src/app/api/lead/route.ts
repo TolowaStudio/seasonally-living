@@ -12,6 +12,7 @@ type Payload = {
   message?: string;
   optIn?: boolean;
   source?: string;
+  unit?: string;
   company?: string; // honeypot
 };
 
@@ -52,8 +53,9 @@ export async function POST(req: NextRequest) {
   const interests = (kind === "note" ? (Array.isArray(d.interests) ? d.interests : []) : [d.interest ?? ""]).filter((i) => INTEREST_IDS.includes(i));
   const tags = interests.map(label).join(", ") || "General";
 
+  const unit = kind === "visit" ? line(d.unit, 160) : "";
   const subject =
-    kind === "visit" ? `Visit request: ${name} (${tags})` : `Note signup: ${email} (${tags})`;
+    kind === "visit" ? `Visit request: ${name} (${tags})${unit ? ` - ${unit}` : ""}` : `Note signup: ${email} (${tags})`;
   const text = [
     kind === "visit" ? "New visit / consult request from seasonallyliving.com" : "New Seasonally Living note signup",
     "",
@@ -61,6 +63,7 @@ export async function POST(req: NextRequest) {
     `Email: ${email}`,
     `Phone: ${line(d.phone, 40) || "-"}`,
     `Interest: ${tags}`,
+    unit ? `Unit: ${unit}` : "",
     kind === "visit" ? `Best time: ${line(d.when, 120) || "-"}` : "",
     kind === "visit" ? `Note opt-in: ${d.optIn ? "yes" : "no"}` : "Note opt-in: yes",
     `Source page: ${line(d.source, 200) || "-"}`,

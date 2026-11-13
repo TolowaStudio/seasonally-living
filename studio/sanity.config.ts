@@ -24,6 +24,7 @@ export default defineConfig({
             ...SINGLETONS.map((s) => S.listItem().title(s.title).id(s.id).child(S.document().schemaType(s.type).documentId(s.id))),
             S.divider(),
             S.documentTypeListItem("linePage").title("Product line pages"),
+            S.documentTypeListItem("preOwnedSpa").title("Pre-owned spas"),
             S.documentTypeListItem("simplePage").title("Visit & note pages"),
           ]),
     }),

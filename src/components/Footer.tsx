@@ -26,7 +26,7 @@ export default function Footer({ settings: s }: { settings: SiteSettings }) {
           <NoteForm compact />
         </div>
 
-        <div className="footer-cols" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr 1fr 1.1fr", gap: 36, paddingTop: 56 }}>
+        <div className="footer-cols" style={{ display: "grid", gridTemplateColumns: `1.3fr ${"1fr ".repeat(s.navGroups.length)}1.1fr`, gap: 36, paddingTop: 56 }}>
           <div>
             <Logo id={s.logo} height={96} alt={s.legalName} />
             <p className="small body-muted" style={{ marginTop: 18, maxWidth: "30ch" }}>
@@ -78,7 +78,7 @@ export default function Footer({ settings: s }: { settings: SiteSettings }) {
           </div>
         </div>
         <p className="tiny" style={{ marginTop: 56, color: "var(--faint)" }}>
-          © {new Date().getFullYear()} {s.legalName}. Stûv, Cal Spas, Cal Saunas and Cal Flame are trademarks of their respective owners.
+          © {new Date().getFullYear()} {s.legalName}. Stûv and Cal Spas are trademarks of their respective owners.
         </p>
       </div>
     </footer>

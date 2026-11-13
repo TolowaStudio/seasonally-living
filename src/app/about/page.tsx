@@ -26,7 +26,26 @@ export default async function AboutPage() {
         <Link href="/visit#book" className="btn btn-primary btn-lg">{c.hero.cta} <Icon name="arrow" size={18} /></Link>
       </PageHero>
 
-      <section className="section">
+      {c.owners && (
+        <section className="section">
+          <div className="wrap">
+            <SectionHead kicker={c.owners.kicker} title={c.owners.title} />
+            <figure style={{ marginTop: 40 }}>
+              <div className="photo" style={{ aspectRatio: "2 / 1" }}>
+                <Image src={c.owners.image} alt={c.owners.alt} fill sizes="(max-width: 1200px) 100vw, 1200px" style={{ objectFit: "cover", objectPosition: "center 48%" }} />
+              </div>
+              {c.owners.caption && <figcaption className="small body-muted" style={{ marginTop: 12 }}>{c.owners.caption}</figcaption>}
+            </figure>
+            <div className="grid-3" style={{ marginTop: 40 }}>
+              {c.owners.paragraphs.map((para) => (
+                <p key={para.slice(0, 24)} className="lead" style={{ fontSize: 19 }}>{para}</p>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="section bg-paper2">
         <div className="wrap">
           <SectionHead kicker={c.timeline.kicker} title={c.timeline.title} />
           <div className="grid-4" style={{ marginTop: 48 }}>
@@ -41,7 +60,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="section bg-paper2">
+      <section className="section">
         <div className="wrap split">
           <div>
             <span className="kicker">{c.values.kicker}</span>

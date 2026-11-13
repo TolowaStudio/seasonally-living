@@ -2,7 +2,8 @@ import { cache } from "react";
 import { createClient } from "@sanity/client";
 import { ALL_PAGES } from "@/content/pages";
 import { SETTINGS } from "@/content/settings";
-import type { PageContent, SiteSettings } from "@/content/types";
+import { DEMO_PRE_OWNED } from "@/content/pre-owned";
+import type { PageContent, PreOwnedSpa, SiteSettings } from "@/content/types";
 import { mergeContent } from "./merge";
 
 export { mergeContent };
@@ -50,4 +51,36 @@ export async function getPage<T extends PageContent>(pageId: string): Promise<T>
 
 export async function getSettings(): Promise<SiteSettings> {
   return mergeContent(SETTINGS, await fetchDoc("siteSettings"));
+}
+
+// ---- Pre-owned spas ("on the floor") ----
+const SPA_FIELDS = `_id, title, "slug": slug.current, status, brand, model, year, seats, size, electrical, highlights, condition, photos[]{image, alt}, featured, sortOrder`;
+
+const fetchQuery = cache(async <T>(query: string, params: Record<string, unknown>): Promise<T | null> => {
+  try {
+    return await client.fetch<T>(query, params, {
+      signal: AbortSignal.timeout(4000),
+      next: { revalidate: REVALIDATE_SECONDS, tags: ["preOwnedSpa"] },
+    });
+  } catch (err) {
+    console.error("sanity: pre-owned fetch failed", err instanceof Error ? err.message : err);
+    return null;
+  }
+});
+
+const demo = () => process.env.PREOWNED_DEMO === "1";
+
+export async function getPreOwnedSpas(): Promise<PreOwnedSpa[]> {
+  const rows = await fetchQuery<PreOwnedSpa[]>(
+    `*[_type == "preOwnedSpa" && defined(slug.current) && status != "sold"] | order(featured desc, sortOrder asc, _createdAt desc){${SPA_FIELDS}}`,
+    {},
+  );
+  if (rows && rows.length) return rows;
+  return demo() ? DEMO_PRE_OWNED.filter((s) => s.status !== "sold") : [];
+}
+
+export async function getPreOwnedSpa(slug: string): Promise<PreOwnedSpa | null> {
+  const row = await fetchQuery<PreOwnedSpa | null>(`*[_type == "preOwnedSpa" && slug.current == $slug][0]{${SPA_FIELDS}}`, { slug });
+  if (row) return row;
+  return demo() ? (DEMO_PRE_OWNED.find((s) => s.slug === slug) ?? null) : null;
 }

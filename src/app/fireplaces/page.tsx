@@ -51,7 +51,7 @@ export default async function FireplacesPage() {
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 28 }}>
             <Link href="/fireplaces/gas-electric" className="btn btn-outline">Prefer gas or electric?</Link>
             <Link href="/hearth-supplies" className="btn btn-outline">Mantels & venting supplies</Link>
-            <Link href="/service" className="btn btn-outline">Venting & chimney service</Link>
+            <Link href="/service" className="btn btn-outline">Venting service</Link>
           </div>
         </div>
       </section>

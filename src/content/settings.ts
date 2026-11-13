@@ -6,7 +6,7 @@ export const SETTINGS: SiteSettings = {
   name: "Seasonally Living",
   legalName: "Seasonally Living by Chim Chimney",
   description:
-    "Wenatchee's home resort showroom since 1995: Cal Spas hot tubs and swim spas, Stûv wood stoves, gas and electric fireplaces, venting and chimney service, Cal Saunas, outdoor living and pools.",
+    "Wenatchee's home resort showroom since 1995: Cal Spas hot tubs, swim spas and pre-owned spas, swimming pool installation, pool and spa chemicals, Stûv wood stoves, gas and electric inserts, and venting.",
   founded: 1979,
   showroomOpened: 1995,
   owners: "Cam & Susan McNeill",
@@ -28,8 +28,8 @@ export const SETTINGS: SiteSettings = {
         { href: "/hot-tubs", label: "Cal Spas hot tubs", note: "Try one in the showroom" },
         { href: "/swim-spas", label: "Swim spas", note: "Swim Pro & Swim Pro X" },
         { href: "/pre-owned", label: "Pre-owned spas", note: "Inspected trade-ins" },
-        { href: "/spa-care", label: "Pool & spa care", note: "Water care, filters, covers" },
-        { href: "/pools", label: "Pools", note: "Spring 2027 builds" },
+        { href: "/pools", label: "Swimming pools", note: "Installed by our crew" },
+        { href: "/spa-care", label: "Pool & spa care", note: "Chemicals, filters, supplies" },
       ],
     },
     {
@@ -37,17 +37,9 @@ export const SETTINGS: SiteSettings = {
       href: "/fireplaces",
       items: [
         { href: "/fireplaces", label: "Stûv wood stoves & fireplaces", note: "The feature collection" },
-        { href: "/fireplaces/gas-electric", label: "Gas & electric fireplaces", note: "Heat on burn-ban days" },
+        { href: "/fireplaces/gas-electric", label: "Gas & electric inserts", note: "Heat on burn-ban days" },
         { href: "/hearth-supplies", label: "Hearth & venting supplies", note: "Mantels, venting, parts" },
-        { href: "/service", label: "Venting & chimney service", note: "Design, install, sweeps" },
-      ],
-    },
-    {
-      label: "Outdoor",
-      href: "/outdoor-living",
-      items: [
-        { href: "/saunas", label: "Cal Saunas", note: "Traditional & infrared" },
-        { href: "/outdoor-living", label: "Outdoor kitchens & projects", note: "Cal Flame, patios, gazebos" },
+        { href: "/service", label: "Venting service", note: "Design, install, inspections" },
       ],
     },
   ],

@@ -37,7 +37,7 @@ export type HomeContent = {
   stuv: { kicker: string; title: string; body: string; models: { name: string; body: string }[]; image: string; alt: string; cta: string; secondaryCta: string };
   venting: { kicker: string; title: string; body: string; cta: string; cards: { icon: string; title: string; body: string }[] };
   lines: { kicker: string; title: string; lead: string; items: { href: string; kicker: string; title: string; body: string; image: string }[] };
-  seasons: { kicker: string; title: string; items: { name: string; lead: string; note: string }[] };
+  seasons: { kicker: string; title: string; credit?: string; items: { name: string; lead: string; note: string; image?: string; alt?: string }[] };
   showroom: { kicker: string; title: string; body: string; image: string; alt: string; cta: string };
 };
 
@@ -67,6 +67,7 @@ export type AboutContent = {
   pageId: "/about";
   seo: Seo;
   hero: Hero;
+  owners?: { kicker: string; title: string; paragraphs: string[]; image: string; alt: string; caption?: string };
   timeline: { kicker: string; title: string; items: { year: string; title: string; body: string }[] };
   values: { kicker: string; title: string; body: string; bullets: string[]; image: string; alt: string };
   closing: { title: string; body: string };
@@ -106,3 +107,21 @@ export type SiteSettings = {
 };
 
 export type PageContent = LineContent | HomeContent | FireplacesContent | ServiceContent | AboutContent | SimpleContent;
+
+export type PreOwnedSpa = {
+  _id?: string;
+  title: string;
+  slug: string;
+  status: "available" | "pending" | "sold";
+  brand?: string;
+  model?: string;
+  year?: number;
+  seats?: number;
+  size?: string;
+  electrical?: string;
+  highlights?: string[];
+  condition?: string;
+  photos?: { image: string; alt?: string }[];
+  featured?: boolean;
+  sortOrder?: number;
+};
