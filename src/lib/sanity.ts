@@ -4,8 +4,9 @@ import { ALL_PAGES } from "@/content/pages";
 import { SETTINGS } from "@/content/settings";
 import { DEMO_PRE_OWNED } from "@/content/pre-owned";
 import { BRANDS } from "@/content/brands";
+import { GUIDES, type Guide } from "@/content/guides";
 import type { BrandContent, PageContent, PreOwnedSpa, SiteSettings } from "@/content/types";
-import { mergeContent } from "./merge";
+import { mergeContent, stripMeta } from "./merge";
 import { brandFromSanity } from "./brand-content";
 
 export { mergeContent };
@@ -117,4 +118,45 @@ export const getBrands = cache(async (): Promise<BrandContent[]> => {
 
 export async function getBrand(slug: string): Promise<BrandContent | undefined> {
   return (await getBrands()).find((b) => b.slug === slug);
+}
+
+// ---- Lead-magnet guides (/guides/[slug]) ----
+// Code defaults in src/content/guides.ts. A Sanity "guide" document with the same slug overrides the
+// matching default field by field; a guide with a new slug is added if it has a title and sections.
+const GUIDE_FIELDS = `"slug": slug.current, title, interest, kicker, summary, gives, readMinutes, intro,
+  sections[]{heading, body, bullets}, closing{title, body, cta}, seo{title, description}`;
+
+export const getGuides = cache(async (): Promise<Guide[]> => {
+  const rows = await fetchQuery<unknown[]>("guide", `*[_type == "guide" && defined(slug.current)]{${GUIDE_FIELDS}}`, {});
+  const out = new Map<string, Guide>(GUIDES.map((g) => [g.slug, g]));
+  for (const r of rows ?? []) {
+    const slug = r && typeof r === "object" ? (r as { slug?: unknown }).slug : undefined;
+    if (typeof slug !== "string" || !/^[a-z0-9-]{1,96}$/.test(slug)) continue;
+    const base = out.get(slug);
+    if (base) {
+      out.set(slug, { ...mergeContent(base, r), slug });
+    } else {
+      const g = r as Partial<Guide>;
+      if (g.title && g.sections?.length) {
+        out.set(slug, {
+          slug,
+          interest: g.interest || "hot-tub",
+          kicker: g.kicker || "Guide",
+          title: g.title,
+          summary: g.summary || "",
+          gives: g.gives ?? [],
+          readMinutes: g.readMinutes || 5,
+          intro: g.intro || "",
+          sections: stripMeta(g.sections),
+          closing: { title: g.closing?.title || "Book a visit.", body: g.closing?.body || "", cta: g.closing?.cta || "Book a visit" },
+          seo: g.seo,
+        });
+      }
+    }
+  }
+  return [...out.values()];
+});
+
+export async function getGuide(slug: string): Promise<Guide | undefined> {
+  return (await getGuides()).find((g) => g.slug === slug);
 }

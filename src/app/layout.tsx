@@ -4,6 +4,7 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ThemeDock from "@/components/ThemeDock";
+import AttributionCapture from "@/components/AttributionCapture";
 import { getSiteUrl, site } from "@/lib/site";
 import { getSettings } from "@/lib/sanity";
 
@@ -54,6 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Nav settings={settings} />
         <div id="main">{children}</div>
         <Footer settings={settings} />
+        <AttributionCapture />
         <ThemeDock enabled={process.env.NEXT_PUBLIC_SHOW_COMPS === "1"} />
       </body>
     </html>

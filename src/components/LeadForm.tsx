@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Icon from "./Icon";
 import { INTERESTS } from "@/lib/interests";
+import { NOTE_CONSENT_TEXT } from "@/lib/consent";
+import { getAttribution, trackConversion } from "@/lib/attribution";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -33,11 +35,13 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
           optIn: fd.get("optIn") === "on",
           source: typeof window !== "undefined" ? window.location.pathname + window.location.search : "",
           company: fd.get("company"),
+          attribution: getAttribution(),
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) throw new Error(data.error || "Something went wrong");
       setStatus("sent");
+      trackConversion("lead_submitted", { interest: unit ? "pre-owned" : interest, source: window.location.pathname, note_opt_in: fd.get("optIn") === "on" });
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -51,6 +55,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
         <p className="body-muted" style={{ marginTop: 8 }}>
           {unit ? "We\u2019ll call or email within one business day with the price and details." : "We\u2019ll call or email within one business day to confirm a time."} Need us sooner? Call (509) 667-8833.
         </p>
+        <p className="body-muted small" style={{ marginTop: 8 }}>If you ticked the note box, check your email for a link to confirm.</p>
       </div>
     );
   }
@@ -105,7 +110,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
       <input name="company" tabIndex={-1} autoComplete="off" aria-hidden style={{ position: "absolute", left: -9999 }} />
       <label className="small body-muted" style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
         <input type="checkbox" name="optIn" style={{ marginTop: 5 }} />
-        Also send me the monthly Seasonally Living note. Unsubscribe any time.
+        {NOTE_CONSENT_TEXT}
       </label>
       {status === "error" && <p className="err-msg" style={{ color: "#d4573f" }}>{error}. Please call (509) 667-8833.</p>}
       <button className="btn btn-primary btn-lg" type="submit" disabled={status === "sending"} style={{ justifySelf: "start" }}>
