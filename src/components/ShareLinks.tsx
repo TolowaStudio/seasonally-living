@@ -19,7 +19,7 @@ export default function ShareLinks({ url, title }: { url: string; title: string 
   }
 
   return (
-    <div className="po-share" aria-label="Share this spa">
+    <div className="po-share" role="group" aria-label="Share this spa">
       <span className="field-label" style={{ marginRight: 4 }}>Share</span>
       <button type="button" className="btn btn-outline" onClick={copy}>{copied ? "Link copied" : "Copy link"}</button>
       <a className="btn btn-outline" href={`sms:?&body=${enc(`${text} ${url}`)}`}>Text</a>

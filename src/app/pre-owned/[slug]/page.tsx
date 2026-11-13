@@ -170,7 +170,7 @@ export default async function PreOwnedSpaPage({ params }: Props) {
             <>
               <span className="kicker">Reserved</span>
               <h2 className="h-lg" style={{ marginTop: 16 }}>Want one like this?</h2>
-              <p className="body-muted" style={{ margin: "12px 0 28px" }}>Tell us the size and what matters to you. When a similar tub arrives, you&apos;ll hear first.</p>
+              <p className="body-muted" style={{ margin: "12px 0 28px" }}>Tell us the size and what matters to you. When a similar tub arrives, we&apos;ll let you know.</p>
               <PreOwnedAlertForm defaultSeats={seatBandOf(spa.seats)} from={spa.title} />
             </>
           ) : (

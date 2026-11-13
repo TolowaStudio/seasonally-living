@@ -19,7 +19,7 @@ export default async function PreOwnedGallery() {
           </p>
           {spas.length === 0 ? (
             <div className="card" style={{ padding: 32, marginTop: 36, maxWidth: 640 }}>
-              <p className="lead">Nothing on the floor this week. Trade-ins come through the shop often. Get on the list and you&apos;ll hear first.</p>
+              <p className="lead">Nothing on the floor this week. Trade-ins come through the shop often. Tell us what you&apos;re after and we&apos;ll let you know.</p>
               <a href="#alert" className="btn btn-primary" style={{ marginTop: 22 }}>
                 Tell me when one arrives <Icon name="arrow" size={16} />
               </a>
@@ -40,7 +40,7 @@ export default async function PreOwnedGallery() {
             <span className="kicker">Don&apos;t see the right one?</span>
             <h2 className="h-lg" style={{ marginTop: 16 }}>Tell us what you&apos;re after.</h2>
             <p className="body-muted" style={{ marginTop: 12, maxWidth: "46ch" }}>
-              Tubs come through the shop all the time and the good ones go quickly. Tell us the size you want and we&apos;ll reach out when one like it arrives, before it&apos;s posted.
+              Tubs come through the shop all the time and the good ones go quickly. Tell us the size you want and we&apos;ll reach out when one like it arrives.
             </p>
             <p className="body-muted" style={{ marginTop: 22, maxWidth: "46ch" }}>
               Got an old tub of your own?{" "}

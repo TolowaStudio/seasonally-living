@@ -291,8 +291,9 @@ export const schemaTypes = [
     ],
     preview: {
       select: { title: "title", status: "status", seats: "seats", media: "photos.0.image" },
-      prepare: ({ title, status, seats }: { title?: string; status?: string; seats?: number }) => ({
+      prepare: ({ title, status, seats, media }: { title?: string; status?: string; seats?: number; media?: unknown }) => ({
         title,
+        media: media as never,
         subtitle: [status, seats ? `${seats} seats` : null].filter(Boolean).join(" · "),
       }),
     },

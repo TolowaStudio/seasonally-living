@@ -56,7 +56,7 @@ export default function PreOwnedAlertForm({ defaultSeats, from }: { defaultSeats
     return (
       <div className="form-status" role="status">
         <p className="h-md">You&apos;re on the list.</p>
-        <p className="body-muted" style={{ marginTop: 8 }}>When a tub like that comes through the shop, we&apos;ll call or email you before it&apos;s posted. Need us sooner? Call (509) 667-8833.</p>
+        <p className="body-muted" style={{ marginTop: 8 }}>When a tub like that comes through the shop, we&apos;ll call or email you. Need us sooner? Call (509) 667-8833.</p>
       </div>
     );
   }

@@ -4,7 +4,7 @@
 export const SELL_FAQ: { q: string; a: string }[] = [
   {
     q: "Will you take my old hot tub if it doesn't work?",
-    a: "Send us what you know and a few photos. We look at every tub, and we'll tell you straight whether it's worth bringing back to life or not. A tub that stopped heating or has a bad pump is often fixable in our shop.", // TODO-confirm: what happens with a tub that is not worth fixing (scrap or decline).
+    a: "Send us what you know and a few photos. We look at every tub, and we'll tell you straight whether it's worth bringing back to life or not. Some tubs are worth fixing and some aren't, and we'll tell you which.", // TODO-confirm: what happens with a tub that is not worth fixing (scrap or decline).
   },
   {
     q: "What will you pay for my hot tub?",
@@ -24,7 +24,7 @@ export const SELL_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Do you only take Cal Spas?",
-    a: "We're a Cal Spas dealer, but tubs come to us in all makes. Tell us what you have and we'll tell you if it's a fit.", // TODO-confirm: which non-Cal brands the shop will accept.
+    a: "We're a Cal Spas dealer. Tell us what you have, whatever the make, and we'll tell you if it's a fit.", // TODO-confirm: which non-Cal brands the shop will accept.
   },
   {
     q: "How quickly will I hear back?",

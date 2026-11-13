@@ -45,7 +45,7 @@ export default function PreOwnedPhotos({ photos, title }: { photos: Photo[]; tit
       )}
 
       <dialog ref={dialog} className="po-lightbox" aria-label={`${title} photos`} onClick={(e) => e.target === dialog.current && dialog.current?.close()}>
-        <div className="po-lb-stage">
+        <div className="po-lb-stage" onClick={(e) => e.target === e.currentTarget && dialog.current?.close()}>
           <Image src={cur.image} alt={alt} fill sizes="100vw" quality={85} />
           <button type="button" className="po-lb-btn po-lb-close" onClick={() => dialog.current?.close()} aria-label="Close">&times;</button>
           {n > 1 && (

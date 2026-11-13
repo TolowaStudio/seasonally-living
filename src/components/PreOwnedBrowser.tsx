@@ -42,8 +42,8 @@ export default function PreOwnedBrowser({ spas }: { spas: PreOwnedSpa[] }) {
       "seats-asc": (a, b) => (a.seats ?? 99) - (b.seats ?? 99),
       "year-desc": (a, b) => (b.year ?? 0) - (a.year ?? 0),
     };
-    // Available first, then reserved; the chosen sort applies within each group.
-    return [...out].sort((a, b) => Number(a.status === "reserved") - Number(b.status === "reserved") || by[sort](a, b));
+    // Available first, then reserved; featured spas lead within each group, then the chosen sort.
+    return [...out].sort((a, b) => Number(a.status === "reserved") - Number(b.status === "reserved") || Number(!!b.featured) - Number(!!a.featured) || by[sort](a, b));
   }, [spas, bands, brands, features, sort]);
 
   const active = bands.length + brands.length + features.length;
