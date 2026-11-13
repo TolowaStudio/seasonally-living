@@ -24,7 +24,7 @@ export default function Footer({ settings: s }: { settings: SiteSettings }) {
               See every topic →
             </Link>
           </div>
-          <NoteForm compact />
+          <NoteForm compact label="Monthly note sign-up, footer" />
         </div>
 
         <div className="footer-cols" style={{ display: "grid", gridTemplateColumns: `1.3fr ${"1fr ".repeat(s.navGroups.length)}1.1fr`, gap: 36, paddingTop: 56 }}>
@@ -87,7 +87,7 @@ export default function Footer({ settings: s }: { settings: SiteSettings }) {
             </span>
           ))}
         </p>
-        <p className="tiny" style={{ marginTop: 20, color: "var(--faint)" }}>
+        <p className="tiny" style={{ marginTop: 20, color: "var(--muted)" }}>
           © {new Date().getFullYear()} {s.legalName}. Stûv and Cal Spas are trademarks of their respective owners.
         </p>
       </div>

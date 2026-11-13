@@ -31,7 +31,7 @@ export default function PreOwnedPhotos({ photos, title }: { photos: Photo[]; tit
   return (
     <div>
       <button type="button" className="photo po-main" style={{ aspectRatio: "4 / 3" }} onClick={() => dialog.current?.showModal()} aria-label={`Open photo ${i + 1} of ${n} full screen`}>
-        <Image src={cur.image} alt={alt} fill priority sizes="(max-width: 940px) 100vw, 60vw" />
+        <Image src={cur.image} alt={alt} fill loading="eager" fetchPriority="high" sizes="(max-width: 940px) 100vw, 60vw" />
         <span className="po-zoom" aria-hidden>Full screen</span>
       </button>
       {n > 1 && (

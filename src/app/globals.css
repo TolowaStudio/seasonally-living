@@ -16,7 +16,7 @@
   --ink:      #f0ede8;
   --ink-soft: #bab4ab;
   --muted:    #8a847a;
-  --faint:    #5f5a52;
+  --faint:    #868076;
   --clay:      #d0703a;
   --clay-deep: #9e4f24;
   --clay-soft: #e8a172;
@@ -39,7 +39,7 @@
   --ink:      #edf1f2;
   --ink-soft: #b2bec4;
   --muted:    #82939b;
-  --faint:    #54656d;
+  --faint:    #76899a;
   --clay:      #d4a55a;
   --clay-deep: #9c7535;
   --clay-soft: #e8c88f;
@@ -62,7 +62,7 @@
   --ink:      #1d1a16;
   --ink-soft: #4b443b;
   --muted:    #776e62;
-  --faint:    #a59a8a;
+  --faint:    #6b6256;
   --clay:      #b4552c;
   --clay-deep: #8a3e1d;
   --clay-soft: #e39a70;
@@ -663,4 +663,28 @@ h1, h2, h3, h4 {
   .rc-scan { font-size: 10pt; }
   .rc-url { font-size: 14pt; }
   .rc-foot { font-size: 9pt; }
+}
+
+/* ---------- Accessibility & touch (TOL-3347 audit) ---------- */
+/* One visible keyboard focus ring everywhere; inputs keep their own border + glow. */
+:where(a, button, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 3px; /* the ring follows each element's own border-radius; never override it here */
+}
+.over-photo :where(a, button):focus-visible { outline-color: var(--clay-soft); } /* only over a photo; the solid header (incl. Linen) keeps --clay */
+/* Inputs: .input:focus already swaps the border to --clay (>=5:1 on every palette) and adds a glow. */
+
+/* Touch targets: 44px minimum for controls people actually tap. */
+.nav-burger { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+.chip { min-height: 44px; }
+.btn-ghost { min-height: 44px; }
+@media (max-width: 940px) {
+  .footer-cols a, footer a.ul-link.small { display: inline-flex; align-items: center; min-height: 44px; }
+  .footer-cols li { line-height: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .card.hoverable:hover { transform: none; }
+  .brand-card:hover .brand-card-photo img { transform: none; }
 }

@@ -7,7 +7,7 @@ import { NOTE_CONSENT_TEXT } from "@/lib/note-consent";
 import { getAttribution, trackConversion } from "@/lib/attribution";
 
 // With `guide` set (a /guides/[slug] page) the topic is fixed by the guide and the person gets that guide after confirming.
-export default function NoteForm({ compact = false, defaultInterest, guide, guideTitle, submitLabel }: { compact?: boolean; defaultInterest?: string; guide?: string; guideTitle?: string; submitLabel?: string }) {
+export default function NoteForm({ compact = false, defaultInterest, guide, guideTitle, submitLabel, label = "Get the Seasonally Living note" }: { compact?: boolean; defaultInterest?: string; guide?: string; guideTitle?: string; submitLabel?: string; label?: string }) {
   const [picked, setPicked] = useState<string[]>(defaultInterest ? [defaultInterest] : []);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [pending, setPending] = useState(true);
@@ -61,7 +61,7 @@ export default function NoteForm({ compact = false, defaultInterest, guide, guid
   }
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }} aria-label="Get the Seasonally Living note">
+    <form onSubmit={onSubmit} style={{ display: "grid", gap: 14 }} aria-label={label}>
       {!guide && <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {PICKABLE_INTERESTS.map((i) => (
           <button

@@ -10,13 +10,14 @@ const LOGO_BASE = "https://res.cloudinary.com/tolowa-studio/image/upload";
 
 /** The client's script logotype from Cloudinary: white on dark/photo backgrounds, original blue on the light theme. */
 export function Logo({ id, height = 58, alt = "Seasonally Living by Chim Chimney" }: { id: string; height?: number; alt?: string }) {
-  const w = Math.round(height * 2.4);
+  // The trimmed script logotype is ~1.08:1 (208x192 at h=192); a wrong ratio here reserves space that never fills.
+  const w = Math.round(height * 1.083);
   return (
     <span className="logo" style={{ display: "inline-flex", height }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="logo-white" src={`${LOGO_BASE}/e_trim/e_colorize:100,co_white/f_auto,q_auto,h_${height * 2}/${id}`} alt={alt} height={height} width={w} style={{ height, width: "auto" }} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="logo-blue" src={`${LOGO_BASE}/e_trim/f_auto,q_auto,h_${height * 2}/${id}`} alt="" aria-hidden="true" height={height} width={w} style={{ height, width: "auto" }} />
+      <img className="logo-blue" loading="lazy" src={`${LOGO_BASE}/e_trim/f_auto,q_auto,h_${height * 2}/${id}`} alt="" aria-hidden="true" height={height} width={w} style={{ height, width: "auto" }} />
     </span>
   );
 }

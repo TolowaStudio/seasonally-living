@@ -19,7 +19,7 @@ export default function PageHero({
 }) {
   return (
     <section style={{ position: "relative", minHeight: "78vh", display: "flex", alignItems: "flex-end", overflow: "hidden" }}>
-      <Image src={image} alt={alt} fill priority sizes="100vw" style={{ objectFit: "cover", objectPosition: position }} />
+      <Image src={image} alt={alt} fill loading="eager" fetchPriority="high" sizes="100vw" style={{ objectFit: "cover", objectPosition: position }} />
       <div
         aria-hidden
         style={{
