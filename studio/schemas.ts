@@ -49,6 +49,11 @@ const heroFields = [
   str("cta", "Button label"),
 ];
 
+/** Optional Cloudinary image: blank is fine, but a value must look like a public ID. */
+const optImg = (name = "image", title = "Image") =>
+  defineField({ name, title, type: "string", description: IMAGE_HELP, validation: (r) => r.regex(/^[a-z0-9][a-z0-9/_-]*$/i, { name: "Cloudinary public ID" }) });
+const url = (name: string, title: string) => defineField({ name, title, type: "url", validation: (r) => r.uri({ scheme: ["https"] }) });
+
 const pageId = (readOnly = true) =>
   defineField({ name: "pageId", title: "Page path", type: "string", readOnly, description: "Route on the site, e.g. /hot-tubs" });
 
@@ -206,5 +211,100 @@ export const schemaTypes = [
       defineField({ name: "sortOrder", type: "number", description: "Lower numbers show first." }),
     ],
     preview: { select: { title: "title", subtitle: "status" } },
+  }),
+  defineType({
+    name: "hearthBrand",
+    title: "Hearth brand",
+    type: "document",
+    description: "One page per maker at /fireplaces/<slug>. Deleting a brand removes its page.",
+    groups: [
+      { name: "range", title: "Models", default: true },
+      { name: "page", title: "Page" },
+    ],
+    fields: [
+      defineField({ name: "name", title: "Brand name", type: "string", group: "page", description: 'As shown, e.g. "Stûv"', validation: (r) => r.required() }),
+      defineField({
+        name: "slug",
+        title: "Web address",
+        type: "slug",
+        group: "page",
+        description: "The page lives at /fireplaces/<this>. Changing it breaks old links.",
+        options: { source: "name", maxLength: 40 },
+        validation: (r) =>
+          r.required().custom((v) =>
+            !v?.current || /^[a-z0-9]+(-[a-z0-9]+)*$/.test(v.current)
+              ? v?.current === "gas-electric"
+                ? "gas-electric is taken by the gas & electric page"
+                : true
+              : "Lowercase letters, numbers and dashes only, e.g. stuv",
+          ),
+      }),
+      defineField({ name: "sortOrder", title: "Sort order", type: "number", group: "page", description: "Lower numbers show first on the fireplaces page." }),
+      defineField({ ...str("origin", "Made in", { description: 'e.g. "Belgium"' }), group: "page" }),
+      defineField({ ...strings("categories", "What they make"), group: "page", description: 'e.g. "Wood stoves", "Gas inserts"' }),
+      defineField({ name: "tagline", title: "Headline", type: "richTitle", group: "page" }),
+      defineField({ ...txt("summary", "Summary"), group: "page" }),
+      defineField({ ...img("heroImage", "Hero image"), group: "page" }),
+      defineField({ ...str("heroAlt", "Hero image description (alt text)"), group: "page" }),
+      defineField({ ...str("heroPosition", "Hero image focus (CSS object-position, e.g. 'center 40%')"), group: "page" }),
+      defineField({ ...list("points", "Three reasons (cards under the hero)", itemFields), group: "page" }),
+      defineField({
+        name: "sections",
+        title: "Product families",
+        type: "array",
+        group: "range",
+        of: [
+          defineArrayMember({
+            type: "object",
+            name: "brandSection",
+            fields: [
+              req("name", "Family name"),
+              txt("summary", "Summary"),
+              optImg(),
+              str("alt", "Image description (alt text)"),
+              defineField({
+                name: "models",
+                title: "Models",
+                type: "array",
+                of: [
+                  defineArrayMember({
+                    type: "object",
+                    name: "brandModel",
+                    fields: [
+                      req("name", "Model name"),
+                      defineField({
+                        name: "inShowroom",
+                        title: "In our showroom",
+                        type: "boolean",
+                        initialValue: false,
+                        description: 'Shows an "In our showroom" badge on the photo. Turn off when it leaves the floor.',
+                      }),
+                      str("type", "Kind", { description: 'e.g. "Wood stove", "Gas insert"' }),
+                      txt("description", "Description"),
+                      strings("facts", "Key facts"),
+                      optImg(),
+                      str("alt", "Image description (alt text)"),
+                      url("url", "Maker's product page"),
+                    ],
+                    preview: {
+                      select: { title: "name", type: "type", inShowroom: "inShowroom" },
+                      prepare: ({ title, type, inShowroom }: { title?: string; type?: string; inShowroom?: boolean }) => ({
+                        title,
+                        subtitle: [inShowroom ? "In our showroom" : null, type].filter(Boolean).join(" · "),
+                      }),
+                    },
+                  }),
+                ],
+              }),
+            ],
+            preview: { select: { title: "name", subtitle: "summary" } },
+          }),
+        ],
+      }),
+      defineField({ ...url("makerUrl", "Maker's website"), group: "page" }),
+      defineField({ ...str("sourceNote", "Image credit line"), group: "page", description: 'e.g. "Product images and specifications courtesy of Napoleon."' }),
+    ],
+    orderings: [{ title: "Sort order", name: "sortOrder", by: [{ field: "sortOrder", direction: "asc" }] }],
+    preview: { select: { title: "name", subtitle: "origin" } },
   }),
 ];

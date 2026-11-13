@@ -9,14 +9,15 @@ import CtaBand from "@/components/CtaBand";
 import NoteForm from "@/components/NoteForm";
 import RelatedLines from "@/components/RelatedLines";
 import RichTitle from "@/components/RichTitle";
-import { getPage } from "@/lib/sanity";
-import type { FireplacesContent } from "@/content/types";
-import { BRANDS } from "@/content/brands";
+import { getBrands, getPage } from "@/lib/sanity";
+import type { BrandContent, FireplacesContent } from "@/content/types";
 
-const brandHref = (name: string) => {
-  const b = BRANDS.find((x) => x.name === name);
+const brandHref = (brands: BrandContent[], name: string) => {
+  const b = brands.find((x) => x.name === name);
   return b ? `/fireplaces/${b.slug}` : undefined;
 };
+
+const COUNT = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 
 // Content: Sanity document "page-fireplaces" (fallback: src/content/pages.ts).
 export const revalidate = 60;
@@ -27,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FireplacesPage() {
-  const c = await getPage<FireplacesContent>("/fireplaces");
+  const [c, brands] = await Promise.all([getPage<FireplacesContent>("/fireplaces"), getBrands()]);
   const book = "/visit?interest=hearth#book";
   return (
     <main>
@@ -38,9 +39,9 @@ export default async function FireplacesPage() {
 
       <section className="section-sm">
         <div className="wrap">
-          <SectionHead kicker="Lines we carry" title="Four makers we stand behind." lead="Each one earned its place on our floor. Pick a maker to see the range, or scroll on to shop by kind of fire." />
+          <SectionHead kicker="Lines we carry" title={`${COUNT[brands.length] ?? brands.length} maker${brands.length === 1 ? "" : "s"} we stand behind.`} lead="Each one earned its place on our floor. Pick a maker to see the range, or scroll on to shop by kind of fire." />
           <div className="grid-4" style={{ marginTop: 44 }}>
-            {BRANDS.map((b, i) => (
+            {brands.map((b, i) => (
               <Reveal key={b.slug} delay={i * 80}>
                 <Link href={`/fireplaces/${b.slug}`} className="card brand-card">
                   <div className="brand-card-photo">
@@ -70,7 +71,7 @@ export default async function FireplacesPage() {
                 <p className="body-muted" style={{ marginTop: 12, flex: 1 }}>{f.body}</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 22 }}>
                   {f.models.map((m) => {
-                    const href = brandHref(m);
+                    const href = brandHref(brands, m);
                     return href ? (
                       <Link key={m} href={href} className="chip">{m}</Link>
                     ) : (

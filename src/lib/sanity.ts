@@ -3,8 +3,10 @@ import { createClient } from "@sanity/client";
 import { ALL_PAGES } from "@/content/pages";
 import { SETTINGS } from "@/content/settings";
 import { DEMO_PRE_OWNED } from "@/content/pre-owned";
-import type { PageContent, PreOwnedSpa, SiteSettings } from "@/content/types";
+import { BRANDS } from "@/content/brands";
+import type { BrandContent, PageContent, PreOwnedSpa, SiteSettings } from "@/content/types";
 import { mergeContent } from "./merge";
+import { brandFromSanity } from "./brand-content";
 
 export { mergeContent };
 
@@ -56,14 +58,16 @@ export async function getSettings(): Promise<SiteSettings> {
 // ---- Pre-owned spas ("on the floor") ----
 const SPA_FIELDS = `_id, title, "slug": slug.current, status, brand, model, year, seats, size, electrical, highlights, condition, photos[]{image, alt}, featured, sortOrder`;
 
-const fetchQuery = cache(async <T>(query: string, params: Record<string, unknown>): Promise<T | null> => {
+// Aborted after 4s; null on any failure so callers fall back. (cache() keys params by reference, so
+// per-render dedupe only happens in callers that are cached themselves, like getBrands.)
+const fetchQuery = cache(async <T>(tag: string, query: string, params: Record<string, unknown>): Promise<T | null> => {
   try {
     return await client.fetch<T>(query, params, {
       signal: AbortSignal.timeout(4000),
-      next: { revalidate: REVALIDATE_SECONDS, tags: ["preOwnedSpa"] },
+      next: { revalidate: REVALIDATE_SECONDS, tags: [tag] },
     });
   } catch (err) {
-    console.error("sanity: pre-owned fetch failed", err instanceof Error ? err.message : err);
+    console.error(`sanity: ${tag} fetch failed`, err instanceof Error ? err.message : err);
     return null;
   }
 });
@@ -73,6 +77,7 @@ const demo = () => process.env.PREOWNED_DEMO === "1" && process.env.NODE_ENV !==
 
 export async function getPreOwnedSpas(): Promise<PreOwnedSpa[]> {
   const rows = await fetchQuery<PreOwnedSpa[]>(
+    "preOwnedSpa",
     `*[_type == "preOwnedSpa" && defined(slug.current) && status != "sold"] | order(featured desc, sortOrder asc, _createdAt desc){${SPA_FIELDS}}`,
     {},
   );
@@ -81,7 +86,35 @@ export async function getPreOwnedSpas(): Promise<PreOwnedSpa[]> {
 }
 
 export async function getPreOwnedSpa(slug: string): Promise<PreOwnedSpa | null> {
-  const row = await fetchQuery<PreOwnedSpa | null>(`*[_type == "preOwnedSpa" && slug.current == $slug][0]{${SPA_FIELDS}}`, { slug });
+  const row = await fetchQuery<PreOwnedSpa | null>("preOwnedSpa", `*[_type == "preOwnedSpa" && slug.current == $slug][0]{${SPA_FIELDS}}`, { slug });
   if (row) return row;
   return demo() ? (DEMO_PRE_OWNED.find((s) => s.slug === slug) ?? null) : null;
+}
+
+// ---- Hearth brands (/fireplaces/[brand]) ----
+// Documents of type "hearthBrand" (ids "hearthBrand-<slug>"). Once Sanity has any brand, its list is
+// the list: a brand deleted in the Studio leaves the site. With none (unseeded dataset, Sanity down),
+// the code list in src/content/brands.ts renders instead.
+const BRAND_FIELDS = `"slug": slug.current, name, origin, categories, tagline, summary, heroImage, heroAlt, heroPosition,
+  points[]{title, body}, sections[]{name, summary, image, alt, models[]{name, type, description, facts, image, alt, url, inShowroom}},
+  makerUrl, sourceNote`;
+
+export const getBrands = cache(async (): Promise<BrandContent[]> => {
+  const rows = await fetchQuery<unknown[]>(
+    "hearthBrand",
+    `*[_type == "hearthBrand" && defined(slug.current)] | order(coalesce(sortOrder, 999) asc, name asc){${BRAND_FIELDS}}`,
+    {},
+  );
+  const brands = (rows ?? [])
+    .map((r) => {
+      const slug = r && typeof r === "object" ? (r as { slug?: unknown }).slug : undefined;
+      return brandFromSanity(r, BRANDS.find((b) => b.slug === slug));
+    })
+    .filter((b): b is BrandContent => !!b)
+    .filter((b, i, all) => all.findIndex((x) => x.slug === b.slug) === i);
+  return brands.length ? brands : BRANDS;
+});
+
+export async function getBrand(slug: string): Promise<BrandContent | undefined> {
+  return (await getBrands()).find((b) => b.slug === slug);
 }
