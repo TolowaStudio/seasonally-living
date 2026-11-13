@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 const THEMES = [
+  { id: "showroom", label: "Showroom (default)" },
   { id: "ember", label: "A · Ember" },
   { id: "alpine", label: "B · Alpine" },
   { id: "linen", label: "C · Linen" },
@@ -10,7 +11,7 @@ const THEMES = [
 
 /** Comp switcher for the design review. Hidden unless NEXT_PUBLIC_SHOW_COMPS=1 or ?comps=1. */
 export default function ThemeDock({ enabled }: { enabled: boolean }) {
-  const [theme, setTheme] = useState("alpine");
+  const [theme, setTheme] = useState("showroom");
   const [show, setShow] = useState(enabled);
 
   const apply = useCallback((id: string) => {

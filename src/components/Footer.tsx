@@ -7,7 +7,7 @@ import type { SiteSettings } from "@/content/types";
 
 export default function Footer({ settings: s }: { settings: SiteSettings }) {
   return (
-    <footer style={{ background: "var(--band)", color: "#f0ede8", paddingTop: 88, paddingBottom: 40 }} data-theme="alpine">
+    <footer style={{ background: "var(--band)", color: "var(--ink)", paddingTop: 88, paddingBottom: 40 }} data-theme="showroom-dark">
       <div className="wrap">
         <div className="split" style={{ alignItems: "start", paddingBottom: 64, borderBottom: "1px solid var(--line)" }}>
           <div>
@@ -28,7 +28,7 @@ export default function Footer({ settings: s }: { settings: SiteSettings }) {
 
         <div className="footer-cols" style={{ display: "grid", gridTemplateColumns: `1.3fr ${"1fr ".repeat(s.navGroups.length)}1.1fr`, gap: 36, paddingTop: 56 }}>
           <div>
-            <Logo id={s.logo} height={96} alt={s.legalName} />
+            <Logo id={s.logo} height={96} alt={s.legalName} onDark />
             <p className="small body-muted" style={{ marginTop: 18, maxWidth: "30ch" }}>
               {s.legalName}. Family-owned by {s.owners} since {s.founded}. Showroom open since {s.showroomOpened}.
             </p>

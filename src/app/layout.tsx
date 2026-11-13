@@ -36,16 +36,16 @@ export const metadata: Metadata = {
   robots: process.env.NEXT_PUBLIC_NOINDEX === "1" ? { index: false, follow: false } : undefined,
 };
 
-export const viewport: Viewport = { themeColor: "#0e1316" };
+export const viewport: Viewport = { themeColor: "#f2f2ef" };
 
 // Applies a saved comp theme before paint so the page doesn't flash.
-const themeBoot = `try{var p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('sl-theme');if(p==='ember'||p==='alpine'||p==='linen')document.documentElement.dataset.theme=p}catch(e){}`;
+const themeBoot = `try{var p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('sl-theme');if(p==='showroom'||p==='ember'||p==='alpine'||p==='linen')document.documentElement.dataset.theme=p}catch(e){}`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Nav, footer and contact details come from the Sanity siteSettings document.
   const settings = await getSettings();
   return (
-    <html lang="en" data-theme="alpine" className={`${archivo.variable} ${hanken.variable}`} suppressHydrationWarning>
+    <html lang="en" data-theme="showroom" className={`${archivo.variable} ${hanken.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
       </head>
