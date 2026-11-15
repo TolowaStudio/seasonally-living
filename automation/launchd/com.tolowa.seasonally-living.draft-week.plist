@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- TEMPLATE ONLY (TOL-3371): not installed. Install after the PR merges and the proofing folder is chosen
+     (docs/content-engine.md, "Weekly schedule"). Sunday 18:00 machine time. Drafts only, never posts. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.tolowa.seasonally-living.draft-week</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/REPLACE_ME/repos/seasonally-living/scripts/content/run-weekly-draft.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Weekday</key><integer>0</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
+  <key>StandardOutPath</key><string>/Users/REPLACE_ME/Library/Logs/seasonally-living-draft-week.log</string>
+  <key>StandardErrorPath</key><string>/Users/REPLACE_ME/Library/Logs/seasonally-living-draft-week.log</string>
+</dict>
+</plist>
