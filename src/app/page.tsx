@@ -5,6 +5,7 @@ import Icon from "@/components/Icon";
 import CtaBand from "@/components/CtaBand";
 import RichTitle from "@/components/RichTitle";
 import ShowroomArrivals from "@/components/ShowroomArrivals";
+import { archivoItalic } from "@/app/fonts/archivo-italic";
 import { getBrands, getPage, getSettings } from "@/lib/sanity";
 import { socialMeta } from "@/lib/seo";
 import { addressOf } from "@/lib/site";
@@ -23,7 +24,7 @@ export default async function Home() {
   // Real catalogue data: the first two photographed models of each hearth line.
   const products = brands.flatMap((b) => b.sections.flatMap((sec) => sec.models).filter((m) => m.image).slice(0, 2).map((m) => ({ brand: b.name, slug: b.slug, cat: b.categories[0], ...m })));
   return (
-    <main>
+    <main className={archivoItalic.variable}>
       {/* HERO: type left, product tiles right */}
       <section className="sh-hero" aria-labelledby="home-h1">
         <div className="sh-hero-t">

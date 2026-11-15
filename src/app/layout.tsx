@@ -15,11 +15,10 @@ import type { HomeContent } from "@/content/types";
 
 // Self-hosted (SIL OFL, licences in ./fonts) so builds never depend on fonts.googleapis.com.
 // Latin-subset variable files from Google Fonts, fetched 2026-11-12.
+// Italic lives in its own loader (src/app/fonts/archivo-italic.ts) called only from the
+// home page, so Next.js scopes its preload to "/" instead of every route (TOL-3376).
 const archivo = localFont({
-  src: [
-    { path: "./fonts/archivo-latin.woff2", weight: "300 700", style: "normal" },
-    { path: "./fonts/archivo-italic-latin.woff2", weight: "300 700", style: "italic" },
-  ],
+  src: [{ path: "./fonts/archivo-latin.woff2", weight: "300 700", style: "normal" }],
   variable: "--font-archivo",
   display: "swap",
   fallback: ["Helvetica Neue", "Arial", "sans-serif"],
@@ -47,8 +46,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#f2f2ef" };
 
-// Applies a saved comp theme before paint so the page doesn't flash.
-const themeBoot = `try{var p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('sl-theme');if(p==='showroom'||p==='ember'||p==='alpine'||p==='linen')document.documentElement.dataset.theme=p}catch(e){}`;
+// Applies a saved comp theme before paint so the page doesn't flash. Also marks
+// the document as JS-capable so .reveal can default to visible for no-JS visitors
+// (globals.css only hides it under html.js) instead of staying opacity:0 forever (TOL-3376).
+const themeBoot = `try{document.documentElement.classList.add('js');var p=new URLSearchParams(location.search).get('theme')||localStorage.getItem('sl-theme');if(p==='showroom'||p==='ember'||p==='alpine'||p==='linen')document.documentElement.dataset.theme=p}catch(e){}`;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Nav, footer and contact details come from the Sanity siteSettings document.
