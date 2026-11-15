@@ -395,12 +395,10 @@ h1, h2, h3, h4 {
 /* ---------- Misc ---------- */
 .kicker-rule { width: 46px; height: 1px; background: var(--clay); }
 
-/* fade-up entrance */
-.reveal {
-  opacity: 0;
-  transform: translateY(22px);
-  transition: opacity .7s var(--ease), transform .7s var(--ease);
-}
+/* fade-up entrance. Hidden only once html.js confirms JS ran (set in layout.tsx's
+   boot script), so no-JS visitors see the content instead of a permanent blank. */
+.reveal { transition: opacity .7s var(--ease), transform .7s var(--ease); }
+html.js .reveal { opacity: 0; transform: translateY(22px); }
 .reveal.in { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -824,10 +822,13 @@ h1, h2, h3, h4 {
 }
 @media (prefers-reduced-motion: reduce) { .sh-tile img, .sh-line .ph img, .sh-spa-ph img { transition: none; } }
 
-/* Headline accent phrase */
-.rt-em { font-style: italic; color: var(--clay-soft); }
-[data-theme="showroom"] .rt-em { font-style: normal; font-weight: 500; color: var(--clay); }
-[data-theme="showroom-dark"] .rt-em { font-style: normal; font-weight: 500; color: var(--clay-soft); }
+/* Headline accent phrase. The italic face is only loaded on home (TOL-3376), so only the
+   themes that actually render it italic (not Showroom, which sets font-style: normal below)
+   point at that family — otherwise the browser has no normal-style face to match and renders
+   the italic glyphs unslanted. */
+.rt-em { font-style: italic; color: var(--clay-soft); font-family: var(--font-archivo-italic, var(--font-archivo)); }
+[data-theme="showroom"] .rt-em { font-style: normal; font-weight: 500; color: var(--clay); font-family: var(--font-archivo); }
+[data-theme="showroom-dark"] .rt-em { font-style: normal; font-weight: 500; color: var(--clay-soft); font-family: var(--font-archivo); }
 .sh-lines.four { grid-template-columns: repeat(4, 1fr); }
 .sh-lines.four .ph { aspect-ratio: 4 / 5; }
 @media (max-width: 1000px) { .sh-lines.four { grid-template-columns: 1fr 1fr; } }
