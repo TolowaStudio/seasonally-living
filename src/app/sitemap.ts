@@ -25,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       "/areas",
       ...AREAS.map((a) => `/areas/${a.slug}`),
       "/journal",
+      "/privacy",
     ]),
   ];
   const pages: MetadataRoute.Sitemap = paths.map((p) => ({

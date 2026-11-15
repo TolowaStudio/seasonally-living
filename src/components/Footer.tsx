@@ -2,6 +2,7 @@ import Link from "next/link";
 import Icon from "./Icon";
 import { Logo } from "./Nav";
 import NoteForm from "./NoteForm";
+import CookieSettingsLink from "./CookieSettingsLink";
 import { addressOf, mapsUrlOf } from "@/lib/site";
 import { AREAS } from "@/content/areas";
 import type { SiteSettings } from "@/content/types";
@@ -88,7 +89,10 @@ export default function Footer({ settings: s }: { settings: SiteSettings }) {
           ))}
         </p>
         <p className="tiny" style={{ marginTop: 20, color: "var(--muted)" }}>
-          © {new Date().getFullYear()} {s.legalName}. Stûv and Cal Spas are trademarks of their respective owners.
+          © {new Date().getFullYear()} {s.legalName}. Stûv and Cal Spas are trademarks of their respective owners.{" "}
+          <Link className="ul-link" href="/privacy">Privacy policy</Link>
+          {" · "}
+          <CookieSettingsLink className="ul-link" />
         </p>
       </div>
     </footer>
