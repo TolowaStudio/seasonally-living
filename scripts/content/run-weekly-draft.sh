@@ -32,5 +32,6 @@ console.log(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${Stri
 OUT="$DRAFT_OUT_ROOT/$WEEK"
 mkdir -p "$OUT"
 
-timeout 3600 node --experimental-strip-types scripts/content/draft-week.ts --week "$WEEK" --model "$MODEL" --out "$OUT" ${DRY[@]+"${DRY[@]}"}
+# 60-minute cap. GNU `timeout` is not on stock macOS; perl is, and SIGALRM survives exec.
+perl -e 'alarm 3600; exec @ARGV' -- node --experimental-strip-types scripts/content/draft-week.ts --week "$WEEK" --model "$MODEL" --out "$OUT" ${DRY[@]+"${DRY[@]}"}
 echo "weekly draft: week=$WEEK out=$OUT"
