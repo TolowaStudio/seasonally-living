@@ -73,6 +73,22 @@ write to Sanity, and cannot post anywhere.
   versions.
 - Output goes to `out/content-drafts/transcripts/` with a `.preview.md` beside it.
 
+## Weekly schedule (TOL-3371)
+
+`scripts/content/run-weekly-draft.sh` drafts the coming week (Sunday run, Monday-start week) into
+`out/content-drafts/weekly/<monday>/` (`DRAFT_OUT_ROOT` overrides), with a `preview.md` for proofing.
+`--dry-run` prints the first prompt with no key and no cost. It reads the Anthropic key from GCP
+`motion-anthropic-api-key` into a temp file (never printed), uses Haiku by default, refuses Opus/Fable,
+and is capped at 60 minutes. Draft only: no Sanity, Facebook, Instagram or Google.
+
+`automation/launchd/com.tolowa.seasonally-living.draft-week.plist` is a TEMPLATE (Sunday 18:00), **not
+installed**. To enable after merge: replace `REPLACE_ME`, copy to `~/Library/LaunchAgents/`, then
+`launchctl bootstrap gui/$(id -u) <plist>`. Undo: `launchctl bootout gui/$(id -u)/com.tolowa.seasonally-living.draft-week`.
+
+Still open: where Kimberly proofs `preview.md` (a shared folder is not chosen: confirm the storage
+choice, then point `DRAFT_OUT_ROOT` at it), and the video half (transcript, captions, Facebook/Instagram
+video posting: posting is a public send and needs a go-ahead).
+
 ## Open items
 
 See the Linear follow-ups under TOL-3345 (newsletter send from the same posts, video upload and
