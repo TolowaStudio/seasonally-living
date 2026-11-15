@@ -7,7 +7,7 @@ const store = new Map<string, string>();
 const calls: unknown[][] = [];
 let reloads = 0;
 let events = 0;
-(globalThis as any).window = {
+(globalThis as unknown as { window: unknown }).window = {
   localStorage: { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k) },
   gtag: (...a: unknown[]) => void calls.push(a),
   dispatchEvent: () => void events++,
@@ -15,7 +15,7 @@ let events = 0;
   removeEventListener() {},
   location: { reload: () => void reloads++ },
 };
-(globalThis as any).Event = class {};
+(globalThis as unknown as { Event: unknown }).Event = class {};
 
 const { clearConsent, setConsent, CONSENT_KEY } = await import("../src/lib/consent.ts");
 
@@ -25,7 +25,7 @@ calls.length = 0; events = 0;
 clearConsent();
 assert.equal(store.has(CONSENT_KEY), false, "stored choice must be removed");
 assert.deepEqual(calls[0]?.slice(0, 2), ["consent", "update"]);
-assert.equal((calls[0]?.[2] as any).ad_storage, "denied");
+assert.equal((calls[0]?.[2] as { ad_storage?: string }).ad_storage, "denied");
 assert.equal(reloads, 1, "accepted visitor: reload drops Meta Pixel and PostHog");
 
 // Declined visitor: nothing was loaded, so no reload; the banner event brings the banner back.
