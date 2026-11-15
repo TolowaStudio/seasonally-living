@@ -1,0 +1,1368 @@
+{
+  "name": "Seasonally Living: social approval queue",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/15 8-19 * * *"
+            }
+          ]
+        }
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000001",
+      "name": "Every 15 minutes (8am-8pm)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "notes": "Runs in the workflow timezone (America/Los_Angeles). Posts never go out overnight."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000002",
+              "name": "dryRun",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000003",
+              "name": "siteUrl",
+              "value": "https://seasonallyliving.com",
+              "type": "string"
+            },
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000004",
+              "name": "sanityProject",
+              "value": "83r23z7t",
+              "type": "string"
+            },
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000005",
+              "name": "sanityDataset",
+              "value": "production",
+              "type": "string"
+            },
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000006",
+              "name": "metaGraphVersion",
+              "value": "v23.0",
+              "type": "string"
+            },
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000007",
+              "name": "facebookPageId",
+              "value": "REPLACE_WITH_FACEBOOK_PAGE_ID",
+              "type": "string"
+            },
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000008",
+              "name": "instagramBusinessAccountId",
+              "value": "REPLACE_WITH_INSTAGRAM_BUSINESS_ACCOUNT_ID",
+              "type": "string"
+            },
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000009",
+              "name": "gbpAccountId",
+              "value": "REPLACE_WITH_GBP_ACCOUNT_ID",
+              "type": "string"
+            },
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000010",
+              "name": "gbpLocationId",
+              "value": "REPLACE_WITH_GBP_LOCATION_ID",
+              "type": "string"
+            },
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000011",
+              "name": "alertEmail",
+              "value": "REPLACE_WITH_APPROVER_EMAILS",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000012",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ],
+      "notes": "dryRun=true means NOTHING is posted and NOTHING is written back. Set it to false only after a human has run one test post."
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "GET",
+        "url": "=https://{{ $('Config').first().json.sanityProject }}.api.sanity.io/v2025-01-01/data/query/{{ $('Config').first().json.sanityDataset }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "*[_type == \"post\" && status in [\"approved\",\"scheduled\"] && (!defined(publishAt) || dateTime(publishAt) <= dateTime(now())) && (!defined(needsConfirm) || count(needsConfirm) == 0)]{_id, title, \"slug\": slug.current, heroImage, \"channels\": coalesce(channels, []), social, \"results\": coalesce(results, {}), \"hasArticle\": count(coalesce(body, [])) > 0} | order(publishAt asc)[0...5]"
+            },
+            {
+              "name": "perspective",
+              "value": "published"
+            }
+          ]
+        }
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000013",
+      "name": "Sanity: approved posts due",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Sanity token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "result",
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000014",
+      "name": "One item per post",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst cfg = $('Config').first().json;\nconst p = $json;\nconst s = p.social || {};\nconst problems = [];\nconst text = [s.facebook, s.instagram && s.instagram.caption, s.gbp && s.gbp.text].filter(Boolean).join('\\n');\nif (/\\[\\[|TODO|lorem/i.test(text)) problems.push('Still has an [[ADD]] / TODO placeholder in the social text');\nconst channels = p.channels.length ? p.channels : ['facebook', 'instagram', 'gbp'];\nconst want = (c) => channels.includes(c) && !(p.results && p.results[c === 'gbp' ? 'gbpUrl' : c + 'Url']);\nconst hashtags = ((s.instagram && s.instagram.hashtags) || []).slice(0, 10);\nconst igCaption = ((s.instagram && s.instagram.caption) || '').trim() + (hashtags.length ? '\\n\\n' + hashtags.join(' ') : '');\nif (want('facebook') && !(s.facebook || '').trim()) problems.push('Facebook text is empty');\nif (want('instagram') && !igCaption.trim()) problems.push('Instagram caption is empty');\nif (want('instagram') && igCaption.length > 2200) problems.push('Instagram caption is over 2,200 characters');\nif (want('gbp') && !((s.gbp && s.gbp.text) || '').trim()) problems.push('Google post text is empty');\nif (want('gbp') && ((s.gbp && s.gbp.text) || '').length > 1500) problems.push('Google post is over 1,500 characters');\nconst img = (t) => 'https://res.cloudinary.com/tolowa-studio/image/upload/' + t + '/' + p.heroImage;\nconst articleUrl = p.hasArticle ? cfg.siteUrl + '/journal/' + p.slug : cfg.siteUrl + '/visit';\nreturn {\n  json: {\n    id: p._id, title: p.title, slug: p.slug, articleUrl, hasArticle: p.hasArticle,\n    problems,\n    wantFacebook: want('facebook'), wantInstagram: want('instagram'), wantGbp: want('gbp'),\n    facebookMessage: (s.facebook || '').trim(), instagramCaption: igCaption,\n    gbpText: ((s.gbp && s.gbp.text) || '').trim(), gbpCta: (s.gbp && s.gbp.cta) || 'LEARN_MORE',\n    imageFacebook: img('f_jpg,q_auto,c_fill,ar_1.91:1,w_1200'),\n    imageInstagram: img('f_jpg,q_auto,c_fill,ar_4:5,w_1080'),\n    imageGbp: img('f_jpg,q_auto,c_fill,ar_4:3,w_1200'),\n    results: p.results || {}, errors: [],\n  },\n};"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000015",
+      "name": "Guard and build payloads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000016",
+              "leftValue": "={{ $('Config').first().json.dryRun }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000017",
+      "name": "Dry run?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "5e1a7c00-0000-4000-8000-000000000018",
+      "name": "Dry run: would post (nothing sent, nothing written)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        160
+      ],
+      "notes": "Config.dryRun is true. The execution log shows each post and any problems found."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000019",
+              "leftValue": "={{ $json.problems.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000020",
+      "name": "Problems found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000021",
+              "leftValue": "={{ $json.wantFacebook }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000022",
+      "name": "Post to Facebook?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $('Config').first().json.metaGraphVersion }}/{{ $('Config').first().json.facebookPageId }}/feed",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.facebookMessage }}"
+            },
+            {
+              "name": "link",
+              "value": "={{ $json.articleUrl }}"
+            }
+          ]
+        }
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000023",
+      "name": "Facebook Page: publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        340
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Meta Page token"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": false,
+      "notes": "NO automatic retry: a retried publish could post twice."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst prev = $('Post to Facebook?').item.json;\nconst res = $json;\nif (res.error || !res.id) return { json: { ...prev, errors: [...prev.errors, 'Facebook: ' + (res.error && (res.error.message || JSON.stringify(res.error)) || 'no post id returned')] } };\nconst url = 'https://www.facebook.com/' + res.id;\nreturn { json: { ...prev, results: { ...prev.results, facebookUrl: url }, persist: [{ patch: { id: prev.id, setIfMissing: { results: {} } } }, { patch: { id: prev.id, set: { 'results.facebookUrl': url } } }] } };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000024",
+      "name": "Facebook result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000025",
+              "leftValue": "={{ $json.wantInstagram }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000026",
+      "name": "Post to Instagram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $('Config').first().json.metaGraphVersion }}/{{ $('Config').first().json.instagramBusinessAccountId }}/media",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{ $json.imageInstagram }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $json.instagramCaption }}"
+            }
+          ]
+        }
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000027",
+      "name": "Instagram: create media",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2420,
+        340
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Meta Page token"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "seconds"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000028",
+      "name": "Wait for Instagram to process the photo",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2640,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://graph.facebook.com/{{ $('Config').first().json.metaGraphVersion }}/{{ $('Config').first().json.instagramBusinessAccountId }}/media_publish",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $('Instagram: create media').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000029",
+      "name": "Instagram: publish media",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2860,
+        340
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Meta Page token"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 8000,
+      "notes": "Retried because the photo may still be processing. A creation_id can only be published once, so a retry cannot post a second copy. TODO-verify with one real test post before activating. When 'create media' failed there is no creation id and every try errors; that is recorded."
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "GET",
+        "url": "=https://graph.facebook.com/{{ $('Config').first().json.metaGraphVersion }}/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "permalink"
+            }
+          ]
+        }
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000030",
+      "name": "Instagram: get permalink",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3080,
+        340
+      ],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Meta Page token"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "notes": "Read-only, so retrying is safe."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst prev = $('Post to Instagram?').item.json;\nconst created = $('Instagram: create media').item.json;\nconst published = $('Instagram: publish media').item.json;\nconst link = $json;\nif (created.error || !created.id) return { json: { ...prev, errors: [...prev.errors, 'Instagram (create): ' + (created.error && (created.error.message || JSON.stringify(created.error)) || 'no media id returned')] } };\n// A retry after a lost response hits an already-published container: Instagram then says so. That means the photo IS live, so do not send the post back to Draft (a re-approval would create a second copy).\nconst msg = published.error ? String(published.error.message || JSON.stringify(published.error)) : '';\nconst alreadyLive = /already (been )?published/i.test(msg);\nif (!alreadyLive && (published.error || !published.id)) return { json: { ...prev, errors: [...prev.errors, 'Instagram (publish): ' + (msg || 'no media id returned')] } };\n// The photo is live even if the permalink lookup failed; keep a usable link.\nconst url = (!alreadyLive && link && link.permalink) || 'https://www.instagram.com/';\nreturn { json: { ...prev, results: { ...prev.results, instagramUrl: url }, persist: [{ patch: { id: prev.id, setIfMissing: { results: {} } } }, { patch: { id: prev.id, set: { 'results.instagramUrl': url } } }] } };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000031",
+      "name": "Instagram result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000032",
+              "leftValue": "={{ $json.wantGbp }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000033",
+      "name": "Post to Google?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3520,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://mybusiness.googleapis.com/v4/accounts/{{ $('Config').first().json.gbpAccountId }}/locations/{{ $('Config').first().json.gbpLocationId }}/localPosts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ languageCode: 'en-US', topicType: 'STANDARD', summary: $json.gbpText, callToAction: $json.gbpCta === 'CALL' ? { actionType: 'CALL' } : { actionType: $json.gbpCta, url: $json.articleUrl }, media: [{ mediaFormat: 'PHOTO', sourceUrl: $json.imageGbp }] }) }}"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000034",
+      "name": "Google Business Profile: publish post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3740,
+        340
+      ],
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Google Business Profile"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst prev = $('Post to Google?').item.json;\nconst res = $json;\nif (res.error || !res.name) return { json: { ...prev, errors: [...prev.errors, 'Google: ' + (res.error && (res.error.message || JSON.stringify(res.error)) || 'no post name returned')] } };\nconst url = res.searchUrl || ('https://business.google.com/posts/l/' + res.name);\nreturn { json: { ...prev, results: { ...prev.results, gbpUrl: url }, persist: [{ patch: { id: prev.id, setIfMissing: { results: {} } } }, { patch: { id: prev.id, set: { 'results.gbpUrl': url } } }] } };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000035",
+      "name": "Google result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3960,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst r = $json;\nconst failed = r.errors.length > 0 || r.problems.length > 0;\nconst set = {};\nif (r.problems.length) {\n  // Never posted: back to Draft with the reason, so it cannot loop.\n  set['results.lastError'] = 'Not posted: ' + r.problems.join('; ');\n  set.status = 'draft';\n} else {\n  if (r.results.facebookUrl) set['results.facebookUrl'] = r.results.facebookUrl;\n  if (r.results.instagramUrl) set['results.instagramUrl'] = r.results.instagramUrl;\n  if (r.results.gbpUrl) set['results.gbpUrl'] = r.results.gbpUrl;\n  set['results.postedAt'] = new Date().toISOString();\n  set['results.lastError'] = failed ? r.errors.join(' | ') : '';\n  // Success -> published. Any failure -> back to Draft so it can't loop; channels that worked keep their links and are skipped next time.\n  set.status = failed ? 'draft' : 'published';\n}\nreturn { json: { ...r, failed, patch: [\n  { patch: { id: r.id, setIfMissing: { results: {} } } },\n  { patch: { id: r.id, set } },\n] } };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000036",
+      "name": "Build the Sanity update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4180,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://{{ $('Config').first().json.sanityProject }}.api.sanity.io/v2025-01-01/data/mutate/{{ $('Config').first().json.sanityDataset }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mutations: $json.patch }) }}"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000037",
+      "name": "Sanity: write the result back",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4400,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Sanity token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "notes": "Safe to retry: set operations are idempotent."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000038",
+              "leftValue": "={{ $('Build the Sanity update').item.json.failed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000039",
+      "name": "Anything go wrong?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('Config').first().json.alertEmail }}",
+        "subject": "={{ 'Social post needs a look: ' + $('Build the Sanity update').item.json.title }}",
+        "emailType": "text",
+        "message": "={{ $('Build the Sanity update').item.json.errors.concat($('Build the Sanity update').item.json.problems).join('\\n') + '\\n\\nThe post is back in Draft in the Studio. Anything that did post is not repeated. Fix the problem, then approve it again.' }}",
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000040",
+      "name": "Email the approvers",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        4840,
+        220
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: alert email"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000041",
+              "leftValue": "={{ Array.isArray($json.persist) && $json.persist.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000042",
+      "name": "Saved Facebook?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://{{ $('Config').first().json.sanityProject }}.api.sanity.io/v2025-01-01/data/mutate/{{ $('Config').first().json.sanityDataset }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mutations: $json.persist }) }}"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000043",
+      "name": "Sanity: save Facebook link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2220,
+        340
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Sanity token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Safe to retry: set is idempotent."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst { persist, ...state } = $('Saved Facebook?').item.json;\nreturn { json: state };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000044",
+      "name": "Restore after Facebook save",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000045",
+              "leftValue": "={{ Array.isArray($json.persist) && $json.persist.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000046",
+      "name": "Saved Instagram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3500,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://{{ $('Config').first().json.sanityProject }}.api.sanity.io/v2025-01-01/data/mutate/{{ $('Config').first().json.sanityDataset }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mutations: $json.persist }) }}"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000047",
+      "name": "Sanity: save Instagram link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3720,
+        340
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Sanity token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Safe to retry: set is idempotent."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst { persist, ...state } = $('Saved Instagram?').item.json;\nreturn { json: state };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000048",
+      "name": "Restore after Instagram save",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3940,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e1a7c00-0000-4000-8000-000000000049",
+              "leftValue": "={{ Array.isArray($json.persist) && $json.persist.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000050",
+      "name": "Saved Google?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4200,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "timeout": 30000
+        },
+        "method": "POST",
+        "url": "=https://{{ $('Config').first().json.sanityProject }}.api.sanity.io/v2025-01-01/data/mutate/{{ $('Config').first().json.sanityDataset }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mutations: $json.persist }) }}"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000051",
+      "name": "Sanity: save Google link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4420,
+        340
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_AFTER_IMPORT",
+          "name": "Seasonally Living: Sanity token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "Safe to retry: set is idempotent."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst { persist, ...state } = $('Saved Google?').item.json;\nreturn { json: state };"
+      },
+      "id": "5e1a7c00-0000-4000-8000-000000000052",
+      "name": "Restore after Google save",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4640,
+        340
+      ]
+    }
+  ],
+  "connections": {
+    "Every 15 minutes (8am-8pm)": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Sanity: approved posts due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanity: approved posts due": {
+      "main": [
+        [
+          {
+            "node": "One item per post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One item per post": {
+      "main": [
+        [
+          {
+            "node": "Guard and build payloads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard and build payloads": {
+      "main": [
+        [
+          {
+            "node": "Dry run?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dry run?": {
+      "main": [
+        [
+          {
+            "node": "Dry run: would post (nothing sent, nothing written)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Problems found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Problems found?": {
+      "main": [
+        [
+          {
+            "node": "Build the Sanity update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post to Facebook?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Facebook?": {
+      "main": [
+        [
+          {
+            "node": "Facebook Page: publish",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post to Instagram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Page: publish": {
+      "main": [
+        [
+          {
+            "node": "Facebook result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook result": {
+      "main": [
+        [
+          {
+            "node": "Saved Facebook?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved Facebook?": {
+      "main": [
+        [
+          {
+            "node": "Sanity: save Facebook link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post to Instagram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanity: save Facebook link": {
+      "main": [
+        [
+          {
+            "node": "Restore after Facebook save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore after Facebook save": {
+      "main": [
+        [
+          {
+            "node": "Post to Instagram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Instagram?": {
+      "main": [
+        [
+          {
+            "node": "Instagram: create media",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post to Google?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram: create media": {
+      "main": [
+        [
+          {
+            "node": "Wait for Instagram to process the photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Instagram to process the photo": {
+      "main": [
+        [
+          {
+            "node": "Instagram: publish media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram: publish media": {
+      "main": [
+        [
+          {
+            "node": "Instagram: get permalink",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram: get permalink": {
+      "main": [
+        [
+          {
+            "node": "Instagram result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram result": {
+      "main": [
+        [
+          {
+            "node": "Saved Instagram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved Instagram?": {
+      "main": [
+        [
+          {
+            "node": "Sanity: save Instagram link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post to Google?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanity: save Instagram link": {
+      "main": [
+        [
+          {
+            "node": "Restore after Instagram save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore after Instagram save": {
+      "main": [
+        [
+          {
+            "node": "Post to Google?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Google?": {
+      "main": [
+        [
+          {
+            "node": "Google Business Profile: publish post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build the Sanity update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Business Profile: publish post": {
+      "main": [
+        [
+          {
+            "node": "Google result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google result": {
+      "main": [
+        [
+          {
+            "node": "Saved Google?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Saved Google?": {
+      "main": [
+        [
+          {
+            "node": "Sanity: save Google link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build the Sanity update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanity: save Google link": {
+      "main": [
+        [
+          {
+            "node": "Restore after Google save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore after Google save": {
+      "main": [
+        [
+          {
+            "node": "Build the Sanity update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build the Sanity update": {
+      "main": [
+        [
+          {
+            "node": "Sanity: write the result back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanity: write the result back": {
+      "main": [
+        [
+          {
+            "node": "Anything go wrong?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anything go wrong?": {
+      "main": [
+        [
+          {
+            "node": "Email the approvers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles",
+    "saveManualExecutions": true,
+    "executionTimeout": 600
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "name": "seasonally-living"
+    },
+    {
+      "name": "TOL-2920"
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "NOT IMPORTED, NOT ACTIVE. Read automation/README.md first. dryRun is true in the Config node."
+  }
+}
