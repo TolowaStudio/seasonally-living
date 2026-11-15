@@ -34,6 +34,29 @@ export function setConsent(value: "granted" | "denied") {
   window.dispatchEvent(new Event(EVENT));
 }
 
+/**
+ * Forget the stored choice so the banner shows again ("Cookie settings" in the footer).
+ * Google tags drop back to denied right away. Meta Pixel and PostHog have no consent mode and cannot be
+ * unloaded from a running page, so when they were loaded (the visitor had accepted) the page reloads without them.
+ */
+export function clearConsent() {
+  const wasGranted = read() === "granted";
+  try {
+    window.localStorage.removeItem(CONSENT_KEY);
+  } catch {
+    /* private mode: nothing was stored */
+  }
+  const w = window as unknown as { gtag?: (...a: unknown[]) => void };
+  if (typeof w.gtag === "function") {
+    w.gtag("consent", "update", { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied", analytics_storage: "denied" });
+  }
+  if (wasGranted) {
+    window.location.reload();
+    return;
+  }
+  window.dispatchEvent(new Event(EVENT));
+}
+
 function subscribe(cb: () => void) {
   window.addEventListener(EVENT, cb);
   window.addEventListener("storage", cb);

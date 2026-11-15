@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Script from "next/script";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CONSENT_KEY, isGranted, setConsent, useConsent } from "@/lib/consent";
 import { INTERESTS } from "@/lib/interests";
@@ -141,7 +142,8 @@ function ConsentBanner() {
       <p style={{ color: "var(--ink-soft)" }}>
         {tracking.consentDefault === "denied"
           ? "We use cookies to see which pages and ads bring people in. Nothing is shared until you say yes."
-          : "We use cookies to see which pages and ads bring people in. Choose No thanks to opt out."}
+          : "We use cookies to see which pages and ads bring people in. Choose No thanks to opt out."}{" "}
+        <Link href="/privacy" style={{ textDecoration: "underline" }}>Privacy policy</Link>
       </p>
       <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
         <button type="button" className="btn btn-primary" style={{ padding: "8px 16px", fontSize: 13.5 }} onClick={() => setConsent("granted")}>
