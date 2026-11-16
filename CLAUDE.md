@@ -4,10 +4,10 @@
 Showroom/retail website for Seasonally Living — an outdoor living product business (fireplaces, hot tubs, outdoor kitchens). Next.js 16 marketing + showroom site.
 
 ## Deploy
-- Platform: Vercel (scope: tolowastudio)
+- Platform: Google Cloud Run (`Dockerfile`, project tolowa-studio, us-west1). Vercel is retired (TOL-655)
 - Framework: Next.js 16
-- Git: github.com/jerameyjames/seasonally-living
-- Production: seasonally-living.com (or TBD — confirm in Vercel dashboard)
+- Git: github.com/tolowa-studio/seasonally-living
+- Production: www.seasonallyliving.com (currently Squarespace; DNS cutover to Cloud Run is a separate approved step)
 
 ## Local dev
 ```bash
@@ -34,6 +34,6 @@ npm run dev  # → http://localhost:3000
 
 ## Next steps (MOTION upgrade)
 - Add Sanity CMS for product content management
-- Add @vercel/analytics or Umami for traffic tracking
+- Add Umami for traffic tracking
 - Wire contact form to email (Resend) or CRM
 - Add Sentry for error monitoring when site goes live
