@@ -35,9 +35,8 @@ yarn-error.log*
 .env.*
 !.env.example
 
-# vercel (commit project.json so `vercel deploy` works after clone)
-.vercel/*
-!.vercel/project.json
+# vercel is retired (TOL-655): keep any stray local link out of git
+.vercel/
 
 # typescript
 *.tsbuildinfo
