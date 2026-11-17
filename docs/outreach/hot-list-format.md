@@ -42,7 +42,7 @@ The first five are the ones the ticket asked for, in this order.
 
 ## Call order
 
-Sort by `reply_code` rank, then `tub_age_years` oldest first (a 7+ year tub is the trade-in candidate), then `reply_date` oldest first. Skip any row with `dnc = Y`. Kimberly's budget for new work is 30 minutes a day (Plan v5 section 10), so the day's list is however many calls fit, not the whole sheet.
+Sort by `reply_code` rank, then `tub_age_years` oldest first (the oldest tubs are the strongest trade-in candidates; the email segment cut is 5+ years, decided 2026-11-15), then `reply_date` oldest first. Skip any row with `dnc = Y`. Kimberly's budget for new work is 30 minutes a day (Plan v5 section 10), so the day's list is however many calls fit, not the whole sheet.
 
 ## Daily routine (about 5 minutes of setup, then the calls)
 
