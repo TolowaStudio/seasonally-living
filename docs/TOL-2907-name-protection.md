@@ -126,9 +126,26 @@ person and a phone number; keep the reply public-safe.
 > 667-8833. If we did not meet your expectations, please call us so we can put it right.
 
 **The F will not move because of replies.** BBB gives the rating reason as a missing competency license. Replies help
-reputation, not that score. The fix is: confirm which Washington L&I registration or license the business holds (public
-lookup at `secure.lni.wa.gov/verify`, which a person must run; it is the first step of TOL-2919 and the gate for pools in
-TOL-3351), then ask BBB to review. Do not move to a new name to escape the record.
+reputation, not that score.
+
+**L&I lookup (done 2026-11-17, public Washington open data, dataset `m8qx-ubtq`, matched by UBI `601862521`):**
+
+| Registration | Number | Status | Dates |
+| --- | --- | --- | --- |
+| CHIM CHIMNEY FIREPLACE & SPA (principal Cam A. McNeill) | CHIMCFS990DF | **EXPIRED** | effective 2001-03-06, expired 2024-08-10 |
+| SEASONALLY LIVING, 1407B Maiden Lane (same UBI, same principal) | SEASOL*762BW | **ACTIVE**, general contractor | effective 2024-01-18, expires 2028-04-08 |
+
+So the business is licensed today, under the new name. The "F" most likely reads the old Chim Chimney registration
+(expired) against a BBB profile that still has the old name and the old address (1604 N Wenatchee Ave). The fix is a
+profile correction, not a reply: claim the profile and give BBB the current license number `SEASOL*762BW`, the current
+address and the "Seasonally Living by Chim Chimney" name, then ask for the rating to be reviewed. Do not move to a new
+name to escape the record. (This is my reading of the data; BBB's own reason text is the only thing that settles it.)
+
+**Do not confuse two businesses.** "CHIM CHIMNEY SWEEPS LLC" (Malaga, UBI 603453854, masonry license active to
+2027-11-25) is a different company. Never cite its license, and watch for customers and listings that mix the two.
+
+`scripts/check-lni-license.ts --live` re-reads the register and fails if our UBI has no ACTIVE registration with more
+than 90 days left; CI runs only its offline self-test.
 
 ## 5. What needs a person (owners and Jeramey; the only parts an agent cannot do)
 
@@ -139,8 +156,8 @@ TOL-3351), then ask BBB to review. Do not move to a new name to escape the recor
    swim spas or River Pools were ever carried.
 3. **Which email is public:** the live `/contact` page shows `hello@seasonallyliving.com`, the new site uses
    `sales@seasonallyliving.com`. Pick one and make sure it is monitored.
-4. **Run the L&I lookup** (or give an agent read access to do it from the license number) and **claim the BBB profile**
-   (free, owner login) so the address, website and name can be corrected. Paid BBB accreditation only after the grade
+4. **Claim the BBB profile** (free, owner login; the L&I lookup is done, section 4) so the license number, address,
+   website and name can be corrected, then ask BBB to review the rating. Paid BBB accreditation only after the grade
    recovers; that is a money call for Jeramey and the owners.
 5. **Approve any wording** in section 4 before it goes anywhere public, and Jeramey's OK on anything published.
 
@@ -155,6 +172,9 @@ This ticket blocks TOL-2913 (ads): ads should wait until sections 3 and 5 are se
   creep back in), or the hours stop being Tuesday-Saturday 10am-4pm;
 - public copy offers Cal Saunas, Cal Flame, outdoor kitchens, Marquis, River Pools or ATV swim spas;
 - any of the 17 legacy Squarespace paths neither renders nor redirects to a page that renders.
+
+`scripts/check-lni-license.ts` (offline self-test in CI; `--live` by hand or on a schedule) guards the license behind the
+BBB "F": it must match our UBI, not a lookalike name, and an ACTIVE registration with under 90 days left fails.
 
 If the owners decide differently in section 3 (say, Marquis is still carried), change `NOT_CARRIED` or the hours in the
 script in the same PR as the copy.
