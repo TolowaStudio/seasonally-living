@@ -21,7 +21,7 @@ D is the "opt-in second" step: nobody is added to the monthly note by receiving 
 
 Segment rules need purchase year and product from the Lightspeed export (TOL-2891). The 2026-11-06 export had no purchase history, so until TOL-2891 delivers it, Susan tags the 50 to 100 seed names by hand. If the export still cannot say what a person bought, they get D only.
 
-Plan v5 section 4 uses 7+ years for the trade-in phone list. The ticket says 5+ for the email. This draft follows the ticket for the email (5+) and sorts the callback list by tub age, oldest first, so the 7+ owners are called first. See "Needs a yes" at the bottom.
+**Decided (Jeramey, 2026-11-15 9:21 PM PT, at the desk): the older-tub segment stays at 5+ years.** Plan v5 section 4 says to phone owners at 7+ years; that line does not apply to this set. Email A goes to everyone with a tub 5 or more years old. The callback list still sorts by tub age, oldest first, so the oldest tubs are called first. Cam has not yet approved the copy.
 
 ## Merge fields
 
@@ -143,7 +143,7 @@ Stop these emails: {{unsubscribe_url}}
 
 ## Needs a yes (Jeramey, then Cam)
 
-1. **5+ or 7+ years.** Email A follows the ticket (5+). Plan v5 says phone the 7+ owners. The callback list sorts oldest first so both are covered. Say if you want the email cut at 7.
+1. **5+ years: decided.** Jeramey kept 5+ for Email A on 2026-11-15, over Plan v5's 7+ for the phone list. Nothing to answer; the checker now fails if the rule drifts.
 2. **Trade-in credit, certified warranty, inspection price, orientation length.** All four are placeholders. Nothing in the drafts states a dollar figure or a warranty length, because no source in the repo or the plan does.
 3. **"Winter soak".** Read as an invitation to sit in a warm demo tub in the showroom. Cam to confirm there is a filled tub to soak in.
 4. **Burn-ban sentence.** Written from the plan's Washington Ecology burn-ban note (Stage 1 bars uncertified stoves; gas and electric aren't wood smoke). Cam to confirm it matches what the county says, and the "more than 10 years old" line.

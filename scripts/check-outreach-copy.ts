@@ -23,10 +23,10 @@ const NOT_CARRIED = [/cal\s?saunas?/i, /cal\s?flame/i, /outdoor kitchens?/i, /ma
 const OUT_OF_SCOPE = /chimney sweep|sweeping|\bliners?\b|\bsweeps?\b/i;
 const HOURS = /\b\d{1,2}(?::\d{2})?\s?(?:am|a\.m\.|a)?\s?[–—-]\s?\d{1,2}(?::\d{2})?\s?(?:pm|p\.m\.|p)\b/i;
 const PLACEHOLDER = /\[\[[^\]]+\]\]/g;
-export const MAX_EMAIL_WORDS = 220;
+export const MAX_EMAIL_WORDS = 220; // about a minute of reading: a personal note, not a newsletter
 export const MAX_CALL_WORDS = 260; // two minutes at about 130 spoken words a minute
 export const REQUIRED_HOT_LIST_COLUMNS = ["name", "owns", "tub_age_years", "phone", "replied"];
-export const OTHER_HOT_LIST_COLUMNS = ["reply_code", "dnc", "minutes", "outcome", "email"];
+export const OTHER_HOT_LIST_COLUMNS = ["reply_code", "segment", "wave", "email", "reply_date", "call_status", "outcome", "next_step", "next_date", "minutes", "dnc"];
 
 const words = (s: string) => s.split(/\s+/).filter(Boolean).length;
 
@@ -69,6 +69,7 @@ export function emailViolations(e: Email): string[] {
   if (!/^Cam( McNeill)?\s*$/m.test(msg)) v.push(`${tag}: not signed by Cam`);
   if (words(msg.replace(PLACEHOLDER, "")) > MAX_EMAIL_WORDS) v.push(`${tag}: over ${MAX_EMAIL_WORDS} words (a personal email, not a newsletter)`);
   if (!/1407 Maiden Ln/.test(e.body)) v.push(`${tag}: no street address in the footer`);
+  if (e.id === "D" && !/\{\{note_signup_url\}\}/.test(msg)) v.push(`${tag}: no {{note_signup_url}} in the message (its only job is the signup link)`);
   if (!/\{\{unsubscribe_url\}\}/.test(e.body)) v.push(`${tag}: no {{unsubscribe_url}} in the footer`);
   if (REVIEW_WORDS.test(all)) v.push(`${tag}: mentions reviews or ratings (no review incentive or ask in this set)`);
   if (DISCOUNT_WORDS.test(all)) v.push(`${tag}: leads with a discount or chemicals`);
@@ -107,10 +108,23 @@ export function callViolations(md: string): string[] {
   return v;
 }
 
+/** Jeramey, 2026-11-15: the older-tub segment stays at 5+ years (Plan v5's 7+ is for the phone list and does not apply here). */
+export function segmentViolations(md: string): string[] {
+  const v: string[] = [];
+  const row = md.match(/^\| A \|.*$/m)?.[0] ?? "";
+  if (!/\b5 or more years\b/.test(row)) v.push("segment-emails.md: the Email A rule must say 5 or more years (decided 2026-11-15)");
+  if (/\b(7|seven)\s?(\+|or more)/i.test(row)) v.push("segment-emails.md: the Email A rule uses 7+ years; the decision was to keep 5+");
+  const head = md.match(/^## Email A.*$/m)?.[0] ?? "";
+  if (!/\b5\+/.test(head)) v.push("segment-emails.md: the Email A heading must say 5+");
+  return v;
+}
+
 export function hotListViolations(csv: string, doc: string): string[] {
   const v: string[] = [];
   const lines = csv.split("\n").filter((l) => l.trim());
   const cols = (lines[0] ?? "").split(",").map((c) => c.trim());
+  const known = [...REQUIRED_HOT_LIST_COLUMNS, ...OTHER_HOT_LIST_COLUMNS];
+  for (const c of cols) if (!known.includes(c)) v.push(`hot list: unknown column ${c} (add it to the checker and the format doc together)`);
   REQUIRED_HOT_LIST_COLUMNS.forEach((c, i) => {
     if (cols[i] !== c) v.push(`hot list: column ${i + 1} must be ${c} (the ticket's five come first, in order), found ${cols[i] ?? "nothing"}`);
   });
@@ -162,13 +176,23 @@ const withLine = (line: string) => good.body.replace("Kimberly will call.", `Kim
   const twoBranches = call.replace("## Close", "## Branch: b\n> " + "word ".repeat(40) + "\n## Close");
   assert.equal(callWords(twoBranches).branch, 40, "the longest branch counts, not the sum");
 
-  const header = "name,owns,tub_age_years,phone,replied,reply_code,dnc,minutes,outcome,email\n";
-  const doc = "`name` `owns` `tub_age_years` `phone` `replied` `reply_code` `dnc` `minutes` `outcome` `email`";
+  const header = `${[...REQUIRED_HOT_LIST_COLUMNS, ...OTHER_HOT_LIST_COLUMNS].join(",")}\n`;
+  const doc = [...REQUIRED_HOT_LIST_COLUMNS, ...OTHER_HOT_LIST_COLUMNS].map((c) => `\`${c}\``).join(" ");
   assert.deepEqual(hotListViolations(header, doc), [], "the good hot list must pass");
-  assert.ok(hotListViolations("owns,name,tub_age_years,phone,replied,reply_code,dnc,minutes,outcome,email\n", doc).length > 0, "the ticket's columns must come first, in order");
-  assert.ok(hotListViolations(header.replace(",dnc", ""), doc).some((x) => /dnc/.test(x)), "dnc column must be required");
+  assert.ok(hotListViolations(header.replace("name,owns", "owns,name"), doc).length > 0, "the ticket's columns must come first, in order");
+  for (const c of OTHER_HOT_LIST_COLUMNS) assert.ok(hotListViolations(header.replace(`,${c}`, ""), doc).some((x) => x.includes(c)), `column ${c} must be required`);
+  assert.ok(hotListViolations(header.replace(",dnc", ",dnc,phone_2"), doc).some((x) => /unknown column/.test(x)), "an unchecked extra column must be caught");
   assert.ok(hotListViolations(header + "Pat,Cal Spa,6,5095550100,tub,want-call,N,2,,p@x.com\n", doc).some((x) => /data row/.test(x)), "customer data in the template must be caught");
   assert.ok(hotListViolations(header, doc.replace("`dnc`", "")).some((x) => /does not describe/.test(x)), "an undocumented column must be caught");
+  const seg = "| A | Spa owners with an older tub | Bought a hot tub or swim spa 5 or more years ago |\n## Email A: spa owners with a 5+ year-old tub\n";
+  assert.deepEqual(segmentViolations(seg), [], "the 5+ rule must pass");
+  assert.ok(segmentViolations(seg.replace("5 or more years", "7 or more years")).length > 0, "7+ in the Email A rule must be caught");
+  assert.ok(segmentViolations(seg.replace("a 5+ year-old", "an older")).some((x) => /heading/.test(x)), "the Email A heading must carry 5+");
+  assert.ok(segmentViolations(seg.replace("5 or more years", "6 or more years")).some((x) => /5 or more/.test(x)), "any threshold other than 5 must be caught");
+  assert.ok(segmentViolations("no table here").length > 0, "a missing Email A row must be caught");
+  const noLink = good.body.replace("Reply with", "{{note_signup_url}} Reply with");
+  assert.ok(emailViolations({ ...good, id: "D", body: good.body }).some((x) => /note_signup_url/.test(x)), "Email D without its signup link must be caught");
+  assert.deepEqual(emailViolations({ ...good, id: "D", body: noLink }), [], "Email D with its signup link must pass");
   assert.deepEqual(placeholders("a [[TRADE-IN]] b [[X: y]]"), ["[[TRADE-IN]]", "[[X: y]]"], "placeholders must be found");
 }
 
@@ -181,14 +205,15 @@ const emails = parseEmails(emailsMd);
 assert.deepEqual(emails.map((e) => e.id), ["A", "B", "C", "D"], "one email per segment: A older tubs, B hearth, C recent spa owners, D everyone");
 const problems = [
   ...emails.flatMap(emailViolations),
+  ...segmentViolations(emailsMd),
   ...linkViolations(emailsMd, "segment-emails.md"), // includes the {{note_signup_url}} definition, which sits outside the email bodies
   ...callViolations(callMd),
   ...hotListViolations(read("hot-list-template.csv"), read("hot-list-format.md")),
 ];
 if (process.argv.includes("--ready")) {
-  for (const f of ["segment-emails.md", "kimberly-callback-script.md"]) for (const p of placeholders(read(f))) problems.push(`${f}: placeholder still open: ${p}`);
+  for (const f of ["segment-emails.md", "kimberly-callback-script.md", "hot-list-format.md"]) for (const p of placeholders(read(f))) problems.push(`${f}: placeholder still open: ${p}`);
 }
 assert.deepEqual(problems, [], `outreach copy breaks a rule:\n${problems.join("\n")}`);
 
-const open = placeholders(emailsMd).length + placeholders(callMd).length;
+const open = placeholders(emailsMd).length + placeholders(callMd).length + placeholders(read("hot-list-format.md")).length;
 console.log(`ok: ${emails.length} emails, call script ${callWords(callMd).total}/${MAX_CALL_WORDS} spoken words, hot-list header; ${open} placeholders still open (--ready fails on them)`);
