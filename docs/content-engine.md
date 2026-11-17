@@ -104,8 +104,20 @@ so burn-in was not built or verified here.
 and is capped at 60 minutes. Draft only: no Sanity, Facebook, Instagram or Google.
 
 `automation/launchd/com.tolowa.seasonally-living.draft-week.plist` is a TEMPLATE (Sunday 18:00), **not
-installed**. To enable after merge: replace `REPLACE_ME`, copy to `~/Library/LaunchAgents/`, then
-`launchctl bootstrap gui/$(id -u) <plist>`. Undo: `launchctl bootout gui/$(id -u)/com.tolowa.seasonally-living.draft-week`.
+installed**. launchd starts jobs with a bare `PATH`; the template and the wrapper both add Homebrew's
+directories, and the wrapper exits 3 naming `node`, `perl` or `gcloud` if one is missing (it also needs
+Node 22+). Do not edit the template by hand. To enable, **on the Mini that should draft (not a laptop)**,
+from a checkout of this repo on `main`:
+
+```
+scripts/content/run-weekly-draft.sh --dry-run             # no key, no cost: proves node and paths
+scripts/content/install-weekly-schedule.sh                # prints the filled-in plist, changes nothing
+scripts/content/install-weekly-schedule.sh --install      # writes ~/Library/LaunchAgents/... and loads it
+launchctl kickstart gui/$(id -u)/com.tolowa.seasonally-living.draft-week   # optional: one real run now (pennies, Haiku)
+```
+
+Undo: `scripts/content/install-weekly-schedule.sh --uninstall`. Log: `~/Library/Logs/seasonally-living-draft-week.log`.
+The Mini needs `gcloud` signed in as an account that can read `motion-anthropic-api-key`.
 
 Still open: where Kimberly proofs `preview.md` (a shared folder is not chosen: confirm the storage
 choice, then point `DRAFT_OUT_ROOT` at it), and video upload and posting to Facebook/Instagram

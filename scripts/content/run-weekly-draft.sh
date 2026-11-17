@@ -11,6 +11,15 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
+# launchd and cron start with PATH=/usr/bin:/bin:/usr/sbin:/sbin, which has no node or gcloud (both live
+# under Homebrew), so the first scheduled run died with "node: command not found" (exit 127). Add the usual
+# Homebrew and mise locations, then fail with a message that names the missing tool.
+export PATH="/opt/homebrew/bin:/opt/homebrew/opt/node@22/bin:/usr/local/bin:$HOME/.local/share/mise/shims:$PATH"
+need() { command -v "$1" >/dev/null 2>&1 || { echo "weekly draft: '$1' not found on PATH ($PATH); install it or fix the launchd PATH" >&2; exit 3; }; }
+need node; need perl
+NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
+if [ "$NODE_MAJOR" -lt 22 ]; then echo "weekly draft: node $NODE_MAJOR found, 22 or newer is needed (--experimental-strip-types)" >&2; exit 3; fi
+
 DRAFT_OUT_ROOT="${DRAFT_OUT_ROOT:-out/content-drafts/weekly}"
 MODEL="${DRAFT_MODEL:-claude-haiku-5-5}"
 case "$MODEL" in *opus*|*fable*) echo "refusing $MODEL: unattended runs use Haiku or Sonnet only" >&2; exit 2;; esac
@@ -19,6 +28,7 @@ DRY=()
 if [ "${1:-}" = "--dry-run" ]; then DRY=(--dry-run); fi
 
 if [ ${#DRY[@]} -eq 0 ]; then
+  need gcloud
   KEYFILE="$(mktemp)"; chmod 600 "$KEYFILE"
   trap 'rm -f "$KEYFILE"' EXIT
   gcloud secrets versions access latest --secret=motion-anthropic-api-key --project=tolowa-studio | tr -d '\n' > "$KEYFILE"
