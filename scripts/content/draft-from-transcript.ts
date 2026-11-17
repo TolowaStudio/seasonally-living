@@ -19,6 +19,7 @@
 // (a phone's voice memo transcript, Whisper, Descript...). The model only sees the text you pass in.
 import { readFileSync, writeFileSync } from "node:fs";
 import { SEASONS, heroFor, seasonOf, type Line } from "../../src/content/calendar.ts";
+import { looksLikeCaptions, parseCaptions, toTranscript } from "./captions.ts";
 import { DEFAULT_MODEL, callWriter, pacificOffset, previewMarkdown, toPostDoc, writeJson } from "./lib.ts";
 
 const args = process.argv.slice(2);
@@ -37,7 +38,9 @@ const flagValues = new Set(["angle", "line", "season", "date", "model", "out"].m
 const file = args.find((a) => !a.startsWith("--") && !flagValues.has(a));
 if (!file) throw new Error("Pass the transcript file path first.");
 
-const transcript = readFileSync(file, "utf8").trim();
+const fileText = readFileSync(file, "utf8");
+// An SRT or WebVTT caption file is fine too: only the speech goes to the model, never the timing.
+const transcript = (looksLikeCaptions(file, fileText) ? toTranscript(parseCaptions(fileText)) : fileText).trim();
 if (transcript.length < 80) throw new Error("That transcript is too short to draft from.");
 const MAX = 24_000; // characters; plenty for a long shoot, caps the cost
 const clipped = transcript.length > MAX;

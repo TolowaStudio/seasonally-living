@@ -12,7 +12,8 @@ with a human approving before anything goes out. The posting side is in `automat
 | Sanity `post` type (article, social versions, approval, results) | `studio/post-schema.ts` |
 | Weekly rhythm, seasonal lead lines, local hooks, vetted hero photos | `src/content/calendar.ts` |
 | Draft a week of posts (Anthropic API) | `scripts/content/draft-week.ts` |
-| Draft a post from a video transcript | `scripts/content/draft-from-transcript.ts` |
+| Draft a post from a video transcript (plain text, SRT or WebVTT) | `scripts/content/draft-from-transcript.ts` |
+| Clean up a video's captions (SRT/WebVTT in, platform-ready SRT + WebVTT + transcript + report out) | `scripts/content/caption-video.ts`, helpers in `captions.ts` |
 | Load reviewed drafts into Sanity (opt-in) | `scripts/content/import-drafts.ts` |
 | n8n approval queue and cross-posting | `automation/n8n/social-approval-queue.json` |
 | Phone-tap approve route (off unless env is set) | `src/app/api/content/approve/route.ts` |
@@ -72,6 +73,27 @@ write to Sanity, and cannot post anywhere.
   said at the end"). One pool-install shoot, a dozen angles, each its own post with all three social
   versions.
 - Output goes to `out/content-drafts/transcripts/` with a `.preview.md` beside it.
+- A caption file (`.srt` or `.vtt`) can be passed instead of plain text; the timing is stripped and only
+  the speech reaches the model.
+
+### Captions (TOL-3371)
+
+`scripts/content/caption-video.ts <captions.srt|.vtt> [--video clip.mp4] [--name slug] [--out dir]`
+
+1. Get timed captions from any tool (Descript, phone transcript export, YouTube auto-captions, Whisper).
+   The script makes no speech-to-text call and sends nothing anywhere.
+2. It re-cuts them to at most 2 lines of 42 characters and 7 seconds per cue (words and total time are
+   preserved), strips markup, and writes `<name>.srt`, `<name>.vtt`, `<name>.transcript.txt` and
+   `<name>.captions-report.md` to `out/content-drafts/captions/`. It refuses to overwrite its input.
+3. With `--video` it checks the captions against the clip length (catches captions from a different cut).
+4. Feed `<name>.transcript.txt` (or the `.srt`) to `draft-from-transcript.ts` for the post copy.
+5. A person watches the video once with the captions on and reads the report. Speech-to-text mishears
+   names, model numbers and numbers.
+
+Where the captions go once approved (not built, see below): Facebook takes the `.srt` as a caption file at
+upload. Instagram has no caption-file upload, so Reels and feed video need captions burned in by an editor
+(Descript, CapCut) or by an `ffmpeg` that has `libass`; the Homebrew `ffmpeg` on the dev laptop does not,
+so burn-in was not built or verified here.
 
 ## Weekly schedule (TOL-3371)
 
@@ -86,8 +108,8 @@ installed**. To enable after merge: replace `REPLACE_ME`, copy to `~/Library/Lau
 `launchctl bootstrap gui/$(id -u) <plist>`. Undo: `launchctl bootout gui/$(id -u)/com.tolowa.seasonally-living.draft-week`.
 
 Still open: where Kimberly proofs `preview.md` (a shared folder is not chosen: confirm the storage
-choice, then point `DRAFT_OUT_ROOT` at it), and the video half (transcript, captions, Facebook/Instagram
-video posting: posting is a public send and needs a go-ahead).
+choice, then point `DRAFT_OUT_ROOT` at it), and video upload and posting to Facebook/Instagram
+(posting is a public send and needs a go-ahead; the caption half is built, see "Captions" above).
 
 ## Open items
 
