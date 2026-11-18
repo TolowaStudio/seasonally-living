@@ -1,21 +1,13 @@
 import { cache } from "react";
-import { createClient } from "@sanity/client";
 import { DEFAULT_POSTS, JOURNAL_TAG_IDS, type JournalPost, type JournalSeason, type JournalStatus, type PortableBlock } from "@/content/journal";
-import { SANITY_DATASET, SANITY_PROJECT_ID, REVALIDATE_SECONDS } from "@/lib/sanity";
+import { REVALIDATE_SECONDS } from "@/lib/sanity";
+import { describeSanityError, sanityClient as client } from "@/lib/sanity-client";
 import { getSiteUrl } from "@/lib/site";
 
 // Journal posts: Sanity documents of type "post", merged over the code defaults in src/content/journal.ts.
 // A post is visible when its status is approved, scheduled or published AND its publishAt (if any) has passed.
 // "approved" counts so a Facebook post that links to the article never points at a 404.
 // A Sanity post with the same slug as a default replaces it (status "draft" retires the default).
-
-const client = createClient({
-  projectId: SANITY_PROJECT_ID,
-  dataset: SANITY_DATASET,
-  apiVersion: "2025-01-01",
-  useCdn: true,
-  perspective: "published",
-});
 
 const FIELDS = `_id, title, "slug": slug.current, tags, season, heroImage, heroAlt, excerpt, body, status, publishAt, "updatedAt": _updatedAt, "posted": defined(results.facebookUrl) || defined(results.instagramUrl) || defined(results.gbpUrl)`;
 const VISIBLE: JournalStatus[] = ["approved", "scheduled", "published"];
@@ -71,7 +63,7 @@ const fetchRows = cache(async (): Promise<unknown[] | null> => {
       next: { revalidate: REVALIDATE_SECONDS, tags: ["post"] },
     });
   } catch (err) {
-    console.error("sanity: post fetch failed", err instanceof Error ? err.message : err);
+    console.error("sanity: post fetch failed", describeSanityError(err));
     return null;
   }
 });
