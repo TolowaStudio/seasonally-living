@@ -1,5 +1,4 @@
 import { cache } from "react";
-import { createClient } from "@sanity/client";
 import { ALL_PAGES } from "@/content/pages";
 import { SETTINGS } from "@/content/settings";
 import { DEMO_PRE_OWNED } from "@/content/pre-owned";
@@ -9,24 +8,17 @@ import { LANDING_PAGES, type LandingContent } from "@/content/landing";
 import { GUIDES, type Guide } from "@/content/guides";
 import type { BrandContent, PageContent, PreOwnedSpa, PreOwnedStatus, SiteSettings } from "@/content/types";
 import { mergeContent } from "./merge";
+import { describeSanityError, sanityClient as client, SANITY_DATASET, SANITY_PROJECT_ID } from "./sanity-client";
 import { brandFromSanity } from "./brand-content";
 
 export { mergeContent };
 
-// Content lives in Sanity (project 83r23z7t, public dataset "production").
+// Content lives in Sanity (project 83r23z7t, dataset "production"; public until TOL-3348 flips it to private,
+// at which point SANITY_READ_TOKEN must be set on the server, see docs/TOL-3348-private-dataset.md).
 // Every read falls back to the code defaults in src/content, so the site never
 // renders empty if Sanity is slow or unreachable. Pages revalidate every 60s (ISR).
-export const SANITY_PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "83r23z7t";
-export const SANITY_DATASET = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
+export { SANITY_DATASET, SANITY_PROJECT_ID };
 export const REVALIDATE_SECONDS = 60;
-
-const client = createClient({
-  projectId: SANITY_PROJECT_ID,
-  dataset: SANITY_DATASET,
-  apiVersion: "2025-01-01",
-  useCdn: true,
-  perspective: "published",
-});
 
 /** Stable document id for a page path, e.g. "/fireplaces/gas-electric" -> "page-fireplaces-gas-electric".
  *  (No dots: Sanity treats dotted IDs as private paths that the public API cannot read.) */
@@ -43,7 +35,7 @@ const fetchDoc = cache(async (id: string): Promise<unknown> => {
       { signal: AbortSignal.timeout(4000), next: { revalidate: REVALIDATE_SECONDS, tags: [id] } },
     );
   } catch (err) {
-    console.error("sanity: fetch failed for", id, err instanceof Error ? err.message : err);
+    console.error("sanity: fetch failed for", id, describeSanityError(err));
     return null;
   }
 });
@@ -61,8 +53,8 @@ export async function getSettings(): Promise<SiteSettings> {
 // ---- Pre-owned spas ("on the floor") ----
 // Public projection only. Internal intake fields (source, acquisitionCost, reconCost, intakeNotes, receivedDate)
 // are never selected, and `reconChecklist` is read only to turn ticked items into public labels.
-// NOTE: the "production" dataset is public, so those fields are still readable straight from the Sanity API.
-// Do not enter real costs until the dataset is private or intake lives in a private dataset (see PR notes).
+// NOTE: while the "production" dataset is public those fields are still readable straight from the Sanity API.
+// Do not enter real costs until the dataset is private (TOL-3348, docs/TOL-3348-private-dataset.md).
 const SPA_FIELDS = `_id, title, "slug": slug.current, "rawStatus": status, brand, model, year, seats, size, electrical, features, highlights,
   condition, warranty, listedDate, soldDate, "recon": reconChecklist, photos[]{image, alt}, featured, sortOrder`;
 
@@ -108,7 +100,7 @@ const fetchQuery = cache(async <T>(tag: string, query: string, params: Record<st
       next: { revalidate: REVALIDATE_SECONDS, tags: [tag] },
     });
   } catch (err) {
-    console.error(`sanity: ${tag} fetch failed`, err instanceof Error ? err.message : err);
+    console.error(`sanity: ${tag} fetch failed`, describeSanityError(err));
     return null;
   }
 });

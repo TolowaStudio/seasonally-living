@@ -275,8 +275,9 @@ export const schemaTypes = [
       defineField({ name: "sortOrder", group: "listing", type: "number", description: "Lower numbers show first." }),
 
       // ---- Intake: INTERNAL. The site's queries never select these fields. ----
-      // WARNING: the production dataset is public, so anyone can read these through the Sanity API.
-      // Keep real costs out until the dataset is private (or intake moves to a private dataset).
+      // WARNING: while the production dataset is public, anyone can read these through the Sanity API (checked
+      // anonymously 2026-11-17: HTTP 200). Keep real costs out until the dataset is private: TOL-3348,
+      // docs/TOL-3348-private-dataset.md has the steps and the check that proves it.
       // Never enter customer names, phone numbers or addresses here.
       defineField({
         name: "source",
