@@ -67,4 +67,9 @@ const block = schema.slice(start, schema.indexOf('name: "listedDate"'));
 assert.ok(block.includes('group: "listing"'), "price must be in the public listing group");
 assert.ok(block.includes("Add the price before listing this spa."), "price must be required before a spa is listed or reserved");
 
+// 7. Server pages must not import values from the "use client" Cloudinary loader (og:image / JSON-LD image URLs broke).
+const page = readFileSync("src/app/pre-owned/[slug]/page.tsx", "utf8");
+assert.ok(!page.includes("cloudinary-loader"), "the spa page must import CLOUDINARY_BASE from @/lib/cloudinary, not the client loader");
+assert.ok(!/^\s*["']use client["']/m.test(readFileSync("src/lib/cloudinary.ts", "utf8")), "src/lib/cloudinary.ts must stay server-safe");
+
 console.log("check-pre-owned-prices: ok");

@@ -6,7 +6,7 @@ import LeadForm from "@/components/LeadForm";
 import PreOwnedAlertForm from "@/components/PreOwnedAlertForm";
 import PreOwnedPhotos from "@/components/PreOwnedPhotos";
 import ShareLinks from "@/components/ShareLinks";
-import { CLOUDINARY_BASE } from "@/lib/cloudinary-loader";
+import { CLOUDINARY_BASE } from "@/lib/cloudinary";
 import { seatBandOf, specLine, statusLabel } from "@/lib/pre-owned-ui";
 import { formatPrice } from "@/lib/pre-owned-public";
 import { getPreOwnedSpa, getSettings } from "@/lib/sanity";
