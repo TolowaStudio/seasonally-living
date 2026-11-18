@@ -10,6 +10,7 @@ import { GUIDES, type Guide } from "@/content/guides";
 import type { BrandContent, PageContent, PreOwnedSpa, PreOwnedStatus, SiteSettings } from "@/content/types";
 import { mergeContent } from "./merge";
 import { brandFromSanity } from "./brand-content";
+import { SPA_FIELDS, publicPrice } from "./pre-owned-public";
 
 export { mergeContent };
 
@@ -59,15 +60,14 @@ export async function getSettings(): Promise<SiteSettings> {
 }
 
 // ---- Pre-owned spas ("on the floor") ----
-// Public projection only. Internal intake fields (source, acquisitionCost, reconCost, intakeNotes, receivedDate)
-// are never selected, and `reconChecklist` is read only to turn ticked items into public labels.
+// Public projection only (SPA_FIELDS in ./pre-owned-public). Internal intake fields (source, acquisitionCost,
+// reconCost, intakeNotes, receivedDate) are never selected, and `reconChecklist` is read only to turn ticked
+// items into public labels. `price` is the public asking price.
 // NOTE: the "production" dataset is public, so those fields are still readable straight from the Sanity API.
 // Do not enter real costs until the dataset is private or intake lives in a private dataset (see PR notes).
-const SPA_FIELDS = `_id, title, "slug": slug.current, "rawStatus": status, brand, model, year, seats, size, electrical, features, highlights,
-  condition, warranty, listedDate, soldDate, "recon": reconChecklist, photos[]{image, alt}, featured, sortOrder`;
-
-type RawSpa = Omit<PreOwnedSpa, "status" | "checklist" | "justArrived"> & {
+type RawSpa = Omit<PreOwnedSpa, "status" | "checklist" | "justArrived" | "price"> & {
   rawStatus?: string;
+  price?: unknown;
   recon?: Record<string, boolean | null> | null;
 };
 
@@ -89,12 +89,14 @@ export function toPublicSpa(r: RawSpa): PreOwnedSpa | null {
   const status = publicStatus(r.rawStatus);
   if (!status || !r.slug) return null;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { rawStatus, recon, ...rest } = r;
+  const { rawStatus, recon, price, ...rest } = r;
+  const publicPriceDollars = publicPrice(status, price);
   const checklist = RECON_CHECKLIST.filter((c) => recon?.[c.key] === true).map((c) => c.label);
   return {
     ...rest,
     status,
     checklist,
+    ...(publicPriceDollars !== undefined ? { price: publicPriceDollars } : {}),
     justArrived: status === "listed" && daysSince(r.listedDate) <= JUST_ARRIVED_DAYS,
   };
 }

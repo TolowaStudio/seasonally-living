@@ -263,6 +263,20 @@ export const schemaTypes = [
         rows: 3,
         description: "Write the exact terms (length, what is covered). Leave blank unless the terms are confirmed; the page then just says to ask us.",
       }),
+      defineField({
+        name: "price",
+        title: "Price (shown on the site)",
+        group: "listing",
+        type: "number",
+        description: "The public asking price in whole US dollars, e.g. 4995. Shown on the gallery and the spa page. Never enter what the shop paid or spent here: acquisition and recon costs live under Intake (staff only).",
+        validation: (r) =>
+          r.custom((v, ctx) => {
+            const status = (ctx.document as { status?: string } | undefined)?.status;
+            if (v === undefined || v === null) return status === "listed" || status === "reserved" ? "Add the price before listing this spa." : true;
+            if (typeof v !== "number" || !Number.isInteger(v) || v < 1 || v > 250000) return "Whole dollars between 1 and 250,000, e.g. 4995.";
+            return true;
+          }),
+      }),
       defineField({ name: "listedDate", title: "Listed date", group: "listing", type: "date", description: 'Set when it goes on the floor. Spas listed in the last few weeks get a "Just arrived" badge.' }),
       defineField({ name: "soldDate", title: "Sold date", group: "listing", type: "date", description: "Set when sold. Drives the Recently found homes strip." }),
       defineField({

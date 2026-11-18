@@ -91,7 +91,7 @@ export const WELCOME: Record<string, [Step, Step, Step]> = {
       subject: "You'll hear about pre-owned spas first",
       preheader: "A heads-up when new arrivals come through our shop.",
       heading: "Welcome. Here's how the first look works",
-      paragraphs: ["Thanks for joining the Seasonally Living note. When a pre-owned spa is ready to show, you will get an email with the details before it is announced more widely. Prices are not posted; call or stop in for the number.", "Your shopping checklist is below, whether the spa is ours or anyone else's."],
+      paragraphs: ["Thanks for joining the Seasonally Living note. When a pre-owned spa is ready to show, you will get an email with the details before it is announced more widely. Every listing shows its price; call or stop in to purchase.", "Your shopping checklist is below, whether the spa is ours or anyone else's."],
       cta: "Ask about a spa",
       guide: "pre-owned-first-look",
     },

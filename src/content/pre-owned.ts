@@ -28,6 +28,7 @@ export const DEMO_PRE_OWNED: PreOwnedSpa[] = [
     condition: "Pumps tested, filters replaced, cabinet cleaned and sealed. Holds temperature as new.",
     checklist: CHECK_ALL,
     warranty: "DEMO: warranty terms are written here by staff.",
+    price: 4995, // DEMO price, not a real listing
     listedDate: daysAgo(4),
     justArrived: true,
     photos: [
@@ -50,6 +51,7 @@ export const DEMO_PRE_OWNED: PreOwnedSpa[] = [
     highlights: ["Premium jet package", "Bluetooth audio"],
     condition: "Full inspection, new cover, heater and control pack tested.",
     checklist: CHECK_ALL.slice(0, 4),
+    price: 6495, // DEMO price
     listedDate: daysAgo(40),
     photos: [{ image: "seasonally-living/brand/calspas/platinum-patio", alt: "Platinum spa on a patio" }],
   },
@@ -67,6 +69,7 @@ export const DEMO_PRE_OWNED: PreOwnedSpa[] = [
     highlights: ["Underglow lighting", "Lounger seat"],
     condition: "Plumbing pressure tested, jets and pillows refreshed.",
     checklist: CHECK_ALL.slice(0, 5),
+    price: 3750, // DEMO price
     listedDate: daysAgo(30),
     photos: [
       { image: "seasonally-living/brand/calspas/platinum-courtyard", alt: "Platinum spa in a courtyard" },
