@@ -1,0 +1,54 @@
+{
+  "ticket": "TOL-2892",
+  "evidenceDate": "2026-11-17",
+  "note": "Read-only facts from public pages. Nothing here was posted, changed or paid for. Numbers move; re-read before quoting.",
+  "google": {
+    "source": "google.com/maps place pages, read in a browser on 2026-11-17 (no Places API key used, no login)",
+    "listings": [
+      { "name": "Seasonally Living by Chim Chimney", "role": "us", "address": "1407 Maiden Ln, Wenatchee", "phone": "(509) 667-8833", "rating": 3.9, "reviews": 99, "status": "open", "category": "Fireplace store" },
+      { "name": "Pool To Spa Services LLC", "role": "competitor", "address": "160 S Worthen St, Wenatchee", "phone": "(509) 662-1590", "rating": 4.9, "reviews": 374, "status": "open", "category": "Hot tub store" },
+      { "name": "Hot Tubs Liquidators (Wenatchee)", "role": "competitor", "address": "1625 N Wenatchee Ave, Wenatchee", "phone": "(509) 888-2444", "rating": 5.0, "reviews": 17, "status": "open", "category": "Hot tub store" },
+      { "name": "Hot Tubs Liquidators (second listing, Chelan side of the lake)", "role": "competitor", "address": "pin at 47.839, -120.013 (street not read)", "phone": "", "rating": 4.9, "reviews": 19, "status": "open", "category": "Hot tub store" },
+      { "name": "Swim World Chelan", "role": "competitor", "address": "1754 N Wenatchee Ave, Wenatchee", "phone": "(509) 682-3431", "rating": 4.4, "reviews": 19, "status": "open", "category": "Hot tub store" },
+      { "name": "Blue Lagoon Pool and Spa LLC", "role": "competitor", "address": "3012 Gs Center Rd (as shown, cut off in the listing text)", "phone": "", "rating": 3.8, "reviews": 25, "status": "open", "category": "Swimming pool contractor" },
+      { "name": "Central Washington Water", "role": "competitor", "address": "514 S Wenatchee Ave, Wenatchee", "phone": "(509) 663-1177", "rating": 4.8, "reviews": 37, "status": "open", "category": "Water softening supplier that also sells hot tubs" },
+      { "name": "The Fireplace Guys", "role": "competitor", "address": "1205 Walnut St, Wenatchee", "phone": "(509) 885-9034", "rating": 4.8, "reviews": 52, "status": "open", "category": "Fireplace store" },
+      { "name": "Valley Fireplace and Spa", "role": "competitor", "address": "pin at 47.846, -120.195 (street not read)", "phone": "(509) 557-0261", "rating": 5.0, "reviews": 12, "status": "open", "category": "Hot tub repair service" },
+      { "name": "Chim-Chimney Sweeps", "role": "adjacent", "address": "pin at 47.417, -120.292, Wenatchee (street not read)", "phone": "(509) 667-1400", "rating": 4.7, "reviews": 42, "status": "open", "category": "Chimney sweep (not shown to be the same business as ours)" },
+      { "name": "Sparkling Spas", "role": "competitor", "address": "pin at 47.598, -120.649 (Leavenworth)", "phone": "", "rating": 4.8, "reviews": 20, "status": "open", "category": "Hot tub care and service" }
+    ]
+  },
+  "secondHomes": {
+    "source": "US Census Bureau ACS 2020-2024 5-year, table B25004 (vacancy status) line 6 'For seasonal, recreational, or occasional use' and B25002 (occupancy), read through Census Reporter (api.censusreporter.org, release acs2024_5yr) on 2026-11-17",
+    "county1yr2024": { "name": "Chelan County, WA (ACS 2024 1-year)", "totalUnits": 39906, "vacant": 6718, "seasonal": 3751, "seasonalMoe": 1077 },
+    "areas": [
+      { "name": "Chelan County, WA", "totalUnits": 38677, "vacant": 7157, "seasonal": 5481, "seasonalMoe": 414 },
+      { "name": "Chelan city", "totalUnits": 2867, "vacant": 1028, "seasonal": 824, "seasonalMoe": 170 },
+      { "name": "Manson", "totalUnits": 900, "vacant": 345, "seasonal": 313, "seasonalMoe": 151 },
+      { "name": "Leavenworth city", "totalUnits": 1507, "vacant": 296, "seasonal": 210, "seasonalMoe": 91 },
+      { "name": "Entiat city", "totalUnits": 612, "vacant": 86, "seasonal": 41, "seasonalMoe": 32 },
+      { "name": "Cashmere city", "totalUnits": 1350, "vacant": 106, "seasonal": 63, "seasonalMoe": 74 },
+      { "name": "East Wenatchee city", "totalUnits": 5577, "vacant": 299, "seasonal": 42, "seasonalMoe": 66 },
+      { "name": "Wenatchee city", "totalUnits": 14682, "vacant": 422, "seasonal": 0, "seasonalMoe": 28 }
+    ]
+  },
+  "dns": {
+    "source": "dig, dns.google DNS-over-HTTPS and whois/RDAP on 2026-11-17",
+    "seasonallyliving.com": {
+      "registrar": "Tucows Domains Inc. (Squarespace-managed)",
+      "created": "2020-05-28",
+      "expires": "2027-05-28",
+      "nameservers": ["dns1.p01.nsone.net", "dns2.p01.nsone.net", "dns3.p01.nsone.net", "dns4.p01.nsone.net", "ns01.squarespacedns.com", "ns02.squarespacedns.com", "ns03.squarespacedns.com", "ns04.squarespacedns.com"],
+      "apexA": ["198.185.159.144", "198.185.159.145", "198.49.23.144", "198.49.23.145"],
+      "wwwCname": "ext-sq.squarespace.com",
+      "mx": ["1 aspmx.l.google.com", "5 alt1.aspmx.l.google.com", "5 alt2.aspmx.l.google.com", "10 alt3.aspmx.l.google.com", "10 alt4.aspmx.l.google.com"],
+      "apexTxt": [],
+      "spf": false,
+      "dmarc": false,
+      "dkimGoogleSelector": false,
+      "caa": false
+    },
+    "chimchimney.biz": { "registrar": "NameCheap", "created": "2026-07-17", "expires": "2027-07-17", "nameservers": ["dns1.registrar-servers.com", "dns2.registrar-servers.com"], "serves": "Namecheap parking page (302 to www.chimchimney.biz)" },
+    "chimchimney.com": { "registrar": "GoDaddy", "created": "2000-03-22", "expires": "2027-03-22", "nameservers": ["ns3.afternic.com", "ns4.afternic.com"], "serves": "domain-for-sale lander (Afternic); has a null MX and SPF -all" }
+  }
+}
