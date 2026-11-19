@@ -142,6 +142,8 @@ export type PreOwnedSpa = {
   checklist?: string[];
   /** Warranty terms for this unit, as written by staff. Blank = not shown as a promise. */
   warranty?: string;
+  /** Public asking price in whole US dollars. Never set on sold spas. Acquisition and recon costs stay staff-only. */
+  price?: number;
   /** ISO date (YYYY-MM-DD) the spa went on the floor. */
   listedDate?: string;
   soldDate?: string;

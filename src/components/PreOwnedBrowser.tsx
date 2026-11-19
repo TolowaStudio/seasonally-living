@@ -6,11 +6,14 @@ import { useMemo, useState } from "react";
 import Icon from "./Icon";
 import { SPA_FEATURES } from "@/content/pre-owned-checklist";
 import type { PreOwnedSpa } from "@/content/types";
-import { SEAT_BANDS, seatBandOf, specLine, statusLabel } from "@/lib/pre-owned-ui";
+import { formatPrice } from "@/lib/pre-owned-public";
+import { SEAT_BANDS, seatBandOf, sortSpas, specLine, statusLabel, type SpaSort } from "@/lib/pre-owned-ui";
 
-type Sort = "arrival" | "seats-desc" | "seats-asc" | "year-desc";
+type Sort = SpaSort;
 const SORTS: { id: Sort; label: string }[] = [
   { id: "arrival", label: "Newest arrivals" },
+  { id: "price-asc", label: "Price: low to high" },
+  { id: "price-desc", label: "Price: high to low" },
   { id: "seats-desc", label: "Most seats" },
   { id: "seats-asc", label: "Fewest seats" },
   { id: "year-desc", label: "Newest model year" },
@@ -18,7 +21,7 @@ const SORTS: { id: Sort; label: string }[] = [
 
 const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
-/** Filter + sort + card grid for the pre-owned floor. Prices are never shown ("Call for price"). */
+/** Filter + sort + card grid for the pre-owned floor. Each card shows the spa's posted price. */
 export default function PreOwnedBrowser({ spas }: { spas: PreOwnedSpa[] }) {
   const [bands, setBands] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
@@ -35,15 +38,7 @@ export default function PreOwnedBrowser({ spas }: { spas: PreOwnedSpa[] }) {
         (!brands.length || brands.includes(s.brand ?? "")) &&
         features.every((f) => s.features?.includes(f)),
     );
-    const key = (s: PreOwnedSpa) => s.listedDate ?? "";
-    const by: Record<Sort, (a: PreOwnedSpa, b: PreOwnedSpa) => number> = {
-      arrival: (a, b) => key(b).localeCompare(key(a)),
-      "seats-desc": (a, b) => (b.seats ?? 0) - (a.seats ?? 0),
-      "seats-asc": (a, b) => (a.seats ?? 99) - (b.seats ?? 99),
-      "year-desc": (a, b) => (b.year ?? 0) - (a.year ?? 0),
-    };
-    // Available first, then reserved; featured spas lead within each group, then the chosen sort.
-    return [...out].sort((a, b) => Number(a.status === "reserved") - Number(b.status === "reserved") || Number(!!b.featured) - Number(!!a.featured) || by[sort](a, b));
+    return sortSpas(out, sort);
   }, [spas, bands, brands, features, sort]);
 
   const active = bands.length + brands.length + features.length;
@@ -133,7 +128,8 @@ export default function PreOwnedBrowser({ spas }: { spas: PreOwnedSpa[] }) {
                   <h3 className="h-md" style={{ fontSize: 22 }}>{s.title}</h3>
                   <p className="body-muted small" style={{ marginTop: 6 }}>{specLine(s)}</p>
                   {s.features && s.features.length > 0 && <p className="po-tags">{s.features.slice(0, 3).join(" · ")}</p>}
-                  <span className="po-cta">{s.status === "reserved" ? "See details" : "Call for price"} <Icon name="arrow" size={16} /></span>
+                  {s.price !== undefined && <p className="po-price">{formatPrice(s.price)}</p>}
+                  <span className="po-cta">{s.status === "reserved" ? "See details" : "See details and call to purchase"} <Icon name="arrow" size={16} /></span>
                 </div>
               </Link>
             );

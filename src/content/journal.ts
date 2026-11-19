@@ -189,7 +189,7 @@ export const DEFAULT_POSTS: JournalPost[] = [
       h2("Know what it needs at your house"),
       p("Before you fall for a tub, check what it needs. Many full-size hot tubs run on 240 volts and need their own dedicated circuit, and a pad or deck that can carry the weight of a full tub. Ask for the electrical requirement and the dimensions. We list those, along with seats and year, on each spa's page."),
       h2("What we put on each spa's page"),
-      p("On our pre-owned spa pages, the “What our shop did” section says what the shop inspected, tested or replaced on that spa. We don't post prices; call us and we'll talk through the spa and your yard."),
+      p("On our pre-owned spa pages, the “What our shop did” section says what the shop inspected, tested or replaced on that spa. Every pre-owned spa on the floor shows its price; call us and we'll talk through the spa and your yard."),
       p(`See what is on the floor right now, or call the shop at ${PHONE}.`),
     ],
     // TODO-confirm: that every pre-owned spa gets run/tested by the shop before listing, and what warranty (if any) the shop offers.

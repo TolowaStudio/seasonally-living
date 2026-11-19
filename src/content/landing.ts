@@ -53,7 +53,7 @@ export const LANDING_PAGES: LandingContent[] = [
       { title: "Repaired and cleaned", body: "Worn parts replaced, lines flushed and the tub cleaned and sanitized." },
       { title: "Delivered", body: "We deliver and set it up the same way we do a new tub." },
     ] },
-    feature: { kicker: "Inventory changes week to week", title: "Tell us what you're after.", body: "Call or ask below and we'll tell you what's on the floor and what's coming. Trading up? We'll take a look at your old tub and give you a straight number.", bullets: ["Call for price on any spa", "Trade-in toward new or pre-owned", "We haul the old one away"], image: IMG.csEscape, alt: "A Cal Spas Escape hot tub on a patio" },
+    feature: { kicker: "Inventory changes week to week", title: "Tell us what you're after.", body: "Call or ask below and we'll tell you what's on the floor and what's coming. Trading up? We'll take a look at your old tub and give you a straight number.", bullets: ["Every pre-owned spa has its price posted", "Trade-in toward new or pre-owned", "We haul the old one away"], image: IMG.csEscape, alt: "A Cal Spas Escape hot tub on a patio" },
     form: { title: "Ask about a spa", lead: "Tell us what you're looking for. We'll call or email within one business day with what's on the floor." },
   }),
   lp({

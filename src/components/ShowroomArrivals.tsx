@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import { formatPrice } from "@/lib/pre-owned-public";
 import { getPreOwnedSpas } from "@/lib/sanity";
 
-/** Pre-owned arrivals strip. Real listings only; with none posted it says so plainly and points to the list. Prices are never shown. */
-export default async function ShowroomArrivals({ title = "Just arrived", lead = "Trade-ins, inspected and repaired in our own shop. Call for price." }: { title?: string; lead?: string }) {
+/** Pre-owned arrivals strip. Real listings only; with none posted it says so plainly and points to the list. Each tile shows the posted price. */
+export default async function ShowroomArrivals({ title = "Just arrived", lead = "Trade-ins, inspected and repaired in our own shop. Every price is posted; call to purchase." }: { title?: string; lead?: string }) {
   const spas = (await getPreOwnedSpas()).slice(0, 4);
   return (
     <section className="section" aria-labelledby="arrivals-h">
@@ -23,7 +24,7 @@ export default async function ShowroomArrivals({ title = "Just arrived", lead = 
                 <Link href={`/pre-owned/${s.slug}`} className="sh-spa" style={{ display: "block" }}>
                   <div className="sh-spa-ph">{s.photos?.[0] && <Image src={s.photos[0].image} alt={s.photos[0].alt || s.title} fill sizes="(max-width: 620px) 74vw, (max-width: 1000px) 50vw, 25vw" />}</div>
                   <p className="sh-spa-t">{s.title}</p>
-                  <p className="sh-spa-s">{[s.seats && `${s.seats} seats`, "Call for price"].filter(Boolean).join(" · ")}</p>
+                  <p className="sh-spa-s">{[s.seats && `${s.seats} seats`, s.price !== undefined && formatPrice(s.price)].filter(Boolean).join(" · ")}</p>
                 </Link>
               </li>
             ))}

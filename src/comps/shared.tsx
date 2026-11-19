@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/Nav";
 import Reveal from "@/components/RevealWrapper";
+import { formatPrice } from "@/lib/pre-owned-public";
 import { getPreOwnedSpas, getSettings } from "@/lib/sanity";
 import { addressOf, mapsUrlOf } from "@/lib/site";
 import { COMPS, CREDENTIALS, type V } from "./data";
@@ -125,7 +126,7 @@ function CompBar({ v }: { v: V }) {
 }
 
 /** Pre-owned arrivals. Real listings once the shop posts them; clearly-labelled placeholders until then. */
-export async function Arrivals({ v, title = "Just arrived", lead = "Trade-ins, inspected and repaired in our own shop. Call for price." }: { v: V; title?: string; lead?: string }) {
+export async function Arrivals({ v, title = "Just arrived", lead = "Trade-ins, inspected and repaired in our own shop. Every price is posted; call to purchase." }: { v: V; title?: string; lead?: string }) {
   const spas = (await getPreOwnedSpas()).slice(0, 4);
   return (
     <section className="cmp-sec cmp-arrivals" aria-labelledby={`arr-${v}`}>
@@ -145,7 +146,7 @@ export async function Arrivals({ v, title = "Just arrived", lead = "Trade-ins, i
                   <Link href={`/pre-owned/${s.slug}`} className="cmp-spa">
                     <div className="cmp-spa-ph">{s.photos?.[0] && <Photo src={s.photos[0].image} alt={s.photos[0].alt || s.title} sizes="(max-width: 700px) 70vw, 25vw" />}</div>
                     <p className="cmp-spa-t">{s.title}</p>
-                    <p className="cmp-spa-s">{[s.seats && `${s.seats} seats`, "Call for price"].filter(Boolean).join(" · ")}</p>
+                    <p className="cmp-spa-s">{[s.seats && `${s.seats} seats`, s.price !== undefined && formatPrice(s.price)].filter(Boolean).join(" · ")}</p>
                   </Link>
                 </li>
               ))
@@ -154,7 +155,7 @@ export async function Arrivals({ v, title = "Just arrived", lead = "Trade-ins, i
                   <div className="cmp-spa cmp-spa-empty">
                     <div className="cmp-spa-ph"><span className="cmp-tag">Placeholder</span></div>
                     <p className="cmp-spa-t">{["Next arrival", "On the shop floor", "Being inspected", "Just traded in"][i]}</p>
-                    <p className="cmp-spa-s">Photo and specs post here the day a spa clears inspection. Call for price.</p>
+                    <p className="cmp-spa-s">Photo, specs and price post here the day a spa clears inspection.</p>
                   </div>
                 </li>
               ))}

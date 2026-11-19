@@ -6,8 +6,9 @@ import LeadForm from "@/components/LeadForm";
 import PreOwnedAlertForm from "@/components/PreOwnedAlertForm";
 import PreOwnedPhotos from "@/components/PreOwnedPhotos";
 import ShareLinks from "@/components/ShareLinks";
-import { CLOUDINARY_BASE } from "@/lib/cloudinary-loader";
+import { CLOUDINARY_BASE } from "@/lib/cloudinary";
 import { seatBandOf, specLine, statusLabel } from "@/lib/pre-owned-ui";
+import { formatPrice } from "@/lib/pre-owned-public";
 import { getPreOwnedSpa, getSettings } from "@/lib/sanity";
 import { getSiteUrl } from "@/lib/site";
 
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const spa = await getPreOwnedSpa(slug);
   if (!spa) return { title: "Pre-owned spa" };
-  const description = `${spa.title}${spa.seats ? `, ${spa.seats}-seat` : ""} pre-owned hot tub from the Seasonally Living shop in Wenatchee. Call for price.`;
+  const description = `${spa.title}${spa.seats ? `, ${spa.seats}-seat` : ""} pre-owned hot tub${spa.price !== undefined ? ` for ${formatPrice(spa.price)}` : ""} from the Seasonally Living shop in Wenatchee. Call to purchase.`;
   const photo = spa.photos?.[0];
   return {
     title: spa.title,
@@ -50,7 +51,7 @@ export default async function PreOwnedSpaPage({ params }: Props) {
     ["Features", spa.features?.join(", ")],
   ];
 
-  // Product + Offer without a price (prices are "Call for price"). itemCondition is used; no review or rating is invented.
+  // Product + Offer. The Offer carries the posted price when there is one; itemCondition is used; no review or rating is invented.
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -67,6 +68,7 @@ export default async function PreOwnedSpaPage({ params }: Props) {
         offers: {
           "@type": "Offer",
           url: pageUrl,
+          ...(spa.price !== undefined ? { price: spa.price, priceCurrency: "USD" } : {}),
           itemCondition: "https://schema.org/UsedCondition",
           availability: reserved ? "https://schema.org/LimitedAvailability" : "https://schema.org/InStock",
           seller: { "@type": "LocalBusiness", name: settings.legalName, telephone: settings.phoneTel, url: base },
@@ -101,15 +103,16 @@ export default async function PreOwnedSpaPage({ params }: Props) {
                   <span key={f}>{f}</span>
                 ))}
               </p>
+              {spa.price !== undefined && <p className="po-price po-price-lg">{formatPrice(spa.price)}</p>}
               <p className="lead" style={{ marginTop: 18 }}>
-                Call for price: <a href={`tel:${settings.phoneTel}`} style={{ color: "var(--clay)" }}>{settings.phoneDisplay}</a>
+                Call to purchase: <a href={`tel:${settings.phoneTel}`} style={{ color: "var(--clay)" }}>{settings.phoneDisplay}</a>
               </p>
               {reserved && <p className="body-muted" style={{ marginTop: 8 }}>This one is reserved. Ask us anyway, or tell us what you want and we&apos;ll watch for a match.</p>}
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 22 }}>
                 <a href={reserved ? "#alert" : "#inquire"} className="btn btn-primary btn-lg">
                   {reserved ? "Tell me about one like it" : "Ask about this spa"} <Icon name="arrow" size={18} />
                 </a>
-                <a href={`tel:${settings.phoneTel}`} className="btn btn-outline btn-lg"><Icon name="phone" size={18} /> Call</a>
+                <a href={`tel:${settings.phoneTel}`} className="btn btn-outline btn-lg"><Icon name="phone" size={18} /> {reserved ? "Call" : "Call to purchase"}</a>
               </div>
               <ShareLinks url={pageUrl} title={spa.title} />
             </div>
@@ -177,7 +180,7 @@ export default async function PreOwnedSpaPage({ params }: Props) {
             <>
               <span className="kicker">Interested?</span>
               <h2 className="h-lg" style={{ marginTop: 16 }}>Ask about this spa.</h2>
-              <p className="body-muted" style={{ margin: "12px 0 28px" }}>We don&apos;t post prices. Send a note and we&apos;ll call you back, or ring {settings.phoneDisplay}.</p>
+              <p className="body-muted" style={{ margin: "12px 0 28px" }}>Send a note and we&apos;ll call you back, or ring {settings.phoneDisplay} to purchase.</p>
               <LeadForm unit={`${spa.title} (${spa.slug})`} unitLabel={spa.title} />
             </>
           )}

@@ -3,11 +3,11 @@ import Icon from "./Icon";
 import PreOwnedAlertForm from "./PreOwnedAlertForm";
 import PreOwnedBrowser from "./PreOwnedBrowser";
 import PreOwnedSold from "./PreOwnedSold";
-import { getPreOwnedSpas } from "@/lib/sanity";
+import { getPreOwnedSpas, getSettings } from "@/lib/sanity";
 
 /** The /pre-owned floor: filterable gallery, recently found homes, arrival alerts and the sell/trade-in prompt. */
 export default async function PreOwnedGallery() {
-  const spas = await getPreOwnedSpas();
+  const [spas, settings] = await Promise.all([getPreOwnedSpas(), getSettings()]);
   return (
     <>
       <section className="section-sm" id="floor" style={{ scrollMarginTop: "var(--nav-h)" }}>
@@ -15,7 +15,8 @@ export default async function PreOwnedGallery() {
           <span className="kicker">On the floor</span>
           <h2 className="h-xl" style={{ marginTop: 18 }}>What&apos;s here right now.</h2>
           <p className="body-muted" style={{ marginTop: 12, maxWidth: "56ch" }}>
-            We don&apos;t post prices. Open any spa for photos and details, then call or send a note and we&apos;ll give you the number.
+            Every used tub we have, with its price. Open any spa for photos and details, then call{" "}
+            <a href={`tel:${settings.phoneTel}`} style={{ color: "var(--clay)", fontWeight: 600 }}>{settings.phoneDisplay}</a> to purchase.
           </p>
           {spas.length === 0 ? (
             <div className="card" style={{ padding: 32, marginTop: 36, maxWidth: 640 }}>
