@@ -52,15 +52,9 @@ if [ ! -f "$SRT" ]; then
 fi
 
 DEST_SRT="$OUT/$STEM.srt"
-if [ -e "$DEST_SRT" ]; then
-  if [ "$(realpath "$DEST_SRT" 2>/dev/null || echo "$DEST_SRT")" = "$(realpath "$SRT" 2>/dev/null || echo "$SRT")" ]; then
-    echo "transcribe-video: refusing to overwrite $DEST_SRT" >&2
-    exit 1
-  fi
-  if [ "$FORCE" -eq 0 ]; then
-    echo "transcribe-video: $DEST_SRT exists; delete it or pass --force" >&2
-    exit 1
-  fi
+if [ -e "$DEST_SRT" ] && [ "$FORCE" -eq 0 ]; then
+  echo "transcribe-video: $DEST_SRT exists; delete it or pass --force" >&2
+  exit 1
 fi
 mv "$SRT" "$DEST_SRT"
 echo "transcribe-video: $DEST_SRT"

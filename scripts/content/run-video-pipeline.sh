@@ -22,7 +22,9 @@ POST_SEND=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip-transcribe) SKIP_TRANSCRIBE=1; shift ;;
-    --srt) SRT="$2"; shift 2 ;;
+    --srt)
+      if [ $# -lt 2 ] || [ -z "${2:-}" ]; then echo "run-video-pipeline: --srt needs a file path" >&2; exit 2; fi
+      SRT="$2"; shift 2 ;;
     --draft) DRAFT=1; shift ;;
     --post-send) POST_SEND=1; shift ;;
     *) echo "unknown flag: $1" >&2; exit 2 ;;
@@ -50,6 +52,7 @@ if [ "$DRAFT" -eq 1 ]; then
     echo "run-video-pipeline: --draft needs ANTHROPIC_API_KEY or ANTHROPIC_API_KEY_FILE" >&2
     exit 3
   fi
+  # draft-from-transcript.ts prints "  -> <json path>" — keep sed in sync with that script's stdout.
   DRAFT_LOG="$(node --experimental-strip-types scripts/content/draft-from-transcript.ts "$TXT" --line local --out "$DRAFT_DIR")"
   JSON="$(printf '%s\n' "$DRAFT_LOG" | sed -n 's/^  -> //p' | tail -1)"
   if [ -z "$JSON" ] || [ ! -f "$JSON" ]; then

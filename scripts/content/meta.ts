@@ -23,7 +23,9 @@ export function metaConfig() {
 }
 
 export function graphUrl(path: string, version: string) {
-  return `https://graph.facebook.com/${version}${path.startsWith("/") ? path : `/${path}`}`;
+  const origin = (process.env.META_GRAPH_ORIGIN ?? "https://graph.facebook.com").replace(/\/$/, "");
+  const prefix = path.startsWith("/") ? path : `/${path}`;
+  return `${origin}/${version}${prefix}`;
 }
 
 /** Meta resumable IG upload start response (REELS). Docs use `upload_url`; some responses use `uri`. */

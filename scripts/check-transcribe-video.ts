@@ -20,6 +20,10 @@ assert.match(missing.stderr, /not found/i);
 const pipeline = spawnSync("bash", ["scripts/content/run-video-pipeline.sh", video, "--skip-transcribe"], { encoding: "utf8" });
 assert.equal(pipeline.status, 2, "pipeline without --srt should exit 2");
 
+const noSrtVal = spawnSync("bash", ["scripts/content/run-video-pipeline.sh", video, "--skip-transcribe", "--srt"], { encoding: "utf8" });
+assert.equal(noSrtVal.status, 2, "pipeline --srt without value should exit 2");
+assert.match(noSrtVal.stderr, /--srt needs a file path/);
+
 const pipeScript = readFileSync("scripts/content/run-video-pipeline.sh", "utf8");
 assert.ok(!/ls -1 out\/content-drafts\/transcripts/.test(pipeScript), "pipeline must not guess draft json with ls");
 assert.match(pipeScript, /draft-from-transcript/, "pipeline must call draft-from-transcript for --draft");
