@@ -1,0 +1,27 @@
+// Meta Graph helpers for shop video posts (TS-3293). Tokens are never printed.
+import { readFileSync } from "node:fs";
+
+export function metaAccessToken(): string {
+  const direct = process.env.META_PAGE_ACCESS_TOKEN?.trim();
+  if (direct) return direct;
+  const file = process.env.META_PAGE_ACCESS_TOKEN_FILE;
+  if (file) return readFileSync(file, "utf8").trim();
+  throw new Error(
+    "No Meta Page token. Set META_PAGE_ACCESS_TOKEN or META_PAGE_ACCESS_TOKEN_FILE.\n" +
+      "Store the token in GCP Secret Manager / n8n credentials — never commit it.",
+  );
+}
+
+export function metaConfig() {
+  const version = process.env.META_GRAPH_VERSION?.trim() || "v23.0";
+  const facebookPageId = process.env.FACEBOOK_PAGE_ID?.trim();
+  const instagramBusinessAccountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID?.trim();
+  if (!facebookPageId || !instagramBusinessAccountId) {
+    throw new Error("Set FACEBOOK_PAGE_ID and INSTAGRAM_BUSINESS_ACCOUNT_ID (see automation/README.md).");
+  }
+  return { version, facebookPageId, instagramBusinessAccountId };
+}
+
+export function graphUrl(path: string, version: string) {
+  return `https://graph.facebook.com/${version}${path.startsWith("/") ? path : `/${path}`}`;
+}

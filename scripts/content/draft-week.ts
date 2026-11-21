@@ -22,7 +22,7 @@
 // Key: ANTHROPIC_API_KEY, or ANTHROPIC_API_KEY_FILE=<file holding it>. Find the secret with
 // `motion-credential-probe anthropic`. The key is never printed.
 import { readFileSync, writeFileSync } from "node:fs";
-import { LOCAL_HOOKS, SEASONS, WEEKLY_RHYTHM, heroFor, seasonOf, type Day, type Line, type Slot } from "../../src/content/calendar.ts";
+import { LOCAL_HOOKS, SEASONS, WEEKLY_RHYTHM, eventsInWeek, heroFor, seasonOf, type Day, type Line, type Slot } from "../../src/content/calendar.ts";
 import { DEFAULT_MODEL, callWriter, pacificOffset, previewMarkdown, toPostDoc, writeJson } from "./lib.ts";
 
 const args = process.argv.slice(2);
@@ -74,6 +74,11 @@ const rotation: Line[] = opt("mix")
 
 const month = Number(week.slice(5, 7));
 const hooks = LOCAL_HOOKS.filter((h) => h.months.includes(month)).map((h) => h.hook);
+const weekEvents = eventsInWeek(week);
+const eventLines =
+  weekEvents.length > 0
+    ? weekEvents.map((e) => `${e.name} (${e.place}): ${e.hook}. Typical window ~${e.startMd}–${e.endMd} each year.`).join("; ")
+    : "none this week";
 
 function prompt(slot: Slot, date: string, line: Line): string {
   const input =
@@ -86,6 +91,7 @@ SLOT: ${slot.kind}. ${slot.brief}
 SEASON: ${season}. Seasonal angles you may draw on: ${SEASONS[season].angles.join("; ")}.
 LEAD LINE FOR THIS POST: ${slot.lines?.[0] ?? line}${theme ? `\nWEEK THEME: ${theme}` : ""}
 LOCAL HOOKS you may mention (do not state dates or times): ${hooks.join("; ") || "none"}
+LOCAL EVENTS near this week (do not invent dates or times; if you mention one, put the exact date in needs_confirm): ${eventLines}
 FORMAT: ${slot.article ? "Write a journal article (body_markdown) AND the three social versions. The social posts point readers to the article." : "Social-only: leave body_markdown as an empty string. Write the three social versions."}
 
 INPUT (the only shop-specific facts for this post):
