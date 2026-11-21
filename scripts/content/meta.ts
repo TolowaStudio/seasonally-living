@@ -25,3 +25,22 @@ export function metaConfig() {
 export function graphUrl(path: string, version: string) {
   return `https://graph.facebook.com/${version}${path.startsWith("/") ? path : `/${path}`}`;
 }
+
+/** Meta resumable IG upload start response (REELS). Docs use `upload_url`; some responses use `uri`. */
+export type InstagramResumableStartBody = {
+  id?: string;
+  upload_url?: string;
+  uri?: string;
+  error?: { message: string };
+};
+
+export function instagramResumableStart(body: InstagramResumableStartBody): { containerId: string; uploadUrl: string } {
+  const uploadUrl = body.upload_url ?? body.uri;
+  const containerId = body.id;
+  if (!containerId || !uploadUrl) {
+    throw new Error(
+      `Instagram resumable start missing id or upload URL (got id=${body.id ?? "null"}, upload_url=${body.upload_url ?? "null"}, uri=${body.uri ?? "null"})`,
+    );
+  }
+  return { containerId, uploadUrl };
+}

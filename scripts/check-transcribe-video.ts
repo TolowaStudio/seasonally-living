@@ -2,7 +2,7 @@
 // Run: node --experimental-strip-types scripts/check-transcribe-video.ts
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -19,5 +19,9 @@ assert.match(missing.stderr, /not found/i);
 
 const pipeline = spawnSync("bash", ["scripts/content/run-video-pipeline.sh", video, "--skip-transcribe"], { encoding: "utf8" });
 assert.equal(pipeline.status, 2, "pipeline without --srt should exit 2");
+
+const pipeScript = readFileSync("scripts/content/run-video-pipeline.sh", "utf8");
+assert.ok(!/ls -1 out\/content-drafts\/transcripts/.test(pipeScript), "pipeline must not guess draft json with ls");
+assert.match(pipeScript, /draft-from-transcript/, "pipeline must call draft-from-transcript for --draft");
 
 console.log("transcribe-video checks passed");

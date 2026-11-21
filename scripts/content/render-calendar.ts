@@ -27,6 +27,7 @@ const opt = (name: string) => {
   return v;
 };
 
+/** Default week anchor: local calendar Monday (matches draft-week.ts). Week math uses UTC noon on YYYY-MM-DD. */
 function comingMonday(): string {
   const d = new Date();
   d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
@@ -84,10 +85,11 @@ for (let w = 0; w < weeks; w++) {
 const horizonEnd = addCalendarDays(week, weeks * 7 - 1);
 const onHorizon = eventsBetween(week, horizonEnd);
 md += `\n## All listed events on the horizon (${week} → ${horizonEnd})\n\n`;
-for (const e of onHorizon.length ? onHorizon : LOCAL_EVENTS.filter(() => false)) {
-  md += `- **${e.name}** (${e.place}), typical ~${e.startMd}–${e.endMd} — ${e.hook}\n`;
-}
-if (!onHorizon.length) md += "- (none overlap this range)\n";
+if (onHorizon.length) {
+  for (const e of onHorizon) {
+    md += `- **${e.name}** (${e.place}), typical ~${e.startMd}–${e.endMd} — ${e.hook}\n`;
+  }
+} else md += "- (none overlap this range)\n";
 
 md += `\n## Full event list (reference)\n\n`;
 for (const e of LOCAL_EVENTS) {

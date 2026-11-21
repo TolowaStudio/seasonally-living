@@ -13,7 +13,13 @@
 // Storage: videos stay on disk under out/content-drafts/video/ (gitignored). No Google Drive upload.
 import { readFileSync, statSync } from "node:fs";
 import { basename } from "node:path";
-import { metaAccessToken, metaConfig, graphUrl } from "./meta.ts";
+import {
+  instagramResumableStart,
+  metaAccessToken,
+  metaConfig,
+  graphUrl,
+  type InstagramResumableStartBody,
+} from "./meta.ts";
 
 const args = process.argv.slice(2);
 if (args.includes("--help") || args.includes("-h")) {
@@ -97,12 +103,9 @@ async function uploadInstagramReel(): Promise<{ id: string }> {
       caption: igCaption,
     }),
   });
-  const startBody = (await start.json()) as { id?: string; uri?: string; error?: { message: string } };
-  const uploadUrl = startBody.uri;
-  const containerId = startBody.id;
-  if (!start.ok || !uploadUrl || !containerId) {
-    throw new Error(`Instagram resumable start failed: ${startBody.error?.message ?? start.status}`);
-  }
+  const startBody = (await start.json()) as InstagramResumableStartBody;
+  if (!start.ok) throw new Error(`Instagram resumable start failed: ${startBody.error?.message ?? start.status}`);
+  const { containerId, uploadUrl } = instagramResumableStart(startBody);
 
   const buf = readFileSync(video);
   const up = await fetch(uploadUrl, {

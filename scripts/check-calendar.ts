@@ -21,11 +21,13 @@ assert.equal(render.status, 0, render.stderr);
 assert.match(render.stdout, /Apple Blossom/);
 assert.match(render.stdout, /Weekly rhythm/);
 
-const dry = spawnSync("bash", ["scripts/content/run-weekly-draft.sh", "--dry-run"], {
-  encoding: "utf8",
-  env: { ...process.env, ANTHROPIC_API_KEY: "", ANTHROPIC_API_KEY_FILE: "", DRAFT_OUT_ROOT: "/tmp/sl-cal-check" },
-});
-assert.equal(dry.status, 0, dry.stderr);
-assert.match(dry.stdout + dry.stderr, /LOCAL EVENTS near this week/);
+const draftDry = spawnSync(
+  "node",
+  ["--experimental-strip-types", "scripts/content/draft-week.ts", "--week", "2026-04-27", "--dry-run"],
+  { encoding: "utf8", env: { ...process.env, ANTHROPIC_API_KEY: "", ANTHROPIC_API_KEY_FILE: "" } },
+);
+assert.equal(draftDry.status, 0, draftDry.stderr);
+assert.match(draftDry.stdout, /LOCAL EVENTS near this week/);
+assert.match(draftDry.stdout, /Apple Blossom/);
 
 console.log("calendar checks passed");

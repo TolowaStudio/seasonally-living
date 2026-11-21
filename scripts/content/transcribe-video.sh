@@ -1,7 +1,7 @@
 #!/bin/bash
 # Speech-to-text for a shop video (Whisper or whisper.cpp). No upload, no API keys in the repo.
 #
-#   scripts/content/transcribe-video.sh <video.mp4> [--out dir] [--model small]
+#   scripts/content/transcribe-video.sh <video.mp4> [--out dir] [--model small] [--force]
 #
 # Writes <stem>.srt (and siblings) under out/content-drafts/transcripts/ by default. Then run
 # scripts/content/caption-video.ts on the SRT.
@@ -19,10 +19,12 @@ shift || true
 
 OUT="out/content-drafts/transcripts"
 MODEL="small"
+FORCE=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --out) OUT="$2"; shift 2 ;;
     --model) MODEL="$2"; shift 2 ;;
+    --force) FORCE=1; shift ;;
     *) echo "unknown flag: $1" >&2; exit 2 ;;
   esac
 done
@@ -50,9 +52,15 @@ if [ ! -f "$SRT" ]; then
 fi
 
 DEST_SRT="$OUT/$STEM.srt"
-if [ -e "$DEST_SRT" ] && [ "$(realpath "$DEST_SRT" 2>/dev/null || echo "$DEST_SRT")" = "$(realpath "$SRT" 2>/dev/null || echo "$SRT")" ]; then
-  echo "transcribe-video: refusing to overwrite $DEST_SRT" >&2
-  exit 1
+if [ -e "$DEST_SRT" ]; then
+  if [ "$(realpath "$DEST_SRT" 2>/dev/null || echo "$DEST_SRT")" = "$(realpath "$SRT" 2>/dev/null || echo "$SRT")" ]; then
+    echo "transcribe-video: refusing to overwrite $DEST_SRT" >&2
+    exit 1
+  fi
+  if [ "$FORCE" -eq 0 ]; then
+    echo "transcribe-video: $DEST_SRT exists; delete it or pass --force" >&2
+    exit 1
+  fi
 fi
 mv "$SRT" "$DEST_SRT"
 echo "transcribe-video: $DEST_SRT"

@@ -43,16 +43,30 @@ fi
 node --experimental-strip-types scripts/content/caption-video.ts "$SRT" --video "$VIDEO" --out "$CAP_DIR" --name "$STEM"
 
 TXT="$CAP_DIR/$STEM.transcript.txt"
+DRAFT_DIR="out/content-drafts/transcripts"
+JSON=""
 if [ "$DRAFT" -eq 1 ]; then
   if [ -z "${ANTHROPIC_API_KEY:-}${ANTHROPIC_API_KEY_FILE:-}" ]; then
     echo "run-video-pipeline: --draft needs ANTHROPIC_API_KEY or ANTHROPIC_API_KEY_FILE" >&2
     exit 3
   fi
-  node --experimental-strip-types scripts/content/draft-from-transcript.ts "$TXT" --line local
+  DRAFT_LOG="$(node --experimental-strip-types scripts/content/draft-from-transcript.ts "$TXT" --line local --out "$DRAFT_DIR")"
+  JSON="$(printf '%s\n' "$DRAFT_LOG" | sed -n 's/^  -> //p' | tail -1)"
+  if [ -z "$JSON" ] || [ ! -f "$JSON" ]; then
+    echo "run-video-pipeline: could not find draft json from draft-from-transcript (expected a '  -> path' line)" >&2
+    exit 1
+  fi
 fi
 
-JSON="$(ls -1 out/content-drafts/transcripts/*"$STEM"*.json 2>/dev/null | head -1 || true)"
 POST_ARGS=(--video "$VIDEO" --srt "$CAP_DIR/$STEM.srt")
-if [ -n "$JSON" ] && [ -f "$JSON" ]; then POST_ARGS+=(--draft-json "$JSON"); fi
-if [ "$POST_SEND" -eq 1 ]; then POST_ARGS+=(--send); else POST_ARGS+=(--dry-run); fi
+if [ -n "$JSON" ]; then POST_ARGS+=(--draft-json "$JSON"); fi
+if [ "$POST_SEND" -eq 1 ]; then
+  if [ -z "$JSON" ]; then
+    echo "run-video-pipeline: --post-send needs --draft (or pass --facebook/--instagram to post-video yourself)" >&2
+    exit 2
+  fi
+  POST_ARGS+=(--send)
+else
+  POST_ARGS+=(--dry-run)
+fi
 node --experimental-strip-types scripts/content/post-video.ts "${POST_ARGS[@]}"
