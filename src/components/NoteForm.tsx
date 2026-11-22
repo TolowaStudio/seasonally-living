@@ -46,7 +46,7 @@ export default function NoteForm({ compact = false, defaultInterest, guide, guid
       if (!res.ok || !data.success) throw new Error(data.error || "");
       setPending(data.pending !== false);
       setStatus("sent");
-      trackLeadConversion("newsletter_signup", { guide: guide ?? "", interests: picked.join(","), source: window.location.pathname }, conversion.eventId);
+      trackLeadConversion("newsletter_signup", { guide, interests: picked.join(","), source: window.location.pathname }, conversion.eventId);
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "");

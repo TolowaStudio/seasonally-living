@@ -4,11 +4,13 @@ import { getStoredConsent, isGranted, type Consent } from "./consent";
 import { getMetaBrowserIds, trackConversion, type TrackProps } from "./track";
 import type { ConversionName } from "./tracking-config";
 
-/** Shared event id for the browser pixel and /api/lead Meta CAPI de-dupe. */
+const nibble = () => Math.floor(Math.random() * 16).toString(16);
+const hexRun = (n: number) => Array.from({ length: n }, nibble).join("");
+
+/** Shared event id for the browser pixel and /api/lead Meta CAPI de-dupe (always RFC-4122-shaped). */
 export function newLeadConversionEventId(): string {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `${hexRun(8)}-${hexRun(4)}-4${hexRun(3)}-${"89ab"[Math.floor(Math.random() * 4)]}${hexRun(3)}-${hexRun(12)}`;
 }
 
 export type LeadConversionFields = {

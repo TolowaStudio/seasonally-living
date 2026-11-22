@@ -10,7 +10,7 @@ import { signingAvailable } from "@/lib/tokens";
 import { confirmLink, linkBase } from "@/lib/note-links";
 import { confirmRequestEmail } from "@/emails/note-emails";
 import { getGuide, getPreOwnedSpa } from "@/lib/sanity";
-import { buildMetaLeadInput, parseAdsConsent, validateConversionEventId } from "@/lib/lead-meta";
+import { planMetaLeadDispatch } from "@/lib/lead-meta";
 import { sendMetaLead } from "@/lib/meta-capi";
 
 // POST /api/lead: visit requests ("visit") and note / guide signups ("note").
@@ -161,24 +161,21 @@ export async function POST(req: NextRequest) {
   if (!staff.ok && !staff.skipped) return fail(502, "delivery_failed", "Delivery failed");
   if (kind === "visit") await sendConfirmation();
 
-  const adsConsent = parseAdsConsent(d.adsConsent);
-  const capiEventId = adsConsent === "granted" ? validateConversionEventId(oneLine(d.eventId, 64)) : undefined;
-  const metaLead = !feedback
-    ? buildMetaLeadInput({
-        kind,
-        adsConsent,
-        eventId: capiEventId,
-        email: email ?? undefined,
-        phone: oneLine(d.phone, 40) || undefined,
-        interests,
-        source: source || undefined,
-        origin: req.nextUrl.origin,
-        fbp: adsConsent === "granted" ? oneLine(d.fbp, 200) : undefined,
-        fbc: adsConsent === "granted" ? oneLine(d.fbc, 200) : undefined,
-        userAgent: req.headers.get("user-agent") ?? undefined,
-        clientIp: ip,
-      })
-    : undefined;
+  const metaLead = planMetaLeadDispatch({
+    feedback,
+    kind,
+    adsConsentRaw: d.adsConsent,
+    eventIdRaw: d.eventId,
+    email: email ?? undefined,
+    phoneRaw: d.phone,
+    interests,
+    sourceRaw: d.source,
+    origin: req.nextUrl.origin,
+    fbpRaw: d.fbp,
+    fbcRaw: d.fbc,
+    userAgent: req.headers.get("user-agent") ?? undefined,
+    clientIp: ip,
+  });
   if (metaLead) void sendMetaLead(metaLead);
 
   console.log(JSON.stringify({
