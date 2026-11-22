@@ -27,8 +27,8 @@ draft ──(Cam or Kimberly approve)──> approved ──(n8n posts)──> p
 4. **n8n posts.** Every 15 minutes between 8am and 8pm Pacific, n8n finds approved posts whose
    `publishAt` has passed (or is blank), at most five per run, and posts each to the channels listed on
    the post (default all three).
-5. **n8n writes back.** Each channel's link goes into the post's "Where it went" box and the status
-   becomes `published`.
+5. **n8n writes back.** Each channel's link goes into a separate **postState** document (not the post
+   itself) and the post's status becomes `published`.
 
 The site shows a post as soon as it is approved (so a Facebook link never lands on a 404). Posts with no
 article text (for example a pre-owned arrival) are social-only and get no page.
@@ -59,10 +59,11 @@ Manager (project `tolowa-studio`), never in the JSON or this repo. `metaGraphVer
 ## Failure behaviour (it never loops and never double-posts)
 
 - **Nothing is retried automatically on a publish call.** A retried publish could post twice.
-- **Every channel's link is saved to Sanity the moment that channel posts** (before the next channel
-  starts), so a crash later in the run cannot repost it.
+- **Every channel's link is saved to the post's postState document the moment that channel posts**
+  (before the next channel starts), so a crash later in the run cannot repost it and a Studio edit to
+  the post cannot wipe those links.
 - **A channel fails** (expired token, API error): the post goes back to **Draft**, the reason is in
-  "Last problem" in the Studio, and the approvers get an email. Channels that already worked keep
+  the reason in the post's postState row, and the approvers get an email. Channels that already worked keep
   their links and are **skipped** when the post is approved again, so they are not posted twice.
 - **The text is not safe to send** (an `[[ADD]]` or `TODO` placeholder, an empty channel, a Google post
   over 1,500 characters, an Instagram caption over 2,200): nothing is posted; the post goes back to
@@ -70,9 +71,9 @@ Manager (project `tolowa-studio`), never in the JSON or this repo. `metaGraphVer
 - **Instagram's photo step succeeds but the permalink lookup fails:** the post counts as live; the link
   falls back to the Instagram home page. (Check the feed.)
 - **Saving a link to Sanity fails** (after three tries, right after a successful post): the post stays
-  `approved`, and the next run would post that one channel again. This is the one remaining way to
-  double-post, and it needs Sanity to be down for a few seconds exactly then. The first week of
-  runs is supervised for this reason; the execution log shows any save that failed.
+  `approved`, and the next run would post that one channel again. This needs Sanity to be down for a few
+  seconds exactly then. The first week of runs is supervised for this reason; the execution log shows
+  any save that failed.
 - **Instagram's publish call is retried** (3 tries, 8 seconds apart) because the photo may still be
   processing. A container id can only be published once, so a retry cannot post a second copy; if a
   retry answers "already published" the photo is treated as live (and recorded with a generic link).
@@ -118,11 +119,6 @@ curl -X POST https://seasonallyliving.com/api/content/approve \
   category combinations, which would show up as "Google: ..." in "Last problem".
 - Posts publish as a link post on Facebook (the article's social card shows the hero photo) and as a
   single-photo post on Instagram and Google. No video, carousels or stories yet.
-- **Do not leave an unpublished Studio edit on a post that is approved or already posted.** n8n and the
-  approve route write to the published document. If an editor's unpublished draft of the same post
-  exists and is published later, it overwrites the saved links and status, and the next run could post
-  again. Edit, press Publish, move on. (A sturdier design keeps posting state in a separate document the
-  editor never touches: filed as a follow-up.)
 - A post sent back to Draft after a partial failure **stays on the site** once any channel has a link,
   so a live Facebook or Instagram link never lands on a 404.
 - The Sanity dataset is public (published documents are readable by anyone). Never put anything private

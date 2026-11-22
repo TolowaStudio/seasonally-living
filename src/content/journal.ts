@@ -6,7 +6,7 @@
 // TODO-confirm markers: every shop-specific claim in these defaults is listed in the PR for
 // Cam & Susan to check. Marked in code with `TODO-confirm` comments, not in the published copy.
 
-export type JournalStatus = "draft" | "approved" | "scheduled" | "published";
+export type JournalStatus = "draft" | "approved" | "scheduled" | "published" | "hidden";
 export type JournalSeason = "winter" | "spring" | "summer" | "fall" | "year-round";
 export type GbpCta = "LEARN_MORE" | "CALL" | "BOOK" | "ORDER" | "SHOP" | "SIGN_UP";
 
