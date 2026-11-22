@@ -37,3 +37,11 @@ npm run dev  # → http://localhost:3000
 - Add Umami for traffic tracking
 - Wire contact form to email (Resend) or CRM
 - Add Sentry for error monitoring when site goes live
+
+## Agent PRs: `Builder:` line and `Refs TS-n`
+
+Agents that open a PR here (Claude, T3 or any other) follow the Shop rules in parent TS-2743 (TOL-3813):
+
+- **Every agent PR body has a `Builder: <model>` line** naming the model that wrote the code, e.g. `Builder: Composer 2.5`. Reviewers who are not the builder are chosen from this line; without it the PR is held and nobody reviews it.
+- **A PR that does not finish its ticket says `Refs TS-<n> (does not close it)`**, never `Closes`/`Fixes`/`Resolves`. Plane closes a ticket on merge from any closing word, so a closing word on a partial step closes the ticket early.
+- **This public site is held for release.** Agent PRs here are never merged by an agent and never auto-merged. Only Jeramey releases them. Do not remove a `hold` label or run `tolowa-merge` on them.
