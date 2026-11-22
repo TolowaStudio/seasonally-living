@@ -5,7 +5,7 @@ import Icon from "./Icon";
 import { PICKABLE_INTERESTS } from "@/lib/interests";
 import { NOTE_CONSENT_TEXT } from "@/lib/note-consent";
 import { getAttribution } from "@/lib/attribution";
-import { leadMetaPayload, newLeadConversionEventId, trackLeadConversion } from "@/lib/lead-client-tracking";
+import { leadConversionFields, trackLeadConversion } from "@/lib/lead-client-tracking";
 
 // With `guide` set (a /guides/[slug] page) the topic is fixed by the guide and the person gets that guide after confirming.
 export default function NoteForm({ compact = false, defaultInterest, guide, guideTitle, submitLabel, label = "Get the Seasonally Living note" }: { compact?: boolean; defaultInterest?: string; guide?: string; guideTitle?: string; submitLabel?: string; label?: string }) {
@@ -21,8 +21,7 @@ export default function NoteForm({ compact = false, defaultInterest, guide, guid
     const fd = new FormData(e.currentTarget);
     setStatus("sending");
     setError("");
-    const eventId = newLeadConversionEventId();
-    const meta = leadMetaPayload();
+    const conversion = leadConversionFields();
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
@@ -37,15 +36,17 @@ export default function NoteForm({ compact = false, defaultInterest, guide, guid
           optIn: true,
           source: window.location.pathname + window.location.search,
           company: fd.get("company"),
-          eventId,
-          ...meta,
+          adsConsent: conversion.adsConsent,
+          eventId: conversion.eventId,
+          fbp: conversion.fbp,
+          fbc: conversion.fbc,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) throw new Error(data.error || "");
       setPending(data.pending !== false);
       setStatus("sent");
-      trackLeadConversion("newsletter_signup", { guide: guide ?? "", interests: picked.join(","), source: window.location.pathname }, eventId);
+      trackLeadConversion("newsletter_signup", { guide: guide ?? "", interests: picked.join(","), source: window.location.pathname }, conversion.eventId);
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "");

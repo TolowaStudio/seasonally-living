@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Icon from "./Icon";
-import { leadMetaPayload, newLeadConversionEventId, trackLeadConversion } from "@/lib/lead-client-tracking";
+import { leadConversionFields, trackLeadConversion } from "@/lib/lead-client-tracking";
 
 // "Sell or trade in your old hot tub." Posts to /api/lead as interest "pre-owned-supply"; every answer travels in
 // the message field (the lead route is not changed for this). Photos follow by email or at the shop (no uploads here).
@@ -30,8 +30,7 @@ export default function PreOwnedSellForm() {
     ].join("\n");
     setStatus("sending");
     setError("");
-    const eventId = newLeadConversionEventId();
-    const meta = leadMetaPayload();
+    const conversion = leadConversionFields();
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
@@ -46,14 +45,16 @@ export default function PreOwnedSellForm() {
           optIn: false,
           source: window.location.pathname + window.location.search,
           company: fd.get("company"),
-          eventId,
-          ...meta,
+          adsConsent: conversion.adsConsent,
+          eventId: conversion.eventId,
+          fbp: conversion.fbp,
+          fbc: conversion.fbc,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) throw new Error(data.error || "Something went wrong");
       setStatus("sent");
-      trackLeadConversion("preowned_inquiry", { interest: "pre-owned-supply", source: window.location.pathname }, eventId);
+      trackLeadConversion("preowned_inquiry", { interest: "pre-owned-supply", source: window.location.pathname }, conversion.eventId);
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Something went wrong");

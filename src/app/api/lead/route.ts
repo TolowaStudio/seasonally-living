@@ -10,7 +10,7 @@ import { signingAvailable } from "@/lib/tokens";
 import { confirmLink, linkBase } from "@/lib/note-links";
 import { confirmRequestEmail } from "@/emails/note-emails";
 import { getGuide, getPreOwnedSpa } from "@/lib/sanity";
-import { buildMetaLeadInput } from "@/lib/lead-meta";
+import { buildMetaLeadInput, parseAdsConsent, validateConversionEventId } from "@/lib/lead-meta";
 import { sendMetaLead } from "@/lib/meta-capi";
 
 // POST /api/lead: visit requests ("visit") and note / guide signups ("note").
@@ -35,6 +35,7 @@ type Payload = {
   eventId?: unknown;
   fbp?: unknown;
   fbc?: unknown;
+  adsConsent?: unknown;
 };
 
 const MAX_BODY = 20_000;
@@ -160,17 +161,20 @@ export async function POST(req: NextRequest) {
   if (!staff.ok && !staff.skipped) return fail(502, "delivery_failed", "Delivery failed");
   if (kind === "visit") await sendConfirmation();
 
+  const adsConsent = parseAdsConsent(d.adsConsent);
+  const capiEventId = adsConsent === "granted" ? validateConversionEventId(oneLine(d.eventId, 64)) : undefined;
   const metaLead = !feedback
     ? buildMetaLeadInput({
         kind,
-        eventId: oneLine(d.eventId, 64),
+        adsConsent,
+        eventId: capiEventId,
         email: email ?? undefined,
         phone: oneLine(d.phone, 40) || undefined,
         interests,
         source: source || undefined,
         origin: req.nextUrl.origin,
-        fbp: oneLine(d.fbp, 200),
-        fbc: oneLine(d.fbc, 200),
+        fbp: adsConsent === "granted" ? oneLine(d.fbp, 200) : undefined,
+        fbc: adsConsent === "granted" ? oneLine(d.fbc, 200) : undefined,
         userAgent: req.headers.get("user-agent") ?? undefined,
         clientIp: ip,
       })

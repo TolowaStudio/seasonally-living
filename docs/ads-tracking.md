@@ -26,8 +26,8 @@ Everything is off until an env var is set. With none set: no tag script, no thir
 | `booking_started` | click on a booking CTA (`#book`, `/visit#book`) or first focus in the booking form | custom `BookingStarted` |
 
 Links can add `data-track-area="..."` (it is sent as `area`). LeadForm, NoteForm, and PreOwnedSellForm call
-`trackConversion` after a successful submit and send the same `eventId` (plus `fbp`/`fbc`) to `/api/lead` for Meta CAPI
-de-duplication.
+`trackConversion` after a successful submit. When the visitor has accepted cookies (`adsConsent: granted`), they also send
+the same RFC-4122 `eventId` (plus `fbp`/`fbc`) to `/api/lead`; the route calls Meta CAPI only in that case.
 
 ## Meta Conversions API
 `src/lib/meta-capi.ts` exports `sendMetaLead({ eventId, email, phone, sourceUrl, userAgent, clientIp, fbp, fbc, interest })`.

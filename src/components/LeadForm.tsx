@@ -5,7 +5,7 @@ import Icon from "./Icon";
 import { PICKABLE_INTERESTS } from "@/lib/interests";
 import { NOTE_CONSENT_TEXT } from "@/lib/note-consent";
 import { getAttribution } from "@/lib/attribution";
-import { leadMetaPayload, newLeadConversionEventId, trackLeadConversion } from "@/lib/lead-client-tracking";
+import { leadConversionFields, trackLeadConversion } from "@/lib/lead-client-tracking";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -37,8 +37,7 @@ export default function LeadForm({
     const fd = new FormData(e.currentTarget);
     setStatus("sending");
     setError("");
-    const eventId = newLeadConversionEventId();
-    const meta = leadMetaPayload();
+    const conversion = leadConversionFields();
     const leadInterest = unit ? "pre-owned" : interest;
     try {
       const res = await fetch("/api/lead", {
@@ -57,8 +56,10 @@ export default function LeadForm({
           source: typeof window !== "undefined" ? window.location.pathname + window.location.search : "",
           company: fd.get("company"),
           attribution: getAttribution(),
-          eventId,
-          ...meta,
+          adsConsent: conversion.adsConsent,
+          eventId: conversion.eventId,
+          fbp: conversion.fbp,
+          fbc: conversion.fbc,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -69,7 +70,7 @@ export default function LeadForm({
         interest: leadInterest,
         source: window.location.pathname,
         note_opt_in: fd.get("optIn") === "on",
-      }, eventId);
+      }, conversion.eventId);
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Something went wrong");

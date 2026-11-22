@@ -2,12 +2,27 @@
 // Fails until /api/lead maps the client's conversion event id into sendMetaLead (Meta mocked).
 import assert from "node:assert/strict";
 
-const EVENT_ID = "7c9e2f1a-4b3d-4a11-9e8f-check-lead-meta";
+const EVENT_ID = "7c9e2f1a-4b3d-4111-9e8f-0123456789ab";
 
-const { buildMetaLeadInput } = await import("../src/lib/lead-meta.ts");
+const { buildMetaLeadInput, validateConversionEventId } = await import("../src/lib/lead-meta.ts");
+
+assert.equal(validateConversionEventId(EVENT_ID), EVENT_ID);
+assert.equal(validateConversionEventId("not-a-uuid"), undefined);
+assert.equal(validateConversionEventId("7c9e2f1a-4b3d-4a11-9e8f-check-lead-meta"), undefined);
+
+const denied = buildMetaLeadInput({
+  kind: "visit",
+  adsConsent: "denied",
+  eventId: EVENT_ID,
+  email: "pat@example.com",
+  interests: ["pool"],
+  origin: "https://seasonallyliving.com",
+});
+assert.equal(denied, undefined, "CAPI must not send when ads consent is denied");
 
 const built = buildMetaLeadInput({
   kind: "visit",
+  adsConsent: "granted",
   eventId: EVENT_ID,
   email: "pat@example.com",
   phone: "(509) 555-0100",
@@ -19,20 +34,24 @@ const built = buildMetaLeadInput({
   userAgent: "check-script",
   clientIp: "203.0.113.10",
 });
-assert.ok(built, "buildMetaLeadInput must accept event id + contact");
+assert.ok(built, "buildMetaLeadInput must accept event id + contact when consent granted");
 assert.equal(built!.eventId, EVENT_ID);
 assert.equal(built!.eventName, "Lead");
 assert.equal(built!.sourceUrl, "https://seasonallyliving.com/lp/pool-planning-2027");
 
 const note = buildMetaLeadInput({
   kind: "note",
+  adsConsent: "granted",
   eventId: EVENT_ID,
   email: "pat@example.com",
   interests: ["hearth"],
   origin: "https://seasonallyliving.com",
 });
 assert.equal(note!.eventName, "Subscribe");
-assert.equal(buildMetaLeadInput({ kind: "visit", interests: [], origin: "https://x.test" }), undefined);
+assert.equal(
+  buildMetaLeadInput({ kind: "visit", adsConsent: "granted", interests: [], origin: "https://x.test" }),
+  undefined,
+);
 
 let posted = "";
 const prevFetch = globalThis.fetch;
