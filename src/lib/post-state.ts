@@ -11,7 +11,6 @@ export type PostStateRow = PostingLinks & {
   postId?: string;
   postedAt?: string;
   lastError?: string;
-  claimedAt?: string;
 };
 
 const url = (v: unknown) => (typeof v === "string" && v.trim().startsWith("https://") ? v.trim() : undefined);

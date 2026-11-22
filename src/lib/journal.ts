@@ -1,7 +1,10 @@
 import { cache } from "react";
 import { createClient } from "@sanity/client";
 import { DEFAULT_POSTS, JOURNAL_TAG_IDS, type JournalPost, type JournalSeason, type JournalStatus, type PortableBlock } from "@/content/journal";
+import { isVisible } from "@/lib/journal-visible";
 import { hasPostedLink, postingLinks, type PostingLinks } from "@/lib/post-state";
+
+export { isVisible } from "@/lib/journal-visible";
 import { SANITY_DATASET, SANITY_PROJECT_ID, REVALIDATE_SECONDS } from "@/lib/sanity";
 import { getSiteUrl } from "@/lib/site";
 
@@ -19,7 +22,6 @@ const client = createClient({
 });
 
 const FIELDS = `_id, title, "slug": slug.current, tags, season, heroImage, heroAlt, excerpt, body, status, publishAt, "updatedAt": _updatedAt, "postState": coalesce(*[_type == "postState" && postId == ^._id][0], {}), "legacyResults": coalesce(results, {})`;
-const VISIBLE: JournalStatus[] = ["approved", "scheduled", "published"];
 const STATUSES: JournalStatus[] = ["draft", "approved", "scheduled", "published", "hidden"];
 const SEASONS: JournalSeason[] = ["winter", "spring", "summer", "fall", "year-round"];
 
@@ -51,14 +53,6 @@ export function postFromSanity(row: unknown): JournalPost | null {
     publishAt: publishAt && !Number.isNaN(Date.parse(publishAt)) ? publishAt : undefined,
     updatedAt: str(r.updatedAt) || undefined,
   };
-}
-
-/** True when the post should be on the public site right now. */
-export function isVisible(p: Pick<JournalPost, "status" | "publishAt" | "posted">, now = Date.now()): boolean {
-  if (p.status === "hidden") return false;
-  if (p.posted) return true; // already linked from Facebook / Instagram / Google (keeps live links from 404ing)
-  if (!VISIBLE.includes(p.status)) return false;
-  return !p.publishAt || Date.parse(p.publishAt) <= now;
 }
 
 /** Newest first. Posts without a date sort last, by title, so the order is stable. */

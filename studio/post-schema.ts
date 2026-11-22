@@ -170,6 +170,15 @@ export const postType = defineType({
     defineField({ name: "publishAt", title: "Publish at", type: "datetime", group: "queue", description: "Optional. Leave blank to post at the next check after approval. Pick a time for a scheduled post." }),
     defineField({ name: "approvedBy", title: "Approved by", type: "string", group: "queue", readOnly: true }),
     defineField({ name: "approvedAt", title: "Approved at", type: "datetime", group: "queue", readOnly: true }),
+    defineField({
+      name: "lastProblem",
+      title: "Last problem",
+      type: "text",
+      rows: 3,
+      group: "queue",
+      readOnly: true,
+      description: "Filled in by automation when posting fails (mirror of postState). Channel messages only, not secrets.",
+    }),
   ],
   orderings: [
     { title: "Publish date, newest first", name: "publishAtDesc", by: [{ field: "publishAt", direction: "desc" }] },

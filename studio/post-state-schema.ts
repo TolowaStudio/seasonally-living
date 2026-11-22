@@ -24,13 +24,13 @@ export const postStateType = defineType({
     resultUrl("instagramUrl", "Instagram post"),
     resultUrl("gbpUrl", "Google post"),
     defineField({ name: "postedAt", type: "datetime", readOnly: true }),
-    defineField({ name: "lastError", title: "Last problem", type: "text", rows: 3, readOnly: true }),
     defineField({
-      name: "claimedAt",
-      title: "Claimed by automation",
-      type: "datetime",
+      name: "lastError",
+      title: "Last problem",
+      type: "text",
+      rows: 3,
       readOnly: true,
-      description: "Set while an n8n run is posting; cleared when the run finishes.",
+      description: "Channel error text only (no API tokens). The post's read-only Last problem field mirrors this for Studio.",
     }),
   ],
   preview: {
@@ -42,7 +42,4 @@ export const postStateType = defineType({
   },
 });
 
-/** Sanity document id for the postState row tied to a post document id. */
-export function postStateDocumentId(postId: string): string {
-  return `postState.${postId}`;
-}
+// Document id convention: postState.<postId> (see postStateDocumentId in src/lib/post-state.ts).
