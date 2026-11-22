@@ -10,6 +10,8 @@ import { signingAvailable } from "@/lib/tokens";
 import { confirmLink, linkBase } from "@/lib/note-links";
 import { confirmRequestEmail } from "@/emails/note-emails";
 import { getGuide, getPreOwnedSpa } from "@/lib/sanity";
+import { buildMetaLeadInput } from "@/lib/lead-meta";
+import { sendMetaLead } from "@/lib/meta-capi";
 
 // POST /api/lead: visit requests ("visit") and note / guide signups ("note").
 // Every error is { success: false, error, code }. A caller can never put a CR/LF or other control
@@ -30,6 +32,9 @@ type Payload = {
   guide?: unknown;
   attribution?: unknown;
   company?: unknown; // honeypot
+  eventId?: unknown;
+  fbp?: unknown;
+  fbc?: unknown;
 };
 
 const MAX_BODY = 20_000;
@@ -155,6 +160,23 @@ export async function POST(req: NextRequest) {
   if (!staff.ok && !staff.skipped) return fail(502, "delivery_failed", "Delivery failed");
   if (kind === "visit") await sendConfirmation();
 
+  const metaLead = !feedback
+    ? buildMetaLeadInput({
+        kind,
+        eventId: oneLine(d.eventId, 64),
+        email: email ?? undefined,
+        phone: oneLine(d.phone, 40) || undefined,
+        interests,
+        source: source || undefined,
+        origin: req.nextUrl.origin,
+        fbp: oneLine(d.fbp, 200),
+        fbc: oneLine(d.fbc, 200),
+        userAgent: req.headers.get("user-agent") ?? undefined,
+        clientIp: ip,
+      })
+    : undefined;
+  if (metaLead) void sendMetaLead(metaLead);
+
   console.log(JSON.stringify({
     event: "lead",
     rid,
@@ -169,6 +191,7 @@ export async function POST(req: NextRequest) {
     emailDomain: email ? email.split("@")[1] : undefined,
     attribution,
     staffMail: staff.ok ? "sent" : "dev-log",
+    metaCapi: metaLead ? "queued" : undefined,
   }));
 
   return NextResponse.json({ success: true, pending });
