@@ -7,12 +7,13 @@ import PageHero from "@/components/PageHero";
 import SectionHead from "@/components/SectionHead";
 import CtaBand from "@/components/CtaBand";
 import RichTitle from "@/components/RichTitle";
-import { AREAS, getArea } from "@/content/areas";
-import { getSettings } from "@/lib/sanity";
+import { AREAS } from "@/content/areas";
+import { areaFaqsForDisplay } from "@/lib/area-copy";
+import { getArea, getAreas, getSettings } from "@/lib/sanity";
 import { addressOf, mapsUrlOf } from "@/lib/site";
 import { SITE_TITLE_SUFFIX, breadcrumbJsonLd, faqJsonLd, socialMeta } from "@/lib/seo";
 
-// Service-area pages. Content: src/content/areas.ts (code for now; Studio-editable is a follow-up).
+// Service-area pages. Code defaults in src/content/areas.ts, overridden by Sanity areaPage-<slug>.
 export const revalidate = 3600;
 export const dynamicParams = false;
 
@@ -21,7 +22,7 @@ export const generateStaticParams = () => AREAS.map((a) => ({ town: a.slug }));
 type Props = { params: Promise<{ town: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const a = getArea((await params).town);
+  const a = await getArea((await params).town);
   if (!a) return {};
   return {
     title: a.title,
@@ -31,15 +32,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AreaPage({ params }: Props) {
-  const a = getArea((await params).town);
+  const a = await getArea((await params).town);
   if (!a) notFound();
-  const s = await getSettings();
-  const others = AREAS.filter((x) => x.slug !== a.slug);
+  const [s, areas] = await Promise.all([getSettings(), getAreas()]);
+  const others = areas.filter((x) => x.slug !== a.slug);
+  const faqs = areaFaqsForDisplay(a.faqs, s.phoneDisplay);
   const book = `/visit?interest=${a.interest}#book`;
 
   return (
     <main>
-      <JsonLd data={[breadcrumbJsonLd([{ name: "Areas we serve", path: "/areas" }, { name: a.label, path: `/areas/${a.slug}` }]), faqJsonLd(a.faqs)]} />
+      <JsonLd data={[breadcrumbJsonLd([{ name: "Areas we serve", path: "/areas" }, { name: a.label, path: `/areas/${a.slug}` }]), faqJsonLd(faqs)]} />
 
       <PageHero kicker={a.hero.kicker} title={<RichTitle t={a.hero.title} />} lead={a.hero.lead} image={a.hero.image} alt={a.hero.alt} position={a.hero.position}>
         <Link href={book} className="btn btn-primary btn-lg">Book a visit <Icon name="arrow" size={18} /></Link>
@@ -88,7 +90,7 @@ export default async function AreaPage({ params }: Props) {
         <div className="wrap-narrow">
           <SectionHead kicker="Good to know" title={`Questions from ${a.label}.`} />
           <div style={{ marginTop: 32, display: "grid" }}>
-            {a.faqs.map((f) => (
+            {faqs.map((f) => (
               <details key={f.q} style={{ borderTop: "1px solid var(--line)", padding: "18px 0" }}>
                 <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: 18 }}>{f.q}</summary>
                 <p className="body-muted" style={{ marginTop: 10 }}>{f.a}</p>

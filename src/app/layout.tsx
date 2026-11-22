@@ -9,7 +9,7 @@ import Tracking from "@/components/Tracking";
 import JsonLd from "@/components/JsonLd";
 import AttributionCapture from "@/components/AttributionCapture";
 import { getSiteUrl, site } from "@/lib/site";
-import { getPage, getSettings } from "@/lib/sanity";
+import { getAreas, getPage, getSettings } from "@/lib/sanity";
 import { cloudinaryUrl, localBusinessJsonLd, ogImageMeta } from "@/lib/seo";
 import type { HomeContent } from "@/content/types";
 
@@ -53,7 +53,7 @@ const themeBoot = `try{document.documentElement.classList.add('js');var p=new UR
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Nav, footer and contact details come from the Sanity siteSettings document.
-  const [settings, home] = await Promise.all([getSettings(), getPage<HomeContent>("/")]);
+  const [settings, home, areas] = await Promise.all([getSettings(), getPage<HomeContent>("/"), getAreas()]);
   return (
     <html lang="en" data-theme="showroom" className={`${archivo.variable} ${hanken.variable}`} suppressHydrationWarning>
       <head>
@@ -65,7 +65,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <a href="#main" className="btn btn-primary skip-link">Skip to content</a>
         <SiteChrome><Nav settings={settings} /></SiteChrome>
         <div id="main">{children}</div>
-        <SiteChrome><Footer settings={settings} /></SiteChrome>
+        <SiteChrome><Footer settings={settings} areas={areas} /></SiteChrome>
         <Tracking />
         <AttributionCapture />
         <ThemeDock enabled={process.env.NEXT_PUBLIC_SHOW_COMPS === "1"} />

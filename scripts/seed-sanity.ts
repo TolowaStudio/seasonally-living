@@ -5,7 +5,9 @@
 //
 // The token needs write access to project 83r23z7t (an editor's own `sanity login` session works locally).
 // By default existing documents are left alone, so edits made in the Studio are never clobbered.
+import { AREAS } from "../src/content/areas.ts";
 import { ALL_PAGES } from "../src/content/pages.ts";
+import { REVIEW_PAGE } from "../src/content/review.ts";
 import { SETTINGS } from "../src/content/settings.ts";
 
 const PROJECT = "83r23z7t";
@@ -27,7 +29,24 @@ function withKeys(v: unknown): unknown {
 
 const docs = [
   { _id: "siteSettings", ...SETTINGS },
+  { _id: "reviewPage", ...REVIEW_PAGE },
   ...ALL_PAGES.map((p) => ({ _id: docId(p.pageId), ...p })),
+  ...AREAS.map((a) => ({
+    _id: `areaPage-${a.slug}`,
+    _type: "serviceAreaPage" as const,
+    slug: a.slug,
+    name: a.name,
+    label: a.label,
+    title: a.title,
+    description: a.description,
+    interest: a.interest,
+    serves: a.serves,
+    distance: a.distance,
+    paragraphs: a.paragraphs,
+    hero: a.hero,
+    lines: a.lines,
+    faqs: a.faqs,
+  })),
 ].map((d) => withKeys(d) as { _id: string; _type: string });
 
 const mutations = docs.map((d) => (replace ? { createOrReplace: d } : { createIfNotExists: d }));

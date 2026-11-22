@@ -8,7 +8,16 @@ const SINGLETONS = [
   { id: "page-fireplaces", type: "fireplacesPage", title: "Fireplaces (Stûv)" },
   { id: "page-service", type: "servicePage", title: "Venting & service" },
   { id: "page-about", type: "aboutPage", title: "Our story" },
+  { id: "reviewPage", type: "reviewPage", title: "Review page (/review)" },
 ];
+
+const AREA_PAGES = [
+  ["wenatchee", "Wenatchee"],
+  ["east-wenatchee", "East Wenatchee"],
+  ["leavenworth", "Leavenworth"],
+  ["chelan-manson", "Chelan & Manson"],
+  ["cashmere", "Cashmere"],
+].map(([slug, title]) => ({ id: `areaPage-${slug}`, type: "serviceAreaPage", title }));
 
 // Staff pipeline for pre-owned spas: intake -> reconditioning -> listed -> reserved -> sold.
 const PRE_OWNED_STAGES = [
@@ -43,6 +52,10 @@ export default defineConfig({
             ...SINGLETONS.map((s) => S.listItem().title(s.title).id(s.id).child(S.document().schemaType(s.type).documentId(s.id))),
             S.divider(),
             S.listItem()
+              .title("Service area pages")
+              .id("area-pages")
+              .child(S.list().title("Service area pages (/areas/…)").items(AREA_PAGES.map((a) => S.listItem().title(a.title).id(a.id).child(S.document().schemaType(a.type).documentId(a.id))))),
+            S.listItem()
               .title("Campaign landing pages")
               .id("landing-pages")
               .child(S.list().title("Campaign landing pages (/lp/…)").items(LANDING.map((l) => S.listItem().title(l.title).id(l.id).child(S.document().schemaType(l.type).documentId(l.id))))),
@@ -74,6 +87,10 @@ export default defineConfig({
   schema: {
     types: schemaTypes,
     // Singletons can't be created again from the "new document" menu.
-    templates: (templates) => templates.filter(({ schemaType }) => !SINGLETONS.some((s) => s.type === schemaType) && schemaType !== "landingPage"),
+    templates: (templates) =>
+      templates.filter(
+        ({ schemaType }) =>
+          !SINGLETONS.some((s) => s.type === schemaType) && schemaType !== "landingPage" && schemaType !== "serviceAreaPage",
+      ),
   },
 });

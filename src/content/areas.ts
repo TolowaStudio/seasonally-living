@@ -8,6 +8,7 @@ import { IMG } from "./pages";
 
 export type AreaFaq = { q: string; a: string };
 export type AreaContent = {
+  _type?: "serviceAreaPage";
   slug: string;
   /** Short name used in links: "Leavenworth" */
   name: string;
@@ -91,7 +92,7 @@ export const AREAS: AreaContent[] = [
       { href: "/service", title: "Venting & service", body: "Design, installation and inspections for stoves, inserts and fireplaces." },
     ],
     faqs: [
-      { q: "Do you deliver hot tubs and swim spas to East Wenatchee?", a: "Yes, East Wenatchee is part of our regular service area. Delivery and setup are scheduled when you buy; call us at (509) 667-8833 for timing." },
+      { q: "Do you deliver hot tubs and swim spas to East Wenatchee?", a: "Yes, East Wenatchee is part of our regular service area. Delivery and setup are scheduled when you buy; call us at {{phone}} for timing." },
       { q: "Who issues permits in East Wenatchee for a stove, pool or gas line?", a: "East Wenatchee is in Douglas County, so the office can differ from Wenatchee's. We'll point you to the right one for your address before work starts." },
       { q: "My East Wenatchee house has no chimney. Can I still have a fireplace?", a: "Usually, yes. Gas and electric fireplaces and many stoves can be vented through a wall or roof. We design the venting around your room and your appliance." },
     ],
@@ -159,7 +160,7 @@ export const AREAS: AreaContent[] = [
       { href: "/fireplaces", title: "Wood stoves & inserts", body: "Heat for the cold months, vented to code." },
     ],
     faqs: [
-      { q: "Do you serve Chelan and Manson?", a: "Yes. Chelan and Manson are in our service area. Call (509) 667-8833 and we'll go through delivery and scheduling for your address." },
+      { q: "Do you serve Chelan and Manson?", a: "Yes. Chelan and Manson are in our service area. Call {{phone}} and we'll go through delivery and scheduling for your address." },
       { q: "I only use my lake house part of the year. What should I buy?", a: "We'd start with how often you're there and what you want from it. A swim spa or hot tub can work with the right water-care and winter plan, and a stove or insert can make arrival easy." },
       { q: "Can your crew build a pool near Chelan?", a: "We install swimming pools with our own crew in North Central Washington. A site visit is the way to know what your lot allows; start with a consult over the winter." },
     ],
@@ -194,7 +195,7 @@ export const AREAS: AreaContent[] = [
     ],
     faqs: [
       { q: "Can I put an insert in my old Cashmere fireplace?", a: "Often you can. We start by looking at the fireplace and the venting that's already there, then recommend an insert that fits the opening and the flue." },
-      { q: "Do you do venting inspections in Cashmere?", a: "Yes. A venting inspection gives you a clear look at the system before you buy, sell, add an insert or light the first fire. Call (509) 667-8833 to set one up." },
+      { q: "Do you do venting inspections in Cashmere?", a: "Yes. A venting inspection gives you a clear look at the system before you buy, sell, add an insert or light the first fire. Call {{phone}} to set one up." },
       { q: "How far is the showroom from Cashmere?", a: "About 10 miles down the valley, in Wenatchee at 1407 Maiden Ln next to Home Depot." },
     ],
     interest: "venting",
@@ -202,4 +203,5 @@ export const AREAS: AreaContent[] = [
   },
 ];
 
-export const getArea = (slug: string) => AREAS.find((a) => a.slug === slug);
+/** Code fallback lookup (pages use getArea from @/lib/sanity). */
+export const getAreaDefault = (slug: string) => AREAS.find((a) => a.slug === slug);

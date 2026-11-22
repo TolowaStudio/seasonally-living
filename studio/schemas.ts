@@ -50,6 +50,15 @@ const heroFields = [
   str("cta", "Button label"),
 ];
 
+const areaHeroFields = [
+  str("kicker"),
+  defineField({ name: "title", type: "richTitle" }),
+  txt("lead"),
+  img(),
+  str("alt", "Image description (alt text)"),
+  str("position", "Image focus (CSS object-position, e.g. 'center 40%')"),
+];
+
 /** Optional Cloudinary image: blank is fine, but a value must look like a public ID. */
 const optImg = (name = "image", title = "Image") =>
   defineField({ name, title, type: "string", description: IMAGE_HELP, validation: (r) => r.regex(/^[a-z0-9][a-z0-9/_-]*$/i, { name: "Cloudinary public ID" }) });
@@ -135,6 +144,51 @@ export const schemaTypes = [
       list("quickLinks", "Quick links", [req("label"), href()], "label"),
     ],
     preview: { select: { title: "seo.title", subtitle: "pageId" } },
+  }),
+  defineType({
+    name: "serviceAreaPage",
+    title: "Service area page",
+    type: "document",
+    description: "Local SEO town pages at /areas/<slug>. Document id must be areaPage-<slug>. Use {{phone}} in FAQ answers for the settings phone.",
+    fields: [
+      defineField({ name: "slug", title: "Town slug", type: "string", readOnly: true, description: "Route: /areas/<slug>" }),
+      req("name", "Short name"),
+      req("label", "Label in links"),
+      req("title", "Page title (before the site suffix)"),
+      txt("description", "Meta description"),
+      str("interest", "Visit-form interest tag", { readOnly: true }),
+      strings("serves", "Matches names in site settings service area"),
+      txt("distance", "One sentence on showroom distance"),
+      strings("paragraphs", "Body paragraphs"),
+      obj("hero", "Hero", areaHeroFields),
+      list(
+        "lines",
+        "Product lines",
+        [href(), req("title"), txt("body")],
+        "title",
+      ),
+      list("faqs", "FAQs", [req("q", "Question"), txt("a", "Answer")], "q"),
+    ],
+    preview: { select: { title: "label", subtitle: "slug" } },
+  }),
+  defineType({
+    name: "reviewPage",
+    title: "Review page",
+    type: "document",
+    description: "Post-purchase /review copy (QR and day-7 email). Document id: reviewPage.",
+    fields: [
+      defineField({ name: "seo", type: "seo" }),
+      obj("hero", "Hero", [
+        str("kicker"),
+        req("title", "Headline"),
+        txt("lead"),
+        txt("googlePlaceholderNote", "Extra line when Google link is still a Maps search"),
+        txt("policyNote", "Review policy note"),
+      ]),
+      obj("feedback", "Private feedback", [str("kicker"), req("title", "Headline"), txt("body")]),
+      obj("photo", "Family photo", [img(), str("alt", "Image description (alt text)")]),
+    ],
+    preview: { prepare: () => ({ title: "Review page (/review)" }) },
   }),
   defineType({
     name: "landingPage",
