@@ -6,7 +6,8 @@
     "dev": "next dev --port 3040",
     "build": "next build",
     "start": "next start --port 3040",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@sanity/client": "^7.28.0",
