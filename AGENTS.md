@@ -1,3 +1,5 @@
+Agent PR rules: see `CLAUDE.md`, section "Agent PRs: `Builder:` line and `Refs TS-n`".
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
