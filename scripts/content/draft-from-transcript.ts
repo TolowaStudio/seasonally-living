@@ -73,14 +73,14 @@ if (args.includes("--dry-run")) {
   process.exit(0);
 }
 
-const { draft, usage } = await callWriter({ model, user });
+const { draft, usage, tier } = await callWriter({ model, user });
 const doc = toPostDoc(draft, {
   season,
   article,
   publishAt: `${date}T08:00:00${pacificOffset(date)}`,
   hero: heroFor([line], season),
   notes: ["Drafted from a transcript. Watch the video once and check every name, number and model against it."],
-  meta: { generatedAt: new Date().toISOString(), model, slot: "video-transcript", transcript: file, angle: opt("angle") ?? null, videoHook: draft.video_hook ?? null, usage },
+  meta: { generatedAt: new Date().toISOString(), model, writerTier: tier, slot: "video-transcript", transcript: file, angle: opt("angle") ?? null, videoHook: draft.video_hook ?? null, usage },
 });
 const out = `${outDir}/${date}-${doc.slug.current}.json`;
 writeJson(out, doc);

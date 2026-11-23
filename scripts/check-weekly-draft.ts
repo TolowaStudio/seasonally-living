@@ -1,14 +1,15 @@
-// Checks the weekly draft wrapper (TOL-3371): the dry run works without a key and costs nothing, an
-// Opus/Fable model is refused, and the launchd template fires on Sunday (Weekday 0) and points at the wrapper.
+// Checks the weekly draft wrapper (TOL-3371, TS-4129): no paid API key, subscription fallback, dry run
+// makes no model call, Opus/Fable refused, launchd template on Sunday.
 // Run: node --experimental-strip-types scripts/check-weekly-draft.ts
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { refuseUnattendedModel, runWriterTiers, type TierAttempt } from "./content/writer-runner.ts";
 
 const sh = "scripts/content/run-weekly-draft.sh";
-const env = { ...process.env, ANTHROPIC_API_KEY: "", ANTHROPIC_API_KEY_FILE: "", DRAFT_OUT_ROOT: `${process.env.TMPDIR ?? "/tmp"}/sl-weekly-check` };
+const env = { ...process.env, DRAFT_WRITER_FORBIDDEN: "1", DRAFT_OUT_ROOT: `${process.env.TMPDIR ?? "/tmp"}/sl-weekly-check` };
 
 const dry = spawnSync("bash", [sh, "--dry-run"], { env, encoding: "utf8" });
 assert.equal(dry.status, 0, `dry run failed: ${dry.stderr}`);
@@ -29,7 +30,7 @@ const plist = readFileSync("automation/launchd/com.tolowa.seasonally-living.draf
 assert.match(plist, /<key>Weekday<\/key><integer>0<\/integer>/, "must fire on Sunday");
 assert.ok(plist.includes("scripts/content/run-weekly-draft.sh"), "must call the wrapper");
 
-// launchd starts jobs with PATH=/usr/bin:/bin:/usr/sbin:/sbin, which has no node or gcloud. The first
+// launchd starts jobs with PATH=/usr/bin:/bin:/usr/sbin:/sbin, which has no node. The first
 // scheduled run died with "node: command not found" (exit 127). Under that PATH the wrapper must either
 // work (it adds the Homebrew dirs) or stop with its own exit 3 naming the tool; never a bare 127.
 const launchdPath = spawnSync("bash", [sh, "--dry-run"], { env: { ...env, PATH: "/usr/bin:/bin:/usr/sbin:/sbin" }, encoding: "utf8" });
@@ -61,5 +62,73 @@ const gone = spawnSync("bash", [installer, "--uninstall", "--no-load"], { env: i
 assert.equal(gone.status, 0, gone.stderr);
 assert.ok(!existsSync(dest), "uninstall must remove the plist");
 assert.equal(spawnSync("bash", [installer, "--bogus"], { encoding: "utf8" }).status, 2, "unknown flag must be refused");
+
+// TS-4129: wrapper must not read GSM or env API keys
+assert.ok(!wrapper.includes("gcloud secrets"), "wrapper must not read a GCP secret");
+assert.ok(!wrapper.includes("ANTHROPIC_API_KEY"), "wrapper must not set ANTHROPIC_API_KEY");
+for (const dir of ["scripts/content", "automation"]) {
+  for (const file of readdirSync(dir, { recursive: true })) {
+    if (typeof file !== "string" || !/\.(ts|sh|md)$/.test(file) || file.includes("history-notes")) continue;
+    const path = join(dir, file);
+    const text = readFileSync(path, "utf8");
+    for (const needle of ["motion-anthropic-api-key", "ANTHROPIC_API_KEY", "api.anthropic.com"]) {
+      assert.ok(!text.includes(needle), `${path} must not reference ${needle} (use history-notes if documenting rollback)`);
+    }
+  }
+}
+
+// Dry run must not invoke the writer (guard env would trip callWriter)
+const guardedDry = spawnSync(
+  "node",
+  ["--experimental-strip-types", "scripts/content/draft-week.ts", "--dry-run", "--only", "Mon"],
+  { env: { ...process.env, DRAFT_WRITER_FORBIDDEN: "1" }, encoding: "utf8" },
+);
+assert.equal(guardedDry.status, 0, guardedDry.stderr);
+
+// Simulated Claude limit falls through to Neon then Composer
+const order: string[] = [];
+const mockDraft = {
+  title: "Test",
+  excerpt: "One.",
+  tags: ["local"],
+  body_markdown: "",
+  facebook: "fb",
+  instagram_caption: "ig",
+  instagram_hashtags: ["#wenatchee"],
+  gbp_text: "gbp",
+  gbp_cta: "LEARN_MORE",
+  needs_confirm: [] as string[],
+};
+const simTiers: TierAttempt[] = [
+  {
+    tier: "claude-max",
+    run: () => {
+      order.push("claude-max");
+      throw Object.assign(new Error("rate limit"), { fallback: true });
+    },
+  },
+  {
+    tier: "neon",
+    run: () => {
+      order.push("neon");
+      throw Object.assign(new Error("neon not signed in"), { fallback: true });
+    },
+  },
+  {
+    tier: "composer",
+    run: (opts) => {
+      order.push("composer");
+      return { draft: mockDraft, usage: { input: 1, output: 2 }, tier: "composer", model: opts.model };
+    },
+  },
+];
+const fall = runWriterTiers({ model: "claude-haiku-5-5", user: "draft this" }, simTiers);
+assert.deepEqual(order, ["claude-max", "neon", "composer"]);
+assert.equal(fall.tier, "composer");
+
+assert.throws(() => refuseUnattendedModel("claude-opus-5-5"));
+process.env.DRAFT_WRITER_FORBIDDEN = "1";
+assert.throws(() => runWriterTiers({ model: "claude-haiku-5-5", user: "x" }), /DRAFT_WRITER_FORBIDDEN/);
+delete process.env.DRAFT_WRITER_FORBIDDEN;
 
 console.log("weekly-draft checks passed");

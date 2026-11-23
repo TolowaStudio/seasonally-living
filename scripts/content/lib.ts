@@ -1,26 +1,16 @@
 // Shared helpers for the content scripts (draft-week.ts, draft-from-transcript.ts, import-drafts.ts).
+// Draft calls go through writer-runner.ts (subscription tiers). No paid Anthropic API.
 // Draft-only: nothing in here writes to Sanity or posts anywhere. Run with Node (type stripping):
 //   node --experimental-strip-types scripts/content/draft-week.ts --help
-import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { SETTINGS } from "../../src/content/settings.ts";
+import { runWriterTiers, type WriterTier } from "./writer-runner.ts";
 import type { GbpCta, JournalSeason } from "../../src/content/journal.ts";
 import { JOURNAL_TAG_IDS } from "../../src/content/journal.ts";
 import { heroFor, type Line } from "../../src/content/calendar.ts";
 
 export const DEFAULT_MODEL = "claude-haiku-5-5";
 export const GBP_CTAS: GbpCta[] = ["LEARN_MORE", "CALL", "BOOK", "ORDER", "SHOP", "SIGN_UP"];
-
-/** The API key comes from the environment only; it is never printed or written anywhere. */
-export function apiKey(): string {
-  const direct = process.env.ANTHROPIC_API_KEY?.trim();
-  if (direct) return direct;
-  const file = process.env.ANTHROPIC_API_KEY_FILE;
-  if (file) return readFileSync(file, "utf8").trim();
-  throw new Error(
-    "No Anthropic key. Set ANTHROPIC_API_KEY, or ANTHROPIC_API_KEY_FILE=<path to a file holding it>.\n" +
-      "Find the secret name with: motion-credential-probe anthropic (GCP Secret Manager, project tolowa-studio).",
-  );
-}
 
 // ---------- The writer's brief (shared by every script) ----------
 
@@ -86,36 +76,14 @@ export const DRAFT_TOOL = {
   },
 } as const;
 
-/** One Messages API call forced through the submit_draft tool. Retries once on 429/5xx. */
-export async function callWriter(opts: { model: string; user: string; maxTokens?: number }): Promise<{ draft: Draft; usage: { input: number; output: number } }> {
-  const body = JSON.stringify({
-    model: opts.model,
-    max_tokens: opts.maxTokens ?? 4000,
-    system: HOUSE_RULES,
-    messages: [{ role: "user", content: opts.user }],
-    tools: [DRAFT_TOOL],
-    tool_choice: { type: "tool", name: DRAFT_TOOL.name },
-  });
-  for (let attempt = 0; ; attempt++) {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": apiKey(), "anthropic-version": "2023-06-01" },
-      body,
-      signal: AbortSignal.timeout(120_000),
-    });
-    if (res.ok) {
-      const j = (await res.json()) as { content: { type: string; input?: unknown }[]; usage?: { input_tokens?: number; output_tokens?: number } };
-      const tool = j.content.find((c) => c.type === "tool_use");
-      if (!tool?.input) throw new Error("The model returned no draft");
-      return { draft: normalise(tool.input as Partial<Draft>), usage: { input: j.usage?.input_tokens ?? 0, output: j.usage?.output_tokens ?? 0 } };
-    }
-    const text = (await res.text()).slice(0, 300); // error bodies never contain the key
-    if (attempt === 0 && (res.status === 429 || res.status >= 500)) {
-      await new Promise((r) => setTimeout(r, 4000));
-      continue;
-    }
-    throw new Error(`Anthropic API ${res.status}: ${text}`);
-  }
+/** One draft through the subscription writer (Claude Max → Neon → Composer). */
+export async function callWriter(
+  opts: { model: string; user: string; maxTokens?: number },
+): Promise<{ draft: Draft; usage: { input: number; output: number }; tier: WriterTier; model: string }> {
+  const user = `${HOUSE_RULES}\n\n${opts.user}`;
+  const { draft: raw, usage, tier, model } = runWriterTiers({ ...opts, user });
+  if (!raw || typeof raw !== "object") throw new Error("The model returned no draft");
+  return { draft: normalise(raw as Partial<Draft>), usage, tier, model };
 }
 
 function normalise(d: Partial<Draft>): Draft {
