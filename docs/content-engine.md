@@ -11,7 +11,7 @@ with a human approving before anything goes out. The posting side is in `automat
 | Code-default posts (always render, even if Sanity is down) | `src/content/journal.ts` (`DEFAULT_POSTS`) |
 | Sanity `post` type (article, social versions, approval, results) | `studio/post-schema.ts` |
 | Weekly rhythm, seasonal lead lines, local hooks, vetted hero photos | `src/content/calendar.ts` |
-| Draft a week of posts (Anthropic API) | `scripts/content/draft-week.ts` |
+| Draft a week of posts (subscription writer) | `scripts/content/draft-week.ts` |
 | Draft a post from a video transcript (plain text, SRT or WebVTT) | `scripts/content/draft-from-transcript.ts` |
 | Clean up a video's captions (SRT/WebVTT in, platform-ready SRT + WebVTT + transcript + report out) | `scripts/content/caption-video.ts`, helpers in `captions.ts` |
 | Load reviewed drafts into Sanity (opt-in) | `scripts/content/import-drafts.ts` |
@@ -34,19 +34,16 @@ with a human approving before anything goes out. The posting side is in `automat
 1. **Monday, 15 minutes:** run the generator for the coming week.
 
    ```bash
-   # find the key by name only; never print it
-   motion-credential-probe anthropic          # -> motion-anthropic-api-key
-   gcloud secrets versions access latest --secret=motion-anthropic-api-key --project=tolowa-studio > "$TMPDIR/ak"
-   ANTHROPIC_API_KEY_FILE="$TMPDIR/ak" node --experimental-strip-types --no-warnings \
-     scripts/content/draft-week.ts --week 2026-11-16 --theme "freeze prep" \
+   node --experimental-strip-types --no-warnings scripts/content/draft-week.ts \
+     --week 2026-11-16 --theme "freeze prep" \
      --arrival "2019 Cal Spas Escape, 5 seats ... what the shop did ..."
-   rm "$TMPDIR/ak"
    ```
 
    Output lands in `out/content-drafts/<week>/` (gitignored): one JSON file per post and a
    `preview.md` that Kimberly can read like a letter. `--dry-run` prints the prompt with no API call.
-   `--only Mon,Fri` drafts just those days. Default model is `claude-haiku-5-5` (about 4 cents a week);
-   `--model claude-sonnet-5-5` for more polish.
+   `--only Mon,Fri` drafts just those days. Default model is `claude-haiku-5-5` on the host's Claude Max subscription;
+   `--model claude-sonnet-5-5` for more polish. If Claude is rate-limited, the run
+   falls through to Gemini Neon, then Composer.
 
 2. **Fill in what only the shop knows.** Wednesday (arrival) and Saturday (video) need real facts:
    pass `--arrival` / `--video`. Without them the draft is a **template** full of `[[ADD: ...]]`
@@ -99,9 +96,9 @@ so burn-in was not built or verified here.
 
 `scripts/content/run-weekly-draft.sh` drafts the coming week (Sunday run, Monday-start week) into
 `out/content-drafts/weekly/<monday>/` (`DRAFT_OUT_ROOT` overrides), with a `preview.md` for proofing.
-`--dry-run` prints the first prompt with no key and no cost. It reads the Anthropic key from GCP
-`motion-anthropic-api-key` into a temp file (never printed), uses Haiku by default, refuses Opus/Fable,
-and is capped at 60 minutes. Draft only: no Sanity, Facebook, Instagram or Google.
+`--dry-run` prints the first prompt with no model call. It uses subscription tiers (Claude Max → Neon →
+Composer), Haiku by default, refuses Opus/Fable, and is capped at 60 minutes. Draft only: no Sanity,
+Facebook, Instagram or Google.
 
 `automation/launchd/com.tolowa.seasonally-living.draft-week.plist` is a TEMPLATE (Sunday 18:00), **not
 installed**. launchd starts jobs with a bare `PATH`; the template and the wrapper both add Homebrew's
@@ -110,14 +107,15 @@ Node 22+). Do not edit the template by hand. To enable, **on the Mini that shoul
 from a checkout of this repo on `main`:
 
 ```
-scripts/content/run-weekly-draft.sh --dry-run             # no key, no cost: proves node and paths
+scripts/content/run-weekly-draft.sh --dry-run             # no model call: proves node and paths
 scripts/content/install-weekly-schedule.sh                # prints the filled-in plist, changes nothing
 scripts/content/install-weekly-schedule.sh --install      # writes ~/Library/LaunchAgents/... and loads it
 launchctl kickstart gui/$(id -u)/com.tolowa.seasonally-living.draft-week   # optional: one real run now (pennies, Haiku)
 ```
 
 Undo: `scripts/content/install-weekly-schedule.sh --uninstall`. Log: `~/Library/Logs/seasonally-living-draft-week.log`.
-The Mini needs `gcloud` signed in as an account that can read `motion-anthropic-api-key`.
+The Mini needs `claude`, and optionally `neon` (Antigravity) and `agent` (Cursor), signed in for the
+subscription tiers.
 
 Still open: where Kimberly proofs `preview.md` (a shared folder is not chosen: confirm the storage
 choice, then point `DRAFT_OUT_ROOT` at it), and video upload and posting to Facebook/Instagram

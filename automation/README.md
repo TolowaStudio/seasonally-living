@@ -111,6 +111,14 @@ curl -X POST https://seasonallyliving.com/api/content/approve \
   from n8n (so the secret never lives on a phone). This is not built yet.
 - Not wired to Cloud Run: setting the two env vars is a deploy step for Jeramey.
 
+## Weekly draft automation (TOL-3371, TS-4129)
+
+`scripts/content/run-weekly-draft.sh` drafts the coming week into `out/content-drafts/weekly/` on a
+schedule (launchd template in `automation/launchd/`). It never posts and never touches Sanity or social
+APIs. Model calls use host subscriptions only: Claude Max (`claude -p`), then Gemini Neon (`neon` on
+hosts with Antigravity, TS-4060), then Composer (`agent -p`). No GCP secret and no paid Anthropic API
+key are read. Install and enable only on the Mini Jeramey approves (`install-weekly-schedule.sh`).
+
 ## Known limits (see the Linear follow-ups)
 
 - Google: the Local Posts endpoint (`mybusiness.googleapis.com/v4/.../localPosts`) and the "call" button

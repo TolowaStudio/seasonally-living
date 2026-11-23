@@ -19,11 +19,11 @@
 // Facebook, Instagram or Google. A person reviews each file, then import-drafts.ts (opt-in) loads them
 // into Sanity as status "draft".
 //
-// Key: ANTHROPIC_API_KEY, or ANTHROPIC_API_KEY_FILE=<file holding it>. Find the secret with
-// `motion-credential-probe anthropic`. The key is never printed.
-import { readFileSync, writeFileSync } from "node:fs";
+// Writer: subscription tiers only (Claude Max → Neon → Composer). No paid API key.
+import { readFileSync } from "node:fs";
 import { LOCAL_HOOKS, SEASONS, WEEKLY_RHYTHM, heroFor, seasonOf, type Day, type Line, type Slot } from "../../src/content/calendar.ts";
-import { DEFAULT_MODEL, callWriter, pacificOffset, previewMarkdown, toPostDoc, writeJson } from "./lib.ts";
+import { DEFAULT_MODEL, callWriter, commitContentDrafts, pacificOffset, previewMarkdown, toPostDoc, type ContentDraftWrite } from "./lib.ts";
+import { tierLabel } from "./writer-runner.ts";
 
 const args = process.argv.slice(2);
 if (args.includes("--help") || args.includes("-h")) {
@@ -104,14 +104,19 @@ if (args.includes("--dry-run")) {
 }
 
 console.log(`Drafting ${slots.length} post(s) for the week of ${week} (${season}) with ${model}`);
-let preview = `# Week of ${week}: drafts to proof\n\nNothing here is approved or posted. Each post is a JSON file beside this page.\n\n`;
+const previewIntro = `# Week of ${week}: drafts to proof\n\nNothing here is approved or posted. Each post is a JSON file beside this page.\n\n`;
+let preview = previewIntro;
+const tiersUsed = new Set<string>();
+const pending: ContentDraftWrite[] = [];
 let inTok = 0;
 let outTok = 0;
 let n = 0;
 for (const slot of slots) {
   const date = addDays(week, DAY_INDEX[slot.day]);
   const line = rotation[n % rotation.length];
-  const { draft, usage } = await callWriter({ model, user: prompt(slot, date, line) });
+  const { draft, usage, tier } = await callWriter({ model, user: prompt(slot, date, line) });
+  const label = tierLabel(tier, model);
+  tiersUsed.add(label);
   inTok += usage.input;
   outTok += usage.output;
   const lines = (slot.lines ?? [line]) as Line[];
@@ -121,12 +126,14 @@ for (const slot of slots) {
     publishAt: `${date}T08:00:00${pacificOffset(date)}`,
     hero: heroFor(draft.tags.length ? (draft.tags as Line[]) : lines, season, n),
     notes: slot.input !== "none" && !(slot.input === "arrival" ? arrival : video) ? [`TEMPLATE: no ${slot.input} details were supplied (--${slot.input}), so nothing here is true yet. Fill every [[ADD]] or delete the post.`] : [],
-    meta: { generatedAt: new Date().toISOString(), model, slot: slot.kind, day: slot.day, week, theme: theme ?? null, usage },
+    meta: { generatedAt: new Date().toISOString(), model, writerTier: tier, writerTierLabel: label, slot: slot.kind, day: slot.day, week, theme: theme ?? null, usage },
   });
   const file = `${outDir}/${String(++n).padStart(2, "0")}-${slot.day.toLowerCase()}-${slot.kind}-${doc.slug.current}.json`;
-  writeJson(file, doc);
-  preview += previewMarkdown(doc, `${slot.day} ${date} (${slot.kind})`);
+  const header = `${slot.day} ${date} (${slot.kind})`;
+  preview += previewMarkdown(doc, header, label);
+  pending.push({ file, doc, previewChunk: "" });
   console.log(`  ${slot.day} ${slot.kind}: "${doc.title}" -> ${file}${doc.needsConfirm.length ? `  [${doc.needsConfirm.length} to check]` : ""}`);
 }
-writeFileSync(`${outDir}/preview.md`, preview);
-console.log(`Preview for proofing: ${outDir}/preview.md\nTokens: ${inTok} in, ${outTok} out (${model}). Nothing was sent anywhere.`);
+commitContentDrafts(outDir, preview, pending);
+const tierSummary = [...tiersUsed].join(", ") || model;
+console.log(`Preview for proofing: ${outDir}/preview.md\nTokens: ${inTok} in, ${outTok} out (${tierSummary}). Nothing was sent anywhere.`);
