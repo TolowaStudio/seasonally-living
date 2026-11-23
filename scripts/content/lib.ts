@@ -229,7 +229,16 @@ export function writeJson(path: string, value: unknown) {
   writeFileSync(path, JSON.stringify(value, null, 2) + "\n");
 }
 
-export function previewMarkdown(doc: PostDoc, header: string): string {
+export type ContentDraftWrite = { file: string; doc: unknown; previewChunk: string };
+
+/** Writes JSON drafts and preview only after every slot succeeded (no partial output). */
+export function commitContentDrafts(outDir: string, preview: string, pending: ContentDraftWrite[]): void {
+  for (const p of pending) writeJson(p.file, p.doc);
+  writeFileSync(`${outDir}/preview.md`, preview);
+}
+
+export function previewMarkdown(doc: PostDoc, header: string, writerTier?: string): string {
   const needs = doc.needsConfirm.length ? doc.needsConfirm.map((n) => `- ${n}`).join("\n") : "- (none)";
-  return `## ${header}: ${doc.title}\n\n**Check before approving**\n${needs}\n\n**Facebook**\n\n${doc.social.facebook}\n\n**Instagram**\n\n${doc.social.instagram.caption}\n\n${doc.social.instagram.hashtags.join(" ")}\n\n**Google (button: ${doc.social.gbp.cta})**\n\n${doc.social.gbp.text}\n\n---\n`;
+  const tierLine = writerTier ? `\n**Writer tier:** ${writerTier}\n` : "";
+  return `## ${header}: ${doc.title}${tierLine}\n\n**Check before approving**\n${needs}\n\n**Facebook**\n\n${doc.social.facebook}\n\n**Instagram**\n\n${doc.social.instagram.caption}\n\n${doc.social.instagram.hashtags.join(" ")}\n\n**Google (button: ${doc.social.gbp.cta})**\n\n${doc.social.gbp.text}\n\n---\n`;
 }

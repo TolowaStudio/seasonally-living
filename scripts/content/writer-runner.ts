@@ -4,6 +4,18 @@
 import { spawnSync } from "node:child_process";
 import type { Draft } from "./lib.ts";
 
+const STRIPPED_ENV_KEYS = [
+  ["ANTHROPIC", "API", "KEY"].join("_"),
+  ["ANTHROPIC", "API", "KEY", "FILE"].join("_"),
+] as const;
+
+/** Child process env for subscription CLIs — never pass paid API keys through. */
+export function subscriptionWriterEnv(base: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const env = { ...base };
+  for (const key of STRIPPED_ENV_KEYS) delete env[key];
+  return env;
+}
+
 export type WriterTier = "claude-max" | "neon" | "composer";
 
 export type WriterCallOpts = { model: string; user: string; maxTokens?: number };
@@ -72,7 +84,8 @@ function parseCliDraft(stdout: string, stderr: string, exitCode: number | null, 
   }
 }
 
-function claudeTextFromJson(stdout: string): string {
+function claudeTextFromJson(stdout: string | null): string {
+  if (!stdout?.trim()) return "";
   const lines = stdout.trim().split("\n").filter(Boolean);
   for (let i = lines.length - 1; i >= 0; i--) {
     try {
@@ -95,11 +108,20 @@ export function runClaudeMaxTier(opts: WriterCallOpts): WriterCallResult {
   const run = spawnSync("claude", ["-p", prompt, "--model", claudeModel, "--output-format", "json"], {
     encoding: "utf8",
     timeout: 120_000,
-    env: process.env,
+    env: subscriptionWriterEnv(),
   });
+  if (run.error) {
+    const code = (run.error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") {
+      const err = new Error("claude-max: claude not on PATH");
+      (err as Error & { fallback?: boolean }).fallback = true;
+      throw err;
+    }
+    throw run.error;
+  }
   const text = claudeTextFromJson(run.stdout);
-  const raw = parseCliDraft(text, run.stderr, run.status, run.signal, "claude-max");
-  return { draft: raw as Draft, usage: { input: 0, output: 0 }, tier: "claude-max", model: opts.model };
+  const raw = parseCliDraft(text, run.stderr ?? "", run.status, run.signal, "claude-max");
+  return { draft: raw as Draft, usage: { input: 0, output: 0 }, tier: "claude-max", model: claudeModel };
 }
 
 export function runNeonTier(opts: WriterCallOpts): WriterCallResult {
@@ -110,6 +132,7 @@ export function runNeonTier(opts: WriterCallOpts): WriterCallResult {
     encoding: "utf8",
     timeout: 120_000,
     shell: false,
+    env: subscriptionWriterEnv(),
   });
   if (run.error && (run.error as NodeJS.ErrnoException).code === "ENOENT") {
     const err = new Error(`neon tier: ${bin} not on PATH`);
@@ -117,7 +140,7 @@ export function runNeonTier(opts: WriterCallOpts): WriterCallResult {
     throw err;
   }
   const raw = parseCliDraft(run.stdout, run.stderr, run.status, run.signal, "neon");
-  return { draft: raw as Draft, usage: { input: 0, output: 0 }, tier: "neon", model: opts.model };
+  return { draft: raw as Draft, usage: { input: 0, output: 0 }, tier: "neon", model: "neon" };
 }
 
 export function runComposerTier(opts: WriterCallOpts): WriterCallResult {
@@ -126,6 +149,7 @@ export function runComposerTier(opts: WriterCallOpts): WriterCallResult {
   const run = spawnSync(bin, ["-p", "--output-format", "text", "--mode", "ask", prompt], {
     encoding: "utf8",
     timeout: 120_000,
+    env: subscriptionWriterEnv(),
   });
   if (run.error && (run.error as NodeJS.ErrnoException).code === "ENOENT") {
     const err = new Error(`composer tier: ${bin} not on PATH`);
@@ -133,7 +157,7 @@ export function runComposerTier(opts: WriterCallOpts): WriterCallResult {
     throw err;
   }
   const raw = parseCliDraft(run.stdout, run.stderr, run.status, run.signal, "composer");
-  return { draft: raw as Draft, usage: { input: 0, output: 0 }, tier: "composer", model: opts.model };
+  return { draft: raw as Draft, usage: { input: 0, output: 0 }, tier: "composer", model: "composer" };
 }
 
 export const DEFAULT_WRITER_TIERS: TierAttempt[] = [
@@ -162,6 +186,17 @@ export function runWriterTiers(opts: WriterCallOpts, tiers: TierAttempt[] = DEFA
   throw new Error(`No subscription writer tier available (tried ${tiers.map((t) => t.tier).join(" → ")}).\n${errors.join("\n")}`);
 }
 
-export function tierLabel(tier: WriterTier, model: string): string {
-  return `${tier} (${model})`;
+export function tierLabel(tier: WriterTier, requestedModel: string): string {
+  switch (tier) {
+    case "claude-max":
+      return `claude-max (${claudeSubscriptionModel(requestedModel)})`;
+    case "neon":
+      return "neon (antigravity)";
+    case "composer":
+      return "composer (cursor agent)";
+    default: {
+      const _never: never = tier;
+      return _never;
+    }
+  }
 }

@@ -21,6 +21,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { SEASONS, heroFor, seasonOf, type Line } from "../../src/content/calendar.ts";
 import { looksLikeCaptions, parseCaptions, toTranscript } from "./captions.ts";
 import { DEFAULT_MODEL, callWriter, pacificOffset, previewMarkdown, toPostDoc, writeJson } from "./lib.ts";
+import { tierLabel } from "./writer-runner.ts";
 
 const args = process.argv.slice(2);
 if (!args.length || args.includes("--help") || args.includes("-h")) {
@@ -74,15 +75,19 @@ if (args.includes("--dry-run")) {
 }
 
 const { draft, usage, tier } = await callWriter({ model, user });
+const label = tierLabel(tier, model);
 const doc = toPostDoc(draft, {
   season,
   article,
   publishAt: `${date}T08:00:00${pacificOffset(date)}`,
   hero: heroFor([line], season),
   notes: ["Drafted from a transcript. Watch the video once and check every name, number and model against it."],
-  meta: { generatedAt: new Date().toISOString(), model, writerTier: tier, slot: "video-transcript", transcript: file, angle: opt("angle") ?? null, videoHook: draft.video_hook ?? null, usage },
+  meta: { generatedAt: new Date().toISOString(), model, writerTier: tier, writerTierLabel: label, slot: "video-transcript", transcript: file, angle: opt("angle") ?? null, videoHook: draft.video_hook ?? null, usage },
 });
 const out = `${outDir}/${date}-${doc.slug.current}.json`;
 writeJson(out, doc);
-writeFileSync(out.replace(/\.json$/, ".preview.md"), `${previewMarkdown(doc, "Video post")}${draft.video_hook ? `\n**Video hook (first 3 seconds):** ${draft.video_hook}\n` : ""}`);
+writeFileSync(
+  out.replace(/\.json$/, ".preview.md"),
+  `${previewMarkdown(doc, "Video post", label)}${draft.video_hook ? `\n**Video hook (first 3 seconds):** ${draft.video_hook}\n` : ""}`,
+);
 console.log(`Draft: "${doc.title}"\n  -> ${out}\n  ${doc.needsConfirm.length} item(s) to check. Tokens: ${usage.input} in, ${usage.output} out. Nothing was sent anywhere.`);
