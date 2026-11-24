@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FEEDBACK_INTEREST, INTERESTS, INTEREST_IDS, LEAD_INTEREST_IDS } from "@/lib/interests";
 import { cleanAttribution, describeTouch } from "@/lib/attribution";
 import { cleanEmail, multiLine, oneLine, tagOf } from "@/lib/text";
+import { FEEDBACK_PHONE_LIMIT, FEEDBACK_PHONE_WINDOW_MS, feedbackPhoneKey } from "@/lib/lead-guards";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { mailConfigured, sendMail, staffRecipients } from "@/lib/mail";
 import { NOTE_CONSENT_TEXT, NOTE_CONSENT_VERSION } from "@/lib/note-consent";
@@ -70,8 +71,17 @@ export async function POST(req: NextRequest) {
   const feedback = kind === "visit" && d.interest === FEEDBACK_INTEREST;
   if (feedback) {
     if (oneLine(d.email, 254) && !email) return fail(400, "bad_email", "That email doesn't look right");
-    if (!email && !oneLine(d.phone, 40)) return fail(400, "missing_contact", "Please add an email or phone so Cam can reply");
+    const phone = oneLine(d.phone, 40);
+    if (!email && !phone) return fail(400, "missing_contact", "Please add an email or phone so Cam can reply");
     if (!multiLine(d.message, 2000)) return fail(400, "missing_message", "Please tell us what happened");
+    if (!email && phone) {
+      const byPhone = rateLimit(feedbackPhoneKey(phone), FEEDBACK_PHONE_LIMIT, FEEDBACK_PHONE_WINDOW_MS);
+      if (!byPhone.ok) {
+        return fail(429, "rate_limited", "That number was just used. Please wait a few minutes or call (509) 667-8833.", {
+          "Retry-After": String(byPhone.retryAfter),
+        });
+      }
+    }
   } else {
     if (!email) return fail(400, "bad_email", "Please enter a valid email");
     if (kind === "visit" && !name) return fail(400, "missing_name", "Please add your name");

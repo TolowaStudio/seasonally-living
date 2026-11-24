@@ -1,8 +1,8 @@
 import { ImageResponse } from "next/og";
-import { AREAS } from "@/content/areas";
 import { ALL_PAGES } from "@/content/pages";
+import { LANDING_SLUGS } from "@/content/landing";
 import type { LineContent } from "@/content/types";
-import { getBrand, getPage, getSettings } from "@/lib/sanity";
+import { getArea, getBrand, getLanding, getPage, getSettings } from "@/lib/sanity";
 import { addressOf } from "@/lib/site";
 import { cloudinaryUrl } from "@/lib/seo";
 
@@ -20,8 +20,14 @@ async function resolve(k: string): Promise<Card | null> {
     return b ? { kicker: `Fireplaces & stoves · ${b.origin}`, title: `${b.name} in Wenatchee`, image: b.heroImage } : null;
   }
   if (k.startsWith("area-")) {
-    const a = AREAS.find((x) => x.slug === k.slice(5));
+    const a = await getArea(k.slice(5));
     return a ? { kicker: a.hero.kicker, title: a.title, image: a.hero.image } : null;
+  }
+  if (k.startsWith("lp-")) {
+    const slug = k.slice(3);
+    if (!LANDING_SLUGS.includes(slug as (typeof LANDING_SLUGS)[number])) return null;
+    const c = await getLanding(slug);
+    return c ? { kicker: c.hero.kicker, title: c.seo.title, image: c.hero.image } : null;
   }
   const def = ALL_PAGES.find((p) => key(p.pageId) === k);
   if (!def) return null;

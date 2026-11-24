@@ -3,8 +3,8 @@ import Link from "next/link";
 import Icon from "@/components/Icon";
 import JsonLd from "@/components/JsonLd";
 import CtaBand from "@/components/CtaBand";
-import { AREAS } from "@/content/areas";
 import { SITE_TITLE_SUFFIX, breadcrumbJsonLd, socialMeta } from "@/lib/seo";
+import { getAreas } from "@/lib/sanity";
 
 export const revalidate = 3600;
 
@@ -18,7 +18,8 @@ export const metadata: Metadata = {
   ...socialMeta({ fullTitle: `${title} | ${SITE_TITLE_SUFFIX}`, description, path: "/areas", ogKey: "home", ogAlt: "Seasonally Living, Wenatchee" }),
 };
 
-export default function AreasPage() {
+export default async function AreasPage() {
+  const areas = await getAreas();
   return (
     <main style={{ paddingTop: "var(--nav-h)" }}>
       <JsonLd data={breadcrumbJsonLd([{ name: "Areas we serve", path: "/areas" }])} />
@@ -31,7 +32,7 @@ export default function AreasPage() {
             Pick your town to see what matters where you live.
           </p>
           <div className="grid-2" style={{ marginTop: 44 }}>
-            {AREAS.map((a) => (
+            {areas.map((a) => (
               <Link key={a.slug} href={`/areas/${a.slug}`} className="card hoverable" style={{ padding: 28, display: "block", color: "inherit" }}>
                 <h2 className="h-md" style={{ fontSize: 24 }}>{a.label}</h2>
                 <p className="body-muted" style={{ marginTop: 8 }}>{a.distance}</p>

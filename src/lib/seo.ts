@@ -9,6 +9,9 @@ const CLOUDINARY = "https://res.cloudinary.com/tolowa-studio/image/upload";
 /** Absolute URL for a site path ("/hot-tubs" -> "https://seasonallyliving.com/hot-tubs"). */
 export const absoluteUrl = (path: string) => `${getSiteUrl()}${path === "/" ? "" : path}`;
 
+/** Same @id as the site-wide LocalBusiness in the root layout (JSON-LD entity link). */
+export const businessSchemaId = (baseUrl: string) => `${baseUrl.replace(/\/$/, "")}/#business`;
+
 /** Serialises JSON-LD for a <script> tag; "<" is escaped so no string can close the tag (Next JSON-LD guide). */
 export const jsonLdString = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 

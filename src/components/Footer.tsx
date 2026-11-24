@@ -4,10 +4,10 @@ import { Logo } from "./Nav";
 import NoteForm from "./NoteForm";
 import CookieSettingsLink from "./CookieSettingsLink";
 import { addressOf, mapsUrlOf } from "@/lib/site";
-import { AREAS } from "@/content/areas";
+import type { AreaContent } from "@/content/areas";
 import type { SiteSettings } from "@/content/types";
 
-export default function Footer({ settings: s }: { settings: SiteSettings }) {
+export default function Footer({ settings: s, areas }: { settings: SiteSettings; areas: AreaContent[] }) {
   return (
     <footer style={{ background: "var(--band)", color: "var(--ink)", paddingTop: 88, paddingBottom: 40 }} data-theme="showroom-dark">
       <div className="wrap">
@@ -81,10 +81,10 @@ export default function Footer({ settings: s }: { settings: SiteSettings }) {
         </div>
         <p className="small body-muted" style={{ marginTop: 48 }}>
           <Link className="ul-link" href="/areas">Serving</Link>{" "}
-          {AREAS.map((a, i) => (
+          {areas.map((a, i) => (
             <span key={a.slug}>
               <Link className="ul-link" href={`/areas/${a.slug}`}>{a.label}</Link>
-              {i < AREAS.length - 1 ? " · " : ""}
+              {i < areas.length - 1 ? " · " : ""}
             </span>
           ))}
         </p>

@@ -10,6 +10,7 @@ import { CLOUDINARY_BASE } from "@/lib/cloudinary";
 import { seatBandOf, specLine, statusLabel } from "@/lib/pre-owned-ui";
 import { formatPrice } from "@/lib/pre-owned-public";
 import { getPreOwnedSpa, getSettings } from "@/lib/sanity";
+import { businessSchemaId } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site";
 
 export const revalidate = 60;
@@ -71,7 +72,13 @@ export default async function PreOwnedSpaPage({ params }: Props) {
           ...(spa.price !== undefined ? { price: spa.price, priceCurrency: "USD" } : {}),
           itemCondition: "https://schema.org/UsedCondition",
           availability: reserved ? "https://schema.org/LimitedAvailability" : "https://schema.org/InStock",
-          seller: { "@type": "LocalBusiness", name: settings.legalName, telephone: settings.phoneTel, url: base },
+          seller: {
+            "@type": "LocalBusiness",
+            "@id": businessSchemaId(base),
+            name: settings.legalName,
+            telephone: settings.phoneTel,
+            url: base,
+          },
         },
       },
       {

@@ -5,7 +5,9 @@ import { SETTINGS } from "@/content/settings";
 import { DEMO_PRE_OWNED } from "@/content/pre-owned";
 import { JUST_ARRIVED_DAYS, RECENTLY_SOLD_DAYS, RECON_CHECKLIST } from "@/content/pre-owned-checklist";
 import { BRANDS } from "@/content/brands";
+import { AREAS, type AreaContent } from "@/content/areas";
 import { LANDING_PAGES, type LandingContent } from "@/content/landing";
+import { REVIEW_PAGE, type ReviewPageContent } from "@/content/review";
 import { GUIDES, type Guide } from "@/content/guides";
 import type { BrandContent, PageContent, PreOwnedSpa, PreOwnedStatus, SiteSettings } from "@/content/types";
 import { mergeContent } from "./merge";
@@ -184,6 +186,35 @@ export async function getBrand(slug: string): Promise<BrandContent | undefined> 
 
 // ---- Campaign landing pages (/lp/[campaign]) ----
 // Document type "landingPage", id "landingPage-<slug>". Code defaults in src/content/landing.ts.
+// ---- Service area pages (/areas/[town]) ----
+const AREA_FIELDS = `"slug": slug, name, label, title, description, interest, serves, distance, paragraphs,
+  hero{kicker, title, lead, image, alt, position},
+  lines[]{href, title, body},
+  faqs[]{q, a}`;
+
+function areaFromSanity(raw: unknown, fallback: AreaContent): AreaContent {
+  const merged = mergeContent(fallback, raw);
+  return { ...merged, slug: fallback.slug };
+}
+
+export const getAreas = cache(async (): Promise<AreaContent[]> => {
+  const rows = await fetchQuery<unknown[]>("serviceAreaPage", `*[_type == "serviceAreaPage" && defined(slug)]{${AREA_FIELDS}}`, {});
+  const bySlug = new Map((rows ?? []).map((r) => {
+    const slug = r && typeof r === "object" ? (r as { slug?: unknown }).slug : undefined;
+    return typeof slug === "string" ? [slug, r] as const : null;
+  }).filter((x): x is [string, unknown] => !!x));
+  return AREAS.map((base) => areaFromSanity(bySlug.get(base.slug), base));
+});
+
+export async function getArea(slug: string): Promise<AreaContent | undefined> {
+  return (await getAreas()).find((a) => a.slug === slug);
+}
+
+// ---- Post-purchase review page (/review) ----
+export async function getReviewPage(): Promise<ReviewPageContent> {
+  return mergeContent(REVIEW_PAGE, await fetchDoc("reviewPage"));
+}
+
 export async function getLanding(slug: string): Promise<LandingContent | null> {
   const fallback = LANDING_PAGES.find((p) => p.slug === slug);
   if (!fallback) return null;

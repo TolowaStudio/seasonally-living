@@ -8,6 +8,7 @@ import RichTitle from "@/components/RichTitle";
 import { LANDING_SLUGS } from "@/content/landing";
 import { addressOf, mapsUrlOf } from "@/lib/site";
 import { getLanding, getSettings } from "@/lib/sanity";
+import { SITE_TITLE_SUFFIX, socialMeta } from "@/lib/seo";
 
 // Content: code defaults in src/content/landing.ts, overridden by Sanity "landingPage-<slug>". ISR like the rest of the site.
 export const revalidate = 60;
@@ -17,9 +18,22 @@ export const generateStaticParams = () => LANDING_SLUGS.map((campaign) => ({ cam
 type Params = { params: Promise<{ campaign: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const c = await getLanding((await params).campaign);
+  const campaign = (await params).campaign;
+  const c = await getLanding(campaign);
   if (!c) return {};
-  return { title: c.seo.title, description: c.seo.description, robots: { index: false, follow: false } };
+  const fullTitle = `${c.seo.title} | ${SITE_TITLE_SUFFIX}`;
+  return {
+    title: c.seo.title,
+    description: c.seo.description,
+    robots: { index: false, follow: false },
+    ...socialMeta({
+      fullTitle,
+      description: c.seo.description,
+      path: `/lp/${campaign}`,
+      ogKey: `lp-${campaign}`,
+      ogAlt: c.hero.alt,
+    }),
+  };
 }
 
 export default async function LandingPage({ params }: Params) {
