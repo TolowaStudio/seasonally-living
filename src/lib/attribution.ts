@@ -153,8 +153,7 @@ const handlers = new Set<ConversionHandler>();
  * Event names fired today (same names as lib/tracking-config.ts ConversionName): lead_submitted (visit request),
  * preowned_inquiry (visit request about a specific spa), newsletter_signup (note / guide signup).
  *
- * TOL-3346 note: components/Tracking.tsx currently fires the ad tags from a DOM success observer. Do NOT also
- * register a handler that calls lib/track.ts until that observer is removed, or every conversion counts twice.
+ * Lead forms call lib/track.ts directly; handlers here are for optional extra listeners only.
  */
 export function registerConversionHandler(fn: ConversionHandler): () => void {
   handlers.add(fn);

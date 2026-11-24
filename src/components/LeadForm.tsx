@@ -4,12 +4,29 @@ import { useState } from "react";
 import Icon from "./Icon";
 import { PICKABLE_INTERESTS } from "@/lib/interests";
 import { NOTE_CONSENT_TEXT } from "@/lib/note-consent";
-import { getAttribution, trackConversion } from "@/lib/attribution";
+import { getAttribution } from "@/lib/attribution";
+import { leadConversionFields, trackLeadConversion } from "@/lib/lead-client-tracking";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
 // `unit` is sent with the lead (title + slug, for the shop); `unitLabel` is what the shopper sees.
-export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }: { defaultInterest?: string; unit?: string; unitLabel?: string }) {
+export default function LeadForm({
+  defaultInterest = "hearth",
+  unit,
+  unitLabel,
+  ctaLabel,
+  whenLabel = "Best time to visit",
+  successTitle,
+  successBody,
+}: {
+  defaultInterest?: string;
+  unit?: string;
+  unitLabel?: string;
+  ctaLabel?: string;
+  whenLabel?: string;
+  successTitle?: string;
+  successBody?: string;
+}) {
   const [interest, setInterest] = useState(unit ? "pre-owned" : defaultInterest);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
@@ -20,13 +37,15 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
     const fd = new FormData(e.currentTarget);
     setStatus("sending");
     setError("");
+    const conversion = leadConversionFields();
+    const leadInterest = unit ? "pre-owned" : interest;
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           kind: "visit",
-          interest: unit ? "pre-owned" : interest,
+          interest: leadInterest,
           unit: unit || undefined,
           name: fd.get("name"),
           email: fd.get("email"),
@@ -37,13 +56,21 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
           source: typeof window !== "undefined" ? window.location.pathname + window.location.search : "",
           company: fd.get("company"),
           attribution: getAttribution(),
+          adsConsent: conversion.adsConsent,
+          eventId: conversion.eventId,
+          fbp: conversion.fbp,
+          fbc: conversion.fbc,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) throw new Error(data.error || "Something went wrong");
       setConfirmSent(data.pending === true);
       setStatus("sent");
-      trackConversion(unit ? "preowned_inquiry" : "lead_submitted", { interest: unit ? "pre-owned" : interest, source: window.location.pathname, note_opt_in: fd.get("optIn") === "on" });
+      trackLeadConversion(unit ? "preowned_inquiry" : "lead_submitted", {
+        interest: leadInterest,
+        source: window.location.pathname,
+        note_opt_in: fd.get("optIn") === "on",
+      }, conversion.eventId);
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -53,9 +80,13 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
   if (status === "sent") {
     return (
       <div className="form-status" role="status">
-        <p className="h-md">{unit ? "Thanks, we\u2019ll be in touch about this spa." : "Thanks, you\u2019re on the calendar list."}</p>
+        <p className="h-md">{successTitle ?? (unit ? "Thanks, we\u2019ll be in touch about this spa." : "Thanks, you\u2019re on the calendar list.")}</p>
         <p className="body-muted" style={{ marginTop: 8 }}>
-          {unit ? "We\u2019ll call or email within one business day with the price and details." : "We\u2019ll call or email within one business day to confirm a time."} Need us sooner? Call (509) 667-8833.
+          {successBody ??
+            (unit
+              ? "We\u2019ll call or email within one business day with the price and details."
+              : "We\u2019ll call or email within one business day to confirm a time.")}{" "}
+          Need us sooner? Call (509) 667-8833.
         </p>
         {confirmSent && <p className="body-muted small" style={{ marginTop: 8 }}>Check your email for a link to confirm the note signup.</p>}
       </div>
@@ -101,7 +132,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
           <input id="lf-email" name="email" className="input" type="email" required autoComplete="email" />
         </div>
         <div className="field">
-          <label htmlFor="lf-when">Best time to visit</label>
+          <label htmlFor="lf-when">{whenLabel}</label>
           <input id="lf-when" name="when" className="input" placeholder="e.g. Saturday morning" />
         </div>
       </div>
@@ -116,7 +147,7 @@ export default function LeadForm({ defaultInterest = "hearth", unit, unitLabel }
       </label>
       {status === "error" && <p className="err-msg" style={{ color: "#d4573f" }}>{error}. Please call (509) 667-8833.</p>}
       <button className="btn btn-primary btn-lg" type="submit" disabled={status === "sending"} style={{ justifySelf: "start" }}>
-        {status === "sending" ? "Sending..." : unit ? "Ask about this spa" : "Request my visit"} <Icon name="arrow" size={18} />
+        {status === "sending" ? "Sending..." : unit ? "Ask about this spa" : (ctaLabel ?? "Request my visit")} <Icon name="arrow" size={18} />
       </button>
     </form>
   );

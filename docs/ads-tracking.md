@@ -8,7 +8,7 @@ Everything is off until an env var is set. With none set: no tag script, no thir
 2. Set the `NEXT_PUBLIC_*` values from `.env.example` as Docker **build args** (they are inlined at build), rebuild, deploy.
 3. In Google Ads, create conversion actions (Lead = primary, Call = primary, others secondary/observation) and put each label in the matching `NEXT_PUBLIC_GOOGLE_ADS_LABEL_*`.
 4. In GA4, mark the six events below as key events.
-5. Optional: set `META_CAPI_TOKEN` (GCP Secret Manager) and wire `sendMetaLead` into `/api/lead`.
+5. Optional: set `META_CAPI_TOKEN` (GCP Secret Manager); `/api/lead` calls `sendMetaLead` when the client sends `eventId`.
 
 ## Loading and consent
 - Google (GA4, Ads): `gtag.js` loads `afterInteractive` in Consent Mode v2, default **denied** (override with `NEXT_PUBLIC_CONSENT_DEFAULT=granted`), `ads_data_redaction` and `url_passthrough` on. Choosing Accept sends `consent update`.
@@ -25,14 +25,14 @@ Everything is off until an env var is set. With none set: no tag script, no thir
 | `directions_click` | click on a Google/Apple Maps link | FindLocation |
 | `booking_started` | click on a booking CTA (`#book`, `/visit#book`) or first focus in the booking form | custom `BookingStarted` |
 
-Links can add `data-track-area="..."` (it is sent as `area`). Form events currently come from a DOM observer in
-`Tracking.tsx` because LeadForm/NoteForm (TOL-2922) do not call `trackConversion`. TODO: replace with direct calls
-after TOL-2922 merges; `trackConversion` returns the event id to send to `/api/lead` for Meta CAPI de-duplication.
+Links can add `data-track-area="..."` (it is sent as `area`). LeadForm, NoteForm, and PreOwnedSellForm call
+`trackConversion` after a successful submit. When the visitor has accepted cookies (`adsConsent: granted`), they also send
+the same RFC-4122 `eventId` (plus `fbp`/`fbc`) to `/api/lead`; the route calls Meta CAPI only in that case.
 
 ## Meta Conversions API
 `src/lib/meta-capi.ts` exports `sendMetaLead({ eventId, email, phone, sourceUrl, userAgent, clientIp, fbp, fbc, interest })`.
 SHA-256 hashes email/phone, 3 s timeout, never throws, no-ops unless `META_CAPI_TOKEN` and `NEXT_PUBLIC_META_PIXEL_ID` are set.
-Not called yet. Client side, `getMetaBrowserIds()` returns `_fbp`/`_fbc` to include in the lead payload.
+Client side, `getMetaBrowserIds()` returns `_fbp`/`_fbc` to include in the lead payload.
 
 ## Landing pages
 `/lp/<slug>`: `hot-tubs-wenatchee`, `pre-owned-hot-tubs`, `gas-inserts-burn-ban`, `stuv-wood-stoves`,

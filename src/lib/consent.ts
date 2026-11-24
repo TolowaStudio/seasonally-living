@@ -75,3 +75,8 @@ export function useConsent(): Consent {
 export function isGranted(c: Consent): boolean {
   return c === "granted";
 }
+
+/** Stored ads/analytics banner choice for lead payloads (client forms). */
+export function getStoredConsent(): Consent {
+  return read();
+}

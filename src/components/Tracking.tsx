@@ -5,14 +5,13 @@ import Script from "next/script";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CONSENT_KEY, isGranted, setConsent, useConsent } from "@/lib/consent";
-import { INTERESTS } from "@/lib/interests";
 import { trackConversion } from "@/lib/track";
 import { anyTagEnabled, googleEnabled, metaEnabled, posthogEnabled, tracking } from "@/lib/tracking-config";
 
 // Mounted once in the root layout. With no NEXT_PUBLIC_* tag env set it renders nothing and attaches nothing.
 //  - Google (GA4 / Ads): loads right away in Consent Mode v2, defaulting to denied (no cookies) until the visitor accepts.
 //  - Meta Pixel and PostHog: have no consent mode, so they load only after the visitor accepts.
-//  - Listeners fire call_click, directions_click, booking_started and the form conversions.
+//  - Listeners fire call_click, directions_click, and booking_started. Form conversions fire in the forms.
 
 const j = JSON.stringify;
 
@@ -38,9 +37,8 @@ posthog.init(${j(key)},{api_host:${j(host)},defaults:'2025-05-24',person_profile
 `;
 
 const MAP_HOSTS = /^(https?:)?\/\/(www\.google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.apple\.com|goo\.gl\/maps|maps\.app\.goo\.gl)/i;
-const interestIdFor = (labelText: string) => INTERESTS.find((i) => i.label === labelText.trim())?.id;
 
-/** Click, focus and form-success listeners. Only attached when a tag is enabled. */
+/** Click and booking-form focus listeners. Only attached when a tag is enabled. */
 function useConversionListeners() {
   const bookingFocused = useRef(false);
   const pathname = usePathname();
@@ -81,48 +79,11 @@ function useConversionListeners() {
       trackConversion("booking_started", { via: "form" });
     };
 
-    // Form conversions. LeadForm / NoteForm (owned by TOL-2922) do not call trackConversion yet, so watch for
-    // the "Thanks" state they render once /api/lead has accepted the submission. The form unmounting is the
-    // signal; a failed submit leaves the form in place. TODO(TOL-3346): replace with direct calls after rebase.
-    let pending: { form: HTMLFormElement; name: "lead_submitted" | "preowned_inquiry" | "newsletter_signup"; interest?: string } | null = null;
-    const onSubmit = (e: SubmitEvent) => {
-      const form = e.target as HTMLFormElement | null;
-      const label = form?.getAttribute?.("aria-label") ?? "";
-      if (!form) return;
-      if (label === "Book a visit") {
-        const unit = /Asking about:/.test(form.textContent ?? "");
-        const picked = form.querySelector(".opt-tile.sel .ot-title")?.textContent ?? "";
-        pending = { form, name: unit ? "preowned_inquiry" : "lead_submitted", interest: unit ? "pre-owned" : interestIdFor(picked) };
-      } else if (label === "Sell or trade in your hot tub") {
-        // Seller / trade-in lead (PreOwnedSellForm, TOL-2901): counts as a pre-owned inquiry, tagged as supply.
-        pending = { form, name: "preowned_inquiry", interest: "pre-owned-supply" };
-      } else if (label.startsWith("Get the Seasonally Living note")) {
-        const picked = [...form.querySelectorAll(".chip.active")].map((c) => interestIdFor(c.textContent ?? "") ?? "").filter(Boolean);
-        pending = { form, name: "newsletter_signup", interest: picked.join(",") || undefined };
-      }
-    };
-    const observer = new MutationObserver(() => {
-      // Success only: the form is gone AND the "Thanks" state is on the page. A navigation away also
-      // unmounts the form, but renders no .form-status, so it must not count as a lead.
-      if (!pending || pending.form.isConnected) return;
-      if (!document.querySelector(".form-status")) {
-        pending = null;
-        return;
-      }
-      const { name, interest } = pending;
-      pending = null;
-      trackConversion(name, { interest });
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-
     document.addEventListener("click", onClick, true);
     document.addEventListener("focusin", onFocusIn, true);
-    document.addEventListener("submit", onSubmit, true);
     return () => {
       document.removeEventListener("click", onClick, true);
       document.removeEventListener("focusin", onFocusIn, true);
-      document.removeEventListener("submit", onSubmit, true);
-      observer.disconnect();
     };
   }, []);
 }

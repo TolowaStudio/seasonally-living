@@ -119,7 +119,17 @@ export default async function LandingPage({ params }: Params) {
           <h2 className="h-lg" style={{ marginTop: 14 }}>{c.form.title}</h2>
           <p className="body-muted" style={{ marginTop: 10 }}>{c.form.lead}</p>
           <div className="card" style={{ padding: "clamp(20px, 4vw, 40px)", marginTop: 28 }}>
-            <LeadForm defaultInterest={c.interest} />
+            <LeadForm
+              defaultInterest={c.interest}
+              {...(campaign === "pool-planning-2027"
+                ? {
+                    ctaLabel: c.hero.cta,
+                    whenLabel: "Best time for a design call",
+                    successTitle: "Thanks, you\u2019re on the spring install list.",
+                    successBody: "We\u2019ll call or email within one business day about your site and the design queue.",
+                  }
+                : {})}
+            />
           </div>
           <p className="small body-muted" style={{ marginTop: 18 }}>
             Prefer to talk? <a className="ul-link" data-track-area="lp-form" href={tel}>{s.phoneDisplay}</a>

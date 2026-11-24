@@ -3,11 +3,8 @@
 // One entry point for conversions. Fans an event out to whichever tags are enabled (GA4, Google Ads,
 // Meta Pixel, PostHog). With no tag enabled, or before a tag has loaded/consent is given, it does nothing.
 //
-// TOL-2922 (attribution.ts) exposes the same `trackConversion(name, props)` signature. When that merges,
-// re-export from there (or call this from it) so there is a single fan-out. TODO(TOL-3346): after
-// rebasing on origin/main, replace the DOM success observer in components/Tracking.tsx with a direct
-// trackConversion() call in LeadForm / NoteForm, and pass the returned event id to /api/lead so the
-// server can send the matching Meta Conversions API event (see lib/meta-capi.ts).
+// LeadForm / NoteForm call this after /api/lead accepts a submission and pass the same event id to the route
+// for Meta CAPI de-duplication (see lib/meta-capi.ts). attribution.ts still exposes a hook for other listeners.
 
 import { CONVERSION_NAMES, anyTagEnabled, tracking, type ConversionName } from "./tracking-config";
 

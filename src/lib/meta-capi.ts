@@ -4,8 +4,7 @@ import { createHash } from "node:crypto";
 // consent denials on the pixel. Does nothing unless BOTH are set: NEXT_PUBLIC_META_PIXEL_ID and META_CAPI_TOKEN
 // (a system-user token from Events Manager > Settings > Conversions API; keep it in GCP Secret Manager).
 //
-// Not called from anywhere yet. The owner of src/app/api/lead/route.ts (TOL-2922) calls it after a lead is
-// accepted and before returning, without awaiting it past the response if they prefer:
+// Called from src/app/api/lead/route.ts after a lead is accepted (fire-and-forget):
 //
 //   void sendMetaLead({ eventId: d.eventId, email, phone, sourceUrl, userAgent, clientIp, fbp: d.fbp, fbc: d.fbc, interest });
 //
