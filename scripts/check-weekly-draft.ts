@@ -13,6 +13,7 @@ const env = { ...process.env, ANTHROPIC_API_KEY: "", ANTHROPIC_API_KEY_FILE: "",
 const dry = spawnSync("bash", [sh, "--dry-run"], { env, encoding: "utf8" });
 assert.equal(dry.status, 0, `dry run failed: ${dry.stderr}`);
 assert.match(dry.stdout, /weekly draft: week=\d{4}-\d{2}-\d{2}/);
+assert.match(dry.stdout, /LOCAL EVENTS near this week/, "wrapper dry-run must echo draft-week prompt");
 
 const opus = spawnSync("bash", [sh, "--dry-run"], { env: { ...env, DRAFT_MODEL: "claude-opus-5-5" }, encoding: "utf8" });
 assert.equal(opus.status, 2, "an Opus model must be refused for the unattended run");

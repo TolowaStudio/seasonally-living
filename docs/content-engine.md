@@ -14,6 +14,10 @@ with a human approving before anything goes out. The posting side is in `automat
 | Draft a week of posts (Anthropic API) | `scripts/content/draft-week.ts` |
 | Draft a post from a video transcript (plain text, SRT or WebVTT) | `scripts/content/draft-from-transcript.ts` |
 | Clean up a video's captions (SRT/WebVTT in, platform-ready SRT + WebVTT + transcript + report out) | `scripts/content/caption-video.ts`, helpers in `captions.ts` |
+| Cam's calendar view + dated valley events | `src/content/calendar.ts` (`LOCAL_EVENTS`), `scripts/content/render-calendar.ts` |
+| Whisper transcript from a video file | `scripts/content/transcribe-video.sh` |
+| Full video pipeline (transcribe → captions → optional draft → post dry-run) | `scripts/content/run-video-pipeline.sh` |
+| Post video to Facebook + Instagram (Meta Graph; `--dry-run` default) | `scripts/content/post-video.ts` |
 | Load reviewed drafts into Sanity (opt-in) | `scripts/content/import-drafts.ts` |
 | n8n approval queue and cross-posting | `automation/n8n/social-approval-queue.json` |
 | Phone-tap approve route (off unless env is set) | `src/app/api/content/approve/route.ts` |
@@ -90,10 +94,34 @@ write to Sanity, and cannot post anywhere.
 5. A person watches the video once with the captions on and reads the report. Speech-to-text mishears
    names, model numbers and numbers.
 
-Where the captions go once approved (not built, see below): Facebook takes the `.srt` as a caption file at
-upload. Instagram has no caption-file upload, so Reels and feed video need captions burned in by an editor
-(Descript, CapCut) or by an `ffmpeg` that has `libass`; the Homebrew `ffmpeg` on the dev laptop does not,
-so burn-in was not built or verified here.
+Where the captions go once approved: Facebook takes the `.srt` at upload (`post-video.ts --srt`). Instagram
+has no caption-file upload, so Reels need captions burned in for viewers who watch without sound (Descript,
+CapCut, or an `ffmpeg` with `libass`; Homebrew `ffmpeg` on the dev laptop does not, so burn-in is still a
+human step before IG send).
+
+### Video pipeline (TS-3293)
+
+**Storage:** shop masters and exports stay on disk under `out/content-drafts/video/` (gitignored). No Google
+Drive upload in this repo; confirm with Cam/Kimberly if a shared folder is needed for proofing.
+
+1. `scripts/content/transcribe-video.sh <clip.mp4>` — local Whisper (`WHISPER_CMD`, default `whisper`) →
+   `out/content-drafts/transcripts/<name>.srt`. No cloud speech API.
+2. `scripts/content/caption-video.ts` on that SRT (optionally `--video` to check length).
+3. `scripts/content/draft-from-transcript.ts` on `<name>.transcript.txt` for post copy.
+4. `scripts/content/post-video.ts --video <clip.mp4> --draft-json <draft.json> --srt <name>.srt` — **dry-run
+   by default**. Pass `--send` only after Jeramey approves a public post and Meta tokens are in
+   `META_PAGE_ACCESS_TOKEN_FILE` with `FACEBOOK_PAGE_ID` and `INSTAGRAM_BUSINESS_ACCOUNT_ID` (see
+   `automation/README.md`).
+
+Or run `scripts/content/run-video-pipeline.sh <clip.mp4>` for steps 1–4 with optional `--draft` and
+`--post-send`.
+
+### Calendar for Cam (TS-3293)
+
+`src/content/calendar.ts` lists **LOCAL_EVENTS** (named valley events with typical month-day windows).
+`scripts/content/render-calendar.ts` prints a markdown calendar for the next few weeks: weekly rhythm,
+season angles, hooks and which events touch each week. The weekly draft generator includes those events in
+its prompt but still forbids inventing exact dates.
 
 ## Weekly schedule (TOL-3371)
 
@@ -119,9 +147,10 @@ launchctl kickstart gui/$(id -u)/com.tolowa.seasonally-living.draft-week   # opt
 Undo: `scripts/content/install-weekly-schedule.sh --uninstall`. Log: `~/Library/Logs/seasonally-living-draft-week.log`.
 The Mini needs `gcloud` signed in as an account that can read `motion-anthropic-api-key`.
 
-Still open: where Kimberly proofs `preview.md` (a shared folder is not chosen: confirm the storage
-choice, then point `DRAFT_OUT_ROOT` at it), and video upload and posting to Facebook/Instagram
-(posting is a public send and needs a go-ahead; the caption half is built, see "Captions" above).
+Still open: where Kimberly proofs `preview.md` (point `DRAFT_OUT_ROOT` at the shared folder once chosen),
+and the first real `post-video.ts --send` (public send; needs Meta tokens and Jeramey go-ahead). Installing
+the Sunday launchd job on a Mini is machine work (`install-weekly-schedule.sh --install` on `main`, not on
+a laptop).
 
 ## Open items
 

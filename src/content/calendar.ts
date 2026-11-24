@@ -138,6 +138,120 @@ export const LOCAL_HOOKS: { months: number[]; hook: string }[] = [
   { months: [1, 2, 3, 11, 12], hook: "Ski season in the Cascades, and coming home cold" },
 ];
 
+/** A real local event Cam may tie content to. Dates shift every year — confirm before stating them. */
+export type LocalEvent = {
+  name: string;
+  place: string;
+  /** Typical annual window (month-day, Pacific). endMd before startMd means it crosses New Year's. */
+  startMd: string;
+  endMd: string;
+  hook: string;
+};
+
+/**
+ * Valley events with approximate annual windows. The writer may mention the event by name and place,
+ * but must not invent exact dates or times — list those in needs_confirm unless INPUT supplies them.
+ */
+export const LOCAL_EVENTS: LocalEvent[] = [
+  {
+    name: "Wenatchee Apple Blossom Festival",
+    place: "Wenatchee",
+    startMd: "04-20",
+    endMd: "05-05",
+    hook: "Spring parades, blossoms along the Columbia, and the valley waking up outdoors",
+  },
+  {
+    name: "Leavenworth Oktoberfest",
+    place: "Leavenworth",
+    startMd: "10-03",
+    endMd: "10-26",
+    hook: "Fall weekends in Leavenworth (several weekends; confirm which one before posting)",
+  },
+  {
+    name: "Leavenworth Village of Lights / Christmas Lighting",
+    place: "Leavenworth",
+    startMd: "11-28",
+    endMd: "02-23",
+    hook: "Holiday lights in Leavenworth (typically Fri–Sun through the winter)",
+  },
+  {
+    name: "Bavarian Icefest",
+    place: "Leavenworth",
+    startMd: "01-17",
+    endMd: "01-19",
+    hook: "Winter ice sculptures and a cold walk through downtown Leavenworth",
+  },
+  {
+    name: "Wenatchee River Salmon Festival",
+    place: "Leavenworth / Wenatchee area",
+    startMd: "09-19",
+    endMd: "09-21",
+    hook: "Salmon in the Wenatchee River and fall in the foothills",
+  },
+  {
+    name: "Wenatchee Valley Brewers Festival",
+    place: "Wenatchee",
+    startMd: "06-20",
+    endMd: "06-22",
+    hook: "Early-summer evenings downtown (confirm the year's dates)",
+  },
+  {
+    name: "SnowFest in Leavenworth",
+    place: "Leavenworth",
+    startMd: "01-10",
+    endMd: "01-12",
+    hook: "Mid-winter snow play and a reason to warm up afterward",
+  },
+];
+
+function mdInEvent(md: string, ev: LocalEvent): boolean {
+  const { startMd, endMd } = ev;
+  if (startMd <= endMd) return md >= startMd && md <= endMd;
+  return md >= startMd || md <= endMd;
+}
+
+/** YYYY-MM-DD on or overlapping a listed local event (typical annual window only). */
+export function eventsOnDate(ymd: string): LocalEvent[] {
+  const md = ymd.slice(5);
+  return LOCAL_EVENTS.filter((ev) => mdInEvent(md, ev));
+}
+
+export function addCalendarDays(iso: string, n: number): string {
+  const d = new Date(`${iso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Distinct local events touching any day in the Mon–Sun week that starts on weekMonday. */
+export function eventsInWeek(weekMonday: string): LocalEvent[] {
+  const seen = new Set<string>();
+  const out: LocalEvent[] = [];
+  for (let i = 0; i < 7; i++) {
+    for (const ev of eventsOnDate(addCalendarDays(weekMonday, i))) {
+      if (!seen.has(ev.name)) {
+        seen.add(ev.name);
+        out.push(ev);
+      }
+    }
+  }
+  return out;
+}
+
+/** Events whose typical window touches any day in [startYmd, endYmd] inclusive. */
+export function eventsBetween(startYmd: string, endYmd: string): LocalEvent[] {
+  const seen = new Set<string>();
+  const out: LocalEvent[] = [];
+  for (let d = startYmd; d <= endYmd; d = addCalendarDays(d, 1)) {
+    for (const ev of eventsOnDate(d)) {
+      if (!seen.has(ev.name)) {
+        seen.add(ev.name);
+        out.push(ev);
+      }
+    }
+  }
+  return out;
+}
+
 /**
  * Vetted hero photos (Cloudinary cloud tolowa-studio). The generator picks from here by line and
  * season, so a model can never invent an image ID. Add more as photos arrive.
