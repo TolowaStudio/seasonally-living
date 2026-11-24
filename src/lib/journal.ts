@@ -1,6 +1,10 @@
 import { cache } from "react";
 import { createClient } from "@sanity/client";
 import { DEFAULT_POSTS, JOURNAL_TAG_IDS, type JournalPost, type JournalSeason, type JournalStatus, type PortableBlock } from "@/content/journal";
+import { isVisible } from "@/lib/journal-visible";
+import { hasPostedLink, postingLinks, type PostingLinks } from "@/lib/post-state";
+
+export { isVisible } from "@/lib/journal-visible";
 import { SANITY_DATASET, SANITY_PROJECT_ID, REVALIDATE_SECONDS } from "@/lib/sanity";
 import { getSiteUrl } from "@/lib/site";
 
@@ -17,9 +21,8 @@ const client = createClient({
   perspective: "published",
 });
 
-const FIELDS = `_id, title, "slug": slug.current, tags, season, heroImage, heroAlt, excerpt, body, status, publishAt, "updatedAt": _updatedAt, "posted": defined(results.facebookUrl) || defined(results.instagramUrl) || defined(results.gbpUrl)`;
-const VISIBLE: JournalStatus[] = ["approved", "scheduled", "published"];
-const STATUSES: JournalStatus[] = ["draft", "approved", "scheduled", "published"];
+const FIELDS = `_id, title, "slug": slug.current, tags, season, heroImage, heroAlt, excerpt, body, status, publishAt, "updatedAt": _updatedAt, "postState": coalesce(*[_type == "postState" && postId == ^._id][0], {}), "legacyResults": coalesce(results, {})`;
+const STATUSES: JournalStatus[] = ["draft", "approved", "scheduled", "published", "hidden"];
 const SEASONS: JournalSeason[] = ["winter", "spring", "summer", "fall", "year-round"];
 
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
@@ -34,6 +37,7 @@ export function postFromSanity(row: unknown): JournalPost | null {
   if (!slug || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug) || !title) return null;
   const body = Array.isArray(r.body) ? (r.body.filter((b) => b && typeof b === "object" && (b as { _type?: unknown })._type === "block") as PortableBlock[]) : [];
   const publishAt = str(r.publishAt);
+  const links = postingLinks(r.postState as PostingLinks, r.legacyResults as PostingLinks);
   return {
     _id: str(r._id) || `post-${slug}`,
     title,
@@ -45,17 +49,10 @@ export function postFromSanity(row: unknown): JournalPost | null {
     excerpt: str(r.excerpt),
     body,
     status,
-    posted: r.posted === true,
+    posted: hasPostedLink(links),
     publishAt: publishAt && !Number.isNaN(Date.parse(publishAt)) ? publishAt : undefined,
     updatedAt: str(r.updatedAt) || undefined,
   };
-}
-
-/** True when the post should be on the public site right now. */
-export function isVisible(p: Pick<JournalPost, "status" | "publishAt" | "posted">, now = Date.now()): boolean {
-  if (p.posted) return true; // already linked from Facebook / Instagram / Google
-  if (!VISIBLE.includes(p.status)) return false;
-  return !p.publishAt || Date.parse(p.publishAt) <= now;
 }
 
 /** Newest first. Posts without a date sort last, by title, so the order is stable. */

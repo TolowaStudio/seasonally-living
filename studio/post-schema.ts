@@ -3,6 +3,7 @@ import { defineArrayMember, defineField, defineType } from "sanity";
 // Journal post: one document feeds the site (/journal), Facebook, Instagram, Google Business Profile
 // and (later) the monthly note. Mirrors src/content/journal.ts. Lifecycle:
 //   draft -> approved (Cam or Kimberly) -> [scheduled if publishAt is in the future] -> published (set by n8n after posting).
+// Channel links and posting errors live in a separate postState document (studio/post-state-schema.ts).
 // See automation/README.md. The dataset is PUBLIC: never put anything private in a post.
 
 const TAGS = [
@@ -28,9 +29,6 @@ const GBP_CTAS = [
 const CLOUDINARY_ID = /^[a-z0-9][a-z0-9/_-]*$/i;
 const LIVE = ["approved", "scheduled", "published"];
 
-const resultUrl = (name: string, title: string) =>
-  defineField({ name, title, type: "url", readOnly: true, validation: (r) => r.uri({ scheme: ["https"] }) });
-
 export const postType = defineType({
   name: "post",
   title: "Journal post",
@@ -39,7 +37,7 @@ export const postType = defineType({
   groups: [
     { name: "article", title: "Article", default: true },
     { name: "social", title: "Social posts" },
-    { name: "queue", title: "Approval & results" },
+    { name: "queue", title: "Approval & queue" },
   ],
   fields: [
     defineField({ name: "title", type: "string", group: "article", validation: (r) => r.required().max(110) }),
@@ -159,6 +157,7 @@ export const postType = defineType({
           { title: "Approved (goes out at the next check)", value: "approved" },
           { title: "Scheduled (approved, waiting for the date)", value: "scheduled" },
           { title: "Published (posted everywhere)", value: "published" },
+          { title: "Hidden (off the site, still posted)", value: "hidden" },
         ],
         layout: "radio",
       },
@@ -172,18 +171,13 @@ export const postType = defineType({
     defineField({ name: "approvedBy", title: "Approved by", type: "string", group: "queue", readOnly: true }),
     defineField({ name: "approvedAt", title: "Approved at", type: "datetime", group: "queue", readOnly: true }),
     defineField({
-      name: "results",
-      title: "Where it went (filled in automatically)",
-      type: "object",
+      name: "lastProblem",
+      title: "Last problem",
+      type: "text",
+      rows: 3,
       group: "queue",
-      options: { collapsible: true, collapsed: false },
-      fields: [
-        resultUrl("facebookUrl", "Facebook post"),
-        resultUrl("instagramUrl", "Instagram post"),
-        resultUrl("gbpUrl", "Google post"),
-        defineField({ name: "postedAt", type: "datetime", readOnly: true }),
-        defineField({ name: "lastError", title: "Last problem", type: "text", rows: 3, readOnly: true }),
-      ],
+      readOnly: true,
+      description: "Filled in by automation when posting fails (mirror of postState). Channel messages only, not secrets.",
     }),
   ],
   orderings: [

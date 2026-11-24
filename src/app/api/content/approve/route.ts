@@ -11,8 +11,8 @@ import { SANITY_DATASET, SANITY_PROJECT_ID } from "@/lib/sanity";
 //   Authorization: Bearer <CONTENT_APPROVE_SECRET>
 //   { "id": "post-<slug>", "approvedBy": "Kimberly" }
 //
-// It flips ONE field on ONE post: status draft -> approved (or scheduled when publishAt is in the
-// future), and records who and when. It posts nothing; the n8n workflow does the posting. It refuses
+// It flips status on the post only (draft -> approved / scheduled) and records who and when. Channel
+// links live in postState documents n8n owns; this route never touches them. It posts nothing. It refuses
 // a post that still has "check with Cam or Susan" items, unfilled [[ADD]] placeholders, or no text.
 // Treat the secret like a password: long and random, in GCP Secret Manager / the Cloud Run env only.
 

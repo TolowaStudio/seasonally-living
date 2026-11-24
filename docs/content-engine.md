@@ -9,7 +9,8 @@ with a human approving before anything goes out. The posting side is in `automat
 | --- | --- |
 | Journal on the site: `/journal`, `/journal/<slug>`, `/journal/rss.xml`, sitemap | `src/app/journal/`, `src/lib/journal.ts` |
 | Code-default posts (always render, even if Sanity is down) | `src/content/journal.ts` (`DEFAULT_POSTS`) |
-| Sanity `post` type (article, social versions, approval, results) | `studio/post-schema.ts` |
+| Sanity `post` type (article, social versions, approval) | `studio/post-schema.ts` |
+| Sanity `postState` type (channel links, automation; editors never edit) | `studio/post-state-schema.ts` |
 | Weekly rhythm, seasonal lead lines, local hooks, vetted hero photos | `src/content/calendar.ts` |
 | Draft a week of posts (Anthropic API) | `scripts/content/draft-week.ts` |
 | Draft a post from a video transcript (plain text, SRT or WebVTT) | `scripts/content/draft-from-transcript.ts` |
@@ -21,7 +22,8 @@ with a human approving before anything goes out. The posting side is in `automat
 ## Journal rules
 
 - A post is on the site when its status is approved, scheduled or published, its `publishAt` (if any)
-  has passed, and it has article text. Drafts and future dates are hidden.
+  has passed, and it has article text. Drafts, future dates and **hidden** are off the site. **Hidden**
+  is for taking an article down without unpublishing social posts (links stay live).
 - A Sanity post with the same slug as a code default replaces it. To retire a default, create a post
   with that slug and set it to Draft.
 - The seed posts are general and true. The shop-specific claims in them carry `TODO-confirm` comments in
@@ -55,7 +57,7 @@ with a human approving before anything goes out. The posting side is in `automat
    price, sale, warranty or "certified" wording, anything about how the shop works.
 4. **Load into Sanity.** `import-drafts.ts <dir>` is a dry run until you add `--write` and
    `SANITY_TOKEN`. It only creates posts as Draft and never overwrites.
-5. **Approve in the Studio** (or the phone tap). n8n posts. Results land in the post.
+5. **Approve in the Studio** (or the phone tap). n8n posts. Results land in **postState**, not on the post.
 
 The generator cannot invent a photo (hero images come from the vetted pool in `calendar.ts`), cannot
 write to Sanity, and cannot post anywhere.
